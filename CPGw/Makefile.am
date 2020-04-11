@@ -18,9 +18,9 @@ CPGateway_CPPFLAGS=-I$(srcdir)/Inc \
                    -I/usr/local/ACE-6.5.0/include
 
 CPGateway_LDFLAGS=-L/usr/local/ACE-6.5.0/lib \
-                  -L$(CURDIR)/../Common \
-                  -L$(CURDIR)/../Ipc \
-                  -L$(CURDIR)/../Protocol
+                  -L$(CURDIR)/Common \
+                  -L$(CURDIR)/Ipc \
+                  -L$(CURDIR)/Protocol
 
 CPGateway_CXXFLAGS=-g -Wall -std=gnu++11
 

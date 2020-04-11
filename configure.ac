@@ -21,6 +21,7 @@ AC_CONFIG_FILES([
  CPGw/Common/Makefile
  CPGw/Ipc/Makefile
  CPGw/Protocol/Makefile
+ CPGw/Makefile
 ])
 
 ## This will create Makefile.in in each folder
