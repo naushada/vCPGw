@@ -38,7 +38,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <ace/Task_T.h>
 #include <ace/UNIX_Addr.h>
 
-#include "readlineIF.h"
+#include "ReadlineIF.h"
 
 /*These are static data member*/
 int ReadlineIF::m_offset = 0;

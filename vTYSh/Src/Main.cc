@@ -1,8 +1,8 @@
 #ifndef __MAIN_CC__
 #define __MAIN_CC__
 
-#include "readlineIF.h"
-#include "vtysh.h"
+#include "ReadlineIF.h"
+#include "Vtysh.h"
 
 int main()
 {

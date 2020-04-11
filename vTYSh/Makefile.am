@@ -1,9 +1,9 @@
 
 bin_PROGRAMS=vTYSh
 
-vTYSh_SOURCES=Src/readlineIF.cc \
-              Src/vtysh.cc \
-              Src/main.cc
+vTYSh_SOURCES=Src/ReadlineIF.cc \
+              Src/Vtysh.cc \
+              Src/Main.cc
 
 vTYSh_CPPFLAGS=-I$(srcdir)/Inc \
                -I/usr/local \

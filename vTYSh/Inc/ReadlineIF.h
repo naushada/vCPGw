@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "vtysh.h"
+#include "Vtysh.h"
 
 class ReadlineIF
 {

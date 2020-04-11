@@ -1,7 +1,7 @@
 #ifndef __VAP_CC__
 #define __VAP_CC__
 
-#include "vap.h"
+#include "Vap.h"
 
 CtrlIF *CtrlIF::m_instance = NULL;
 
