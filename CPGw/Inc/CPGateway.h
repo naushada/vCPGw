@@ -4,6 +4,8 @@
 #include "DhcpServerUser.h"
 #include "CPGatewayState.h"
 
+namespace ARP {class CPGwArp;}
+
 #include "ace/Event_Handler.h"
 #include "ace/SOCK_Dgram.h"
 #include "ace/SString.h"
@@ -26,7 +28,10 @@ class CPGateway : public ACE_Event_Handler
     /*State-Machine for CPGateway. Note This will point to pointer to sub-class*/
     CPGatewayState *m_state;
 
+    /*Instance of dhcpUser.*/
     DhcpServerUser *m_dhcpUser;
+    /*Instance of ARP.*/
+    ARP::CPGwArp *m_arpUser;
 
   public:
     virtual ~CPGateway();
@@ -53,6 +58,8 @@ class CPGateway : public ACE_Event_Handler
     int sendResponse(ACE_CString chaddr, ACE_Byte *in, ACE_UINT32 inLen);
     void ipAddr(ACE_CString ip);
     void ethIntfName(ACE_CString eth);
+
+    ARP::CPGwArp &getArpUser(void);
 
     ACE_CString &getMacAddress(void);
 };

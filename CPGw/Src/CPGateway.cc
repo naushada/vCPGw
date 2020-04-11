@@ -27,6 +27,7 @@
 #include "CPGatewayState.h"
 #include "CPGatewayStateActivated.h"
 
+#include "Arp.h"
 #include "DhcpServer.h"
 
 void CPGateway::setState(CPGatewayState *st)
@@ -46,10 +47,15 @@ CPGatewayState &CPGateway::getState(void)
   return(*m_state);
 }
 
+ARP::CPGwArp &CPGateway::getArpUser(void)
+{
+  ACE_TRACE("CPGateway::getArpUser\n");
+  return(*m_arpUser);
+}
 
 DhcpServerUser &CPGateway::getDhcpServerUser(void)
 {
-  ACE_TRACE("CPGateway::getState\n");
+  ACE_TRACE("CPGateway::getDhcpServerUser\n");
   return(*m_dhcpUser);
 }
 
@@ -287,6 +293,10 @@ CPGateway::CPGateway(ACE_CString intfName, ACE_CString ip,
   ACE_NEW_NORETURN(m_dhcpUser, DhcpServerUser(this));
   /*Mske CPGateway state machine Activated State.*/
   setState(CPGatewayStateActivated::instance());
+
+  /*Instantiating ARP instance.*/
+  ACE_NEW_NORETURN(m_arpUser, ARP::CPGwArp(this, getMacAddress()));
+
 }
 
 CPGateway::CPGateway(ACE_CString intfName)
@@ -334,7 +344,6 @@ ACE_UINT8 CPGateway::start()
   ACE_CString ipAddrStr("127.0.0.1");
   ACE_CString nodetag("primary");
 
-
   ACE_Reactor::instance()->register_handler(this, ACE_Event_Handler::READ_MASK);
 
   while(1)
@@ -350,6 +359,7 @@ ACE_UINT8 CPGateway::stop()
   ACE_TRACE("CPGateway::stop\n");
   return(0);
 }
+
 int main(int argc, char *argv[])
 {
 

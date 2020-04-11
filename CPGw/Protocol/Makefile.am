@@ -1,5 +1,7 @@
 #/*!Name of the binary*/
 
+SUBDIRS=Arp
+
 noinst_LIBRARIES = libDhcps.a
 
 libDhcps_a_SOURCES = Src/DhcpServer.cc \

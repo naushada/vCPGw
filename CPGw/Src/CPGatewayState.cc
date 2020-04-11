@@ -9,6 +9,8 @@
 #include "CPGateway.h"
 #include "CPGatewayState.h"
 
+#include "Arp.h"
+
 CPGatewayState::CPGatewayState()
 {
   ACE_TRACE("CPGatewayState::CPGatewayState\n");
@@ -68,6 +70,14 @@ ACE_UINT32 CPGatewayState::processRequest(CPGateway &parent,
   else if(TransportIF::ETH_P_ARP == ntohs(ethHdr->proto))
   {
     /*ARP Packet for MAC resolve.*/
+    if(!parent.getArpUser().processRequest(parent, in, inLen))
+    {
+      /*Remember peerIP and peerMAC now.*/
+      parent.getDhcpServerUser().addSession(parent.getArpUser().peerIp(),
+                                            parent.getArpUser().peerMac());
+      ACE_DEBUG((LM_DEBUG, "peerIp and peerMac are Updated in DhcpServer\n"));
+    }
+
   }
   else if(TransportIF::ETH_P_EAPOL == ntohs(ethHdr->proto))
   {

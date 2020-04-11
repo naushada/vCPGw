@@ -147,4 +147,14 @@ void DHCP::Server::setMacAddress(ACE_CString mac)
   m_macAddress = mac;
 }
 
+ACE_UINT32 DHCP::Server::ipAddr(void)
+{
+  return(m_ipAddr);
+}
+
+void DHCP::Server::ipAddr(ACE_UINT32 ip)
+{
+  m_ipAddr = ip;
+}
+
 #endif /*__DHCP_SERVER_CC__*/

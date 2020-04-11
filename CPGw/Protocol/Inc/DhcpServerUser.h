@@ -11,8 +11,12 @@
 
 class CPGateway;
 
+/*Hash Map based on client's MAC address.*/
 typedef ACE_Hash_Map_Manager<ACE_CString, DHCP::Server*, ACE_Null_Mutex>DhcpServerInstMap_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, DHCP::Server *, ACE_Null_Mutex>::iterator DhcpServerInstMap_iter;
+/*Hash Map based on IP Address of client.*/
+typedef ACE_Hash_Map_Manager<ACE_UINT32, ACE_CString , ACE_Null_Mutex>SessionMap_t;
+typedef ACE_Hash_Map_Manager<ACE_UINT32, ACE_CString, ACE_Null_Mutex>::iterator SessionMap_iter;
 
 typedef struct TIMER_ID
 {
@@ -64,6 +68,8 @@ class DhcpServerUser : public ACE_Event_Handler
 private:
   /*Hash Map whose key is mac address of DHCP Client.*/
   DhcpServerInstMap_t m_instMap;
+  /*Subscriber Map based on IP Address.*/
+  SessionMap_t m_sessMap;
   /*Guard Timer for next request.*/
   long m_guardTid;
   /*lease Expire timeout.*/
@@ -91,6 +97,9 @@ public:
   ACE_UINT8 addSubscriber(DHCP::Server *sess, ACE_CString macAddress);
   DHCP::Server *getSubscriber(ACE_CString macAddress);
   ACE_UINT8 deleteSubscriber(ACE_CString macAddress);
+
+  void addSession(ACE_UINT32 ip, ACE_CString mac);
+  void deleteSession(ACE_UINT32 ipAddr);
 
   ACE_UINT8 isSubscriberAuthenticated(ACE_CString macAddress);
 

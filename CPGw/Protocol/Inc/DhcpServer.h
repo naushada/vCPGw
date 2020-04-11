@@ -44,6 +44,8 @@ namespace DHCP
     ACE_UINT32 m_lease;
     ACE_CString m_sname;
     ACE_CString m_macAddress;
+    /*IP Address of DHCP Client.*/
+    ACE_UINT32 m_ipAddr;
 
   public:
     Server();
@@ -72,6 +74,9 @@ namespace DHCP
 
     ACE_CString &getMacAddress(void);
     void setMacAddress(ACE_CString mac);
+
+    ACE_UINT32 ipAddr(void);
+    void ipAddr(ACE_UINT32 ip);
   };
 }
 

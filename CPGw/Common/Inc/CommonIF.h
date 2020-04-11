@@ -60,6 +60,7 @@ namespace TransportIF {
   /*Ethernet 10Mbps.*/
   static const ACE_UINT8 ARPHRD_ETHER = 1;
 
+  static const ACE_UINT16 ARP_PROTO_IPv4 = 0x0800;
   /*Octets in one ethernet address.*/
   static const ACE_UINT8 ETH_ALEN = 6;
   /*ARP Packet*/

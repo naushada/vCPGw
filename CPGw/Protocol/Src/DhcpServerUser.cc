@@ -25,6 +25,7 @@ DhcpServerUser::DhcpServerUser(CPGateway *parent)
   guardTid(0);
   leaseTid(0);
   m_instMap.unbind_all();
+  m_sessMap.unbind_all();
 }
 
 DhcpServerUser::~DhcpServerUser()
@@ -244,6 +245,33 @@ ACE_INT32 DhcpServerUser::process_timeout(const void *act)
   return(0);
 }
 
+void DhcpServerUser::addSession(ACE_UINT32 ipAddr, ACE_CString macAddr)
+{
 
+  if(isSubscriberFound(macAddr))
+  {
+    DHCP::Server *sess = getSubscriber(macAddr);
+    /*IP address is updated into dhcp User.*/
+    sess->ipAddr(ipAddr);
+  }
+
+  if(m_sessMap.find(ipAddr) == -1)
+  {
+    /*Not Found in thme map.*/
+    ACE_DEBUG((LM_DEBUG, "IP %u not found in the m_sessMap\n", ipAddr));
+    m_sessMap.bind(ipAddr, macAddr);
+  }
+}
+
+void DhcpServerUser::deleteSession(ACE_UINT32 ipAddr)
+{
+  ACE_CString mac;
+  if(m_sessMap.find(ipAddr, mac) != -1)
+  {
+    /*Session is removed now.*/
+    m_sessMap.unbind(ipAddr);
+    ACE_DEBUG((LM_DEBUG, "session for IP %u is removed\n", ipAddr));
+  }
+}
 
 #endif /*__DHCP_SERVER_USER_CC__*/
