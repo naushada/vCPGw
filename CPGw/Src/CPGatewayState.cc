@@ -5,11 +5,9 @@
 #include "ace/SString.h"
 #include "ace/Basic_Types.h"
 
-#include "commonIF.h"
+#include "CommonIF.h"
 #include "CPGateway.h"
 #include "CPGatewayState.h"
-
-//#include "DhcpServerUser.h"
 
 CPGatewayState::CPGatewayState()
 {

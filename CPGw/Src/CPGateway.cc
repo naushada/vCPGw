@@ -22,7 +22,7 @@
 #include "ace/SOCK_Dgram.h"
 #include "ace/Log_Msg.h"
 
-#include "commonIF.h"
+#include "CommonIF.h"
 #include "CPGateway.h"
 #include "CPGatewayState.h"
 #include "CPGatewayStateActivated.h"

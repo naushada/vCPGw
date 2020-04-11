@@ -1,20 +1,19 @@
 #/*!Name of the binary*/
 
-bin_PROGRAMS = vAPG
+bin_PROGRAMS=vAPSh
 
-vAPG_SOURCES = src/vap.cc \
-               inc/vap.h
+vAPSh_SOURCES=src/vap.cc
 
-vAPG_CPPFLAGS=-I$(srcdir)/inc \
-              -I$(top_srcdir)/common/inc \
-              -I$(top_srcdir)/ipc/inc \
-              -I/usr/local \
-              -I/usr/local/ACE-6.5.0/include
+vAPSh_CPPFLAGS=-I$(srcdir)/Inc \
+               -I$(top_srcdir)/Common/Inc \
+               -I$(top_srcdir)/Ipc/Inc \
+               -I/usr/local \
+               -I/usr/local/ACE-6.5.0/include
 
-vAPG_CXXFLAGS=-g -Wall -std=gnu++11
+vAPSh_CXXFLAGS=-g -Wall -std=gnu++11
 
-vAPG_LDFLAGS=-L/usr/local/ACE-6.5.0/lib \
-             -L$(CURDIR)/../common \
-             -L$(CURDIR)/../ipc
+vAPSh_LDFLAGS=-L/usr/local/ACE-6.5.0/lib \
+              -L$(CURDIR)/../Common \
+              -L$(CURDIR)/../Ipc
 
-vAPG_LDADD=-lACE -lreadline -lpthread -ltinfo -lipc -lcommon
+vAPSh_LDADD=-lACE -lreadline -lpthread -ltinfo -lipc -lcommon

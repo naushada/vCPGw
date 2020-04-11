@@ -7,7 +7,7 @@
 
 #include "CPGateway.h"
 #include "DhcpServerUser.h"
-#include "commonIF.h"
+#include "CommonIF.h"
 #include "DhcpServer.h"
 
 #include "DhcpServerStateDecline.h"

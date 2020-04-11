@@ -1,4 +1,4 @@
-AC_INIT([vAPG], [1.0], [naushad.dln@gmail.com])
+AC_INIT([vCPGw], [1.0], [naushad.dln@gmail.com])
 AC_CONFIG_AUX_DIR([auxdir])
 AM_INIT_AUTOMAKE([1.14.1 subdir-objects foreign])
 AC_PROG_CXX
@@ -16,11 +16,12 @@ AC_HEADER_STDC
 AC_HEADER_DIRENT
 AC_CONFIG_FILES([
  Makefile
- common/Makefile
- ipc/Makefile
- vap/Makefile
- vtysh/Makefile
- vdhcp/Makefile
- cpgateway/Makefile
+ vAPSh/Makefile
+ vTYSh/Makefile
+ CPGw/Common/Makefile
+ CPGw/Ipc/Makefile
+ CPGw/Protocol/Makefile
 ])
+
+## This will create Makefile.in in each folder
 AC_OUTPUT

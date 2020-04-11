@@ -2,7 +2,7 @@
 #define __COMMONIF_CC__
 
 #include <ace/Log_Msg.h>
-#include "commonIF.h"
+#include "CommonIF.h"
 
 
 ACE_UINT32 CommonIF::get_hash32(const ACE_UINT8 *nodeTag)

@@ -14,8 +14,8 @@
 #include <ace/UNIX_Addr.h>
 #include <ace/Timer_Queue_T.h>
 
-#include "commonIF.h"
-#include "ipc.h"
+#include "CommonIF.h"
+#include "Ipc.h"
 
 UniIPC::~UniIPC()
 {

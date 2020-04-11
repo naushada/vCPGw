@@ -1,3 +1,3 @@
-SUBDIRS = common ipc vap vtysh vdhcp cpgateway
+SUBDIRS = CPGw vAPSh vTYSh
 ACLOCAL_AMFLAGS = -Im4
 EXTRA_DIST = autogen.sh

@@ -1,7 +1,7 @@
 #ifndef __DHCP_SERVER_STATE_H__
 #define __DHCP_SERVER_STATE_H__
 
-#include "commonIF.h"
+#include "CommonIF.h"
 #include "ace/SString.h"
 #include "ace/Message_Block.h"
 
