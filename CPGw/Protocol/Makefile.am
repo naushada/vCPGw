@@ -1,6 +1,6 @@
 #/*!Name of the binary*/
 
-SUBDIRS=Arp
+SUBDIRS=Arp Dns
 
 noinst_LIBRARIES = libDhcps.a
 

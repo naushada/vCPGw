@@ -41,6 +41,8 @@ namespace CommonIF {
 namespace TransportIF {
   static const ACE_UINT16 DHCP_CLIENT_PORT = 68;
   static const ACE_UINT16 DHCP_SERVER_PORT = 67;
+  static const ACE_UINT16 DNS_SERVER_PORT = 53;
+
   static const ACE_Byte DHCP_COOKIE_LEN = 4;
 
   /*ARP Request.*/

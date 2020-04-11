@@ -4,13 +4,15 @@
 #include "DhcpServerUser.h"
 #include "CPGatewayState.h"
 
-namespace ARP {class CPGwArp;}
 
 #include "ace/Event_Handler.h"
 #include "ace/SOCK_Dgram.h"
 #include "ace/SString.h"
 #include "ace/Hash_Map_Manager.h"
 #include "ace/Null_Mutex.h"
+
+namespace ARP {class CPGwArp;}
+namespace DNS {class CPGwDns;}
 
 class CPGateway : public ACE_Event_Handler
 {
@@ -25,6 +27,12 @@ class CPGateway : public ACE_Event_Handler
     ACE_UINT32 m_intfIndex;
     ACE_SOCK_Dgram m_dgram;
 
+    /*hostName of the Machine.*/
+    ACE_CString m_hostName;
+    /*Domain Name.*/
+    ACE_CString m_domainName;
+
+
     /*State-Machine for CPGateway. Note This will point to pointer to sub-class*/
     CPGatewayState *m_state;
 
@@ -32,6 +40,8 @@ class CPGateway : public ACE_Event_Handler
     DhcpServerUser *m_dhcpUser;
     /*Instance of ARP.*/
     ARP::CPGwArp *m_arpUser;
+    /*Instance of DNS.*/
+    DNS::CPGwDns *m_dnsUser;
 
   public:
     virtual ~CPGateway();
@@ -56,12 +66,23 @@ class CPGateway : public ACE_Event_Handler
     void setDhcpServerUser(DhcpServerUser *du);
     DhcpServerUser &getDhcpServerUser(void);
     int sendResponse(ACE_CString chaddr, ACE_Byte *in, ACE_UINT32 inLen);
+
     void ipAddr(ACE_CString ip);
+    ACE_CString &ipAddr(void);
+
     void ethIntfName(ACE_CString eth);
 
     ARP::CPGwArp &getArpUser(void);
+    DNS::CPGwDns &getDnsUser(void);
 
     ACE_CString &getMacAddress(void);
+
+    ACE_CString &hostName(void);
+    void hostName(ACE_CString hName);
+
+    ACE_CString &domainName(void);
+    void domainName(ACE_CString dName);
+
 };
 
 #endif /*__CPGATEWAY_H__*/

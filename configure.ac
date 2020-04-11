@@ -22,6 +22,7 @@ AC_CONFIG_FILES([
  CPGw/Ipc/Makefile
  CPGw/Protocol/Makefile
  CPGw/Protocol/Arp/Makefile
+ CPGw/Protocol/Dns/Makefile
  CPGw/Makefile
 ])
 

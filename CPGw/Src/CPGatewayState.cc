@@ -57,7 +57,7 @@ ACE_UINT32 CPGatewayState::processRequest(CPGateway &parent,
       {
         parent.getDhcpServerUser().processRequest(in, inLen);
       }
-      //else if()
+      else if(TransportIF::DNS_SERVER_PORT == ntohs(udpHdr->dest_port))
       {
         /*DNS Packet.*/
       }

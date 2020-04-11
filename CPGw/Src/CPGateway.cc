@@ -21,6 +21,7 @@
 #include "ace/SString.h"
 #include "ace/SOCK_Dgram.h"
 #include "ace/Log_Msg.h"
+#include "ace/INET_Addr.h"
 
 #include "CommonIF.h"
 #include "CPGateway.h"
@@ -28,6 +29,7 @@
 #include "CPGatewayStateActivated.h"
 
 #include "Arp.h"
+#include "Dns.h"
 #include "DhcpServer.h"
 
 void CPGateway::setState(CPGatewayState *st)
@@ -45,6 +47,12 @@ CPGatewayState &CPGateway::getState(void)
 {
   ACE_TRACE("CPGateway::getState\n");
   return(*m_state);
+}
+
+DNS::CPGwDns &CPGateway::getDnsUser(void)
+{
+  ACE_TRACE("CPGateway::getDnsUser\n");
+  return(*m_dnsUser);
 }
 
 ARP::CPGwArp &CPGateway::getArpUser(void)
@@ -276,6 +284,7 @@ ACE_HANDLE CPGateway::get_handle() const
   return(const_cast<CPGateway *>(this)->handle());
 }
 
+/*Constructor*/
 CPGateway::CPGateway(ACE_CString intfName, ACE_CString ip,
                      ACE_UINT8 entity, ACE_UINT8 instance,
                      ACE_CString nodeTag)
@@ -296,6 +305,19 @@ CPGateway::CPGateway(ACE_CString intfName, ACE_CString ip,
 
   /*Instantiating ARP instance.*/
   ACE_NEW_NORETURN(m_arpUser, ARP::CPGwArp(this, getMacAddress()));
+
+  ACE_INET_Addr addr;
+  addr.set_address((const char *)ipAddr().c_str(), ipAddr().length());
+  char hname[255];
+  addr.get_host_name(hname, sizeof(hname));
+
+  ACE_CString hhname((const char *)hname);
+  hostName(hhname);
+
+
+  /*Instantiating DNS instance.*/
+  ACE_NEW_NORETURN(m_dnsUser, DNS::CPGwDns(this, getMacAddress(), hostName(),
+                                           domainName(), (ACE_UINT32)addr.get_ip_address()));
 
 }
 
@@ -335,6 +357,31 @@ void CPGateway::ethIntfName(ACE_CString eth)
 ACE_CString &CPGateway::getMacAddress(void)
 {
   return(m_macAddress);
+}
+
+ACE_CString &CPGateway::ipAddr(void)
+{
+  return(m_ipAddress);
+}
+
+ACE_CString &CPGateway::hostName(void)
+{
+  return(m_hostName);
+}
+
+void CPGateway::hostName(ACE_CString hName)
+{
+  m_hostName = hName;
+}
+
+ACE_CString &CPGateway::domainName(void)
+{
+  return(m_domainName);
+}
+
+void CPGateway::domainName(ACE_CString dName)
+{
+  m_domainName = dName;
 }
 
 ACE_UINT8 CPGateway::start()
