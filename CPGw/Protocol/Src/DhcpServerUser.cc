@@ -9,6 +9,7 @@
 #include "DhcpServerUser.h"
 #include "CommonIF.h"
 #include "DhcpServer.h"
+#include "DhcpCommon.h"
 
 #include "DhcpServerStateDecline.h"
 #include "DhcpServerStateDiscover.h"
@@ -114,19 +115,51 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
    ACE_DEBUG((LM_DEBUG, "%X:",  haddr.c_str()[4] & 0xFF));
    ACE_DEBUG((LM_DEBUG, "%X\n", haddr.c_str()[5] & 0xFF));
 
+   DHCP::Server *sess = NULL;
+
    if(isSubscriberFound(haddr))
    {
      ACE_DEBUG((LM_INFO, "%I subscriber is found\n"));
-     DHCP::Server *sess = getSubscriber(haddr);
+     sess = getSubscriber(haddr);
      sess->getState().rx(*sess, in, inLen);
    }
    else
    {
-     DHCP::Server *sess = NULL;
      ACE_NEW_NORETURN(sess, DHCP::Server(this, cpGw().getMacAddress()));
 
      addSubscriber(sess, haddr);
      sess->getState().rx(*sess, in, inLen);
+   }
+
+   RFC2131::DhcpOption *elm = NULL;
+   if(sess->optionMap().find(RFC2131::OPTION_HOST_NAME, elm) != -1)
+   {
+     /*Found, create one.*/
+     ACE_Byte val[255];
+     ACE_Byte len = 0;
+     len = elm->getValue(val);
+     ACE_CString hName((const char *)val, len);
+     ACE_CString ip;
+
+     if(!sess->ipAddr())
+     {
+       /*IP address is not allocated yet.*/
+       addResolver(hName, ip);
+       ACE_DEBUG((LM_INFO, "%I IP Address is not Allocated YET for host %s\n",
+                  hName.c_str()));
+     }
+     else
+     {
+       /*IP ia allocated now.*/
+       ACE_Byte val[255];
+       ACE_Byte len = 0;
+       len = elm->getValue(val);
+       ACE_CString hName((const char *)val, len);
+       sess->ipAddr(ip);
+       updateResolver(hName, ip);
+       ACE_DEBUG((LM_INFO, "%I IP Address %s for host %s\n",
+                  ip.c_str(), hName.c_str()));
+     }
    }
 
    return(0);
@@ -273,5 +306,44 @@ void DhcpServerUser::deleteSession(ACE_UINT32 ipAddr)
     ACE_DEBUG((LM_DEBUG, "session for IP %u is removed\n", ipAddr));
   }
 }
+
+void DhcpServerUser::addResolver(ACE_CString hName, ACE_CString ip)
+{
+  ACE_CString ipStr;
+  if(m_name2IPMap.find(hName, ipStr) == -1)
+  {
+    /*Not Found. Add into it.*/
+    m_name2IPMap.bind(hName, ip);
+    ACE_DEBUG((LM_DEBUG, "IP %u hName %s not found in the m_name2IPMap\n", 
+               ip.c_str(), hName.c_str()));
+  }
+}
+
+void DhcpServerUser::deleteResolver(ACE_CString hName)
+{
+  ACE_CString ipStr;
+  if(m_name2IPMap.find(hName, ipStr) != -1)
+  {
+    m_name2IPMap.unbind(hName);
+    ACE_DEBUG((LM_DEBUG, "Resolver hostName %s IP %u are removed\n",
+               hName.c_str(), ipStr.c_str()));
+  }
+}
+
+void DhcpServerUser::updateResolver(ACE_CString hName, ACE_CString ip)
+{
+  ACE_CString ipStr;
+  if(m_name2IPMap.find(hName, ipStr) != -1)
+  {
+    /*Found. Update it now.*/
+    /*rebind - newValue, newValue, oldValue, oldValue.*/
+    if(m_name2IPMap.rebind(hName, ip, hName, ipStr) == -1)
+    {
+      ACE_DEBUG((LM_DEBUG, "old IP %s old hName %s new IP %s new hName failed to update in m_name2IPMap\n", 
+               ipStr.c_str(), hName.c_str(), ip.c_str(), hName.c_str()));
+    }
+  }
+}
+
 
 #endif /*__DHCP_SERVER_USER_CC__*/

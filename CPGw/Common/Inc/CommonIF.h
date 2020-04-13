@@ -78,7 +78,6 @@ namespace TransportIF {
   static const ACE_UINT16 ETH_P_PPPOED = 0x8863;
   static const ACE_UINT16 ETH_P_PPPOES = 0x8864;
   static const ACE_UINT16 ETH_P_EAPOL = 0x888E;
-
   /*Packet Type.*/
   static const ACE_UINT8 IP_ICMP = 1;
   static const ACE_UINT8 IP_IGMP = 2;
@@ -165,6 +164,40 @@ namespace TransportIF {
     ACE_Byte sname[64];
     ACE_Byte file[128];
   }__attribute__((packed))DHCP;
+
+  typedef struct DNS
+  {
+    /*unique transaction id to map request into response.*/
+    ACE_UINT16 xid;
+    /*Recursion desired.*/
+    ACE_UINT8 rd:1;
+    /*Is message truncated.*/
+    ACE_UINT8 tc:1;
+    /*Is it authoritative Answer*/
+    ACE_UINT8 aa:1;
+    /*Query Type.*/
+    ACE_UINT8 opcode:4;
+    /*request(0), response(1)*/
+    ACE_UINT8 qr:1;
+
+    /*Response Code*/
+    ACE_UINT8 rcode:4;
+    /*RFU*/
+    ACE_UINT8 z:3;
+    /*Recursion Available.*/
+    ACE_UINT8 ra:1;
+    /*number of entries in Query section.*/
+    ACE_UINT16 qdcount;
+    /*Number of RR (Resource Record) in Answer Section.*/
+    ACE_UINT16 ancount;
+    /*Number of Name Server Record.*/
+    ACE_UINT16 nscount;
+    /*Resource Record in Additional Section.*/
+    ACE_UINT16 arcount;
+
+  }__attribute__((packed))DNS;
+
+
 };
 
 

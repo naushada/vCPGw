@@ -512,7 +512,7 @@ ACE_UINT32 DhcpServerState::rx(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 in
                                          sizeof(TransportIF::IP)   +
                                          sizeof(TransportIF::UDP)  +
                                          sizeof(TransportIF::DHCP) +
-                                         4/*Dhcp Cookies*/];
+                                         TransportIF::DHCP_COOKIE_LEN];
 
   /*populate dhcp option into Hash Map.*/
   populateDhcpOption(parent, dhcpOption, dhcpOptionLen);
@@ -522,7 +522,10 @@ ACE_UINT32 DhcpServerState::rx(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 in
 
   if(parent.optionMap().find(RFC2131::OPTION_MESSAGE_TYPE, elm) != -1)
   {
-    msgType =(ACE_UINT8)elm->m_value[0];
+    ACE_Byte val[8];
+    ACE_Byte len = 0;
+    len = elm->getValue(val);
+    msgType =(ACE_UINT8)val[0];
     ACE_DEBUG((LM_DEBUG, "messageType tag(%u) is found\n", msgType));
   }
 

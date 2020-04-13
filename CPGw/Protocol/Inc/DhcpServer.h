@@ -40,6 +40,7 @@ namespace DHCP
     /*dhcp header is in context.*/
     RFC2131::DhcpCtx *m_ctx;
     ElemDef m_optionMap;
+    /*Back Pointrt to parent.*/
     DhcpServerUser *m_dhcpServerUser;
     ACE_UINT32 m_lease;
     ACE_CString m_sname;
@@ -77,6 +78,7 @@ namespace DHCP
 
     ACE_UINT32 ipAddr(void);
     void ipAddr(ACE_UINT32 ip);
+    void ipAddr(ACE_CString ip);
   };
 }
 

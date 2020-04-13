@@ -10,14 +10,20 @@
 #include "DhcpServer.h"
 #include "DhcpServerStateDiscover.h"
 
-DHCP::Server::Server(DhcpServerUser *usr, ACE_CString mac)
+DHCP::Server::Server(DhcpServerUser *parent, ACE_CString mac)
 {
-  m_dhcpServerUser = usr;
-
+  setDhcpServerUser(parent);
   setMacAddress(mac);
+  lease(0);
+  ipAddr(0);
+  m_mb = NULL;
+  m_description.set("DhcpServer");
+  m_state = NULL;
+  m_optionMap.unbind_all();
+  m_ipAddr = 0;
+
   /*context of DHCP Client's dhcp-header.*/
   m_ctx = new RFC2131::DhcpCtx();
-
   /*The start state is Discover.*/
   setState(DhcpServerStateDiscover::instance());
 }
@@ -155,6 +161,19 @@ ACE_UINT32 DHCP::Server::ipAddr(void)
 void DHCP::Server::ipAddr(ACE_UINT32 ip)
 {
   m_ipAddr = ip;
+}
+
+void DHCP::Server::ipAddr(ACE_CString IPStr)
+{
+  ACE_UINT32 ip = ipAddr();
+  ACE_UINT16 dontCare = 8080;
+  ACE_INET_Addr addr(dontCare, ip);
+  const char *ipStr = addr.get_host_addr();
+
+  if(ipStr)
+  {
+    IPStr.set(ipStr, ACE_OS::strlen(ipStr));
+  }
 }
 
 #endif /*__DHCP_SERVER_CC__*/
