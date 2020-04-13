@@ -345,5 +345,24 @@ void DhcpServerUser::updateResolver(ACE_CString hName, ACE_CString ip)
   }
 }
 
+ACE_TCHAR *DhcpServerUser::getResolverIP(ACE_CString hName)
+{
+  ACE_CString ipStr;
+  ACE_TCHAR *IP = NULL;
+
+  if(m_name2IPMap.find(hName, ipStr) != -1)
+  {
+    ACE_DEBUG((LM_DEBUG, "The hName %s IP Address %s\n", hName.c_str(),
+               ipStr.c_str()));
+    ACE_NEW_NORETURN(IP, ACE_TCHAR[4]);
+    IP[0] = ipStr.c_str()[0] & 0xFF;
+    IP[1] = ipStr.c_str()[1] & 0xFF;
+    IP[2] = ipStr.c_str()[2] & 0xFF;
+    IP[3] = ipStr.c_str()[3] & 0xFF;
+  }
+
+  return(IP);
+}
+
 
 #endif /*__DHCP_SERVER_USER_CC__*/

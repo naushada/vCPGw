@@ -111,6 +111,7 @@ public:
   void addResolver(ACE_CString hName, ACE_CString ip);
   void deleteResolver(ACE_CString hName);
   void updateResolver(ACE_CString hName, ACE_CString ip);
+  ACE_TCHAR *getResolverIP(ACE_CString hName);
 
   ACE_UINT8 isSubscriberAuthenticated(ACE_CString macAddress);
 

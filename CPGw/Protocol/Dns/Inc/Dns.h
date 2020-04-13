@@ -51,7 +51,7 @@ namespace DNS
   typedef struct QHdr
   {
     ACE_Byte m_len;
-    ACE_Byte m_value[255];
+    ACE_Byte m_value[128];
 
     QHdr()
     {
@@ -149,7 +149,11 @@ namespace DNS
 
     ACE_UINT32 processRequest(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen);
     ACE_Message_Block *buildResponse(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen);
-    void processQuery(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen, ACE_UINT16 qdcount);
+    void processQdcount(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen, ACE_UINT16 qdcount);
+    void processAncount(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen, ACE_UINT16 ancount);
+    void processNscount(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen, ACE_UINT16 nscount);
+    void processArcount(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen, ACE_UINT16 arcount);
+    void processDnsQury(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen);
 
   };
 }
