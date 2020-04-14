@@ -5,6 +5,8 @@
 #include "ace/SString.h"
 #include "ace/Containers.h"
 
+#include <vector>
+
 class CPGateway;
 
 namespace DNS
@@ -82,7 +84,7 @@ namespace DNS
 
   typedef struct QData
   {
-    ACE_Unbounded_Stack<QHdr *> m_qHdrList;
+    std::vector<QHdr *> m_qHdrList;
     /*Query Type.*/
     ACE_UINT16 m_qtype;
     /*Query Class.*/
@@ -127,7 +129,7 @@ namespace DNS
     ACE_CString m_domainName;
     ACE_CString m_macAddress;
     ACE_UINT32 m_ipAddr;
-    ACE_Unbounded_Stack<QData *> m_qDataList;
+    std::vector<QData *> m_qDataList;
 
     CPGateway *m_parent;
   public:
