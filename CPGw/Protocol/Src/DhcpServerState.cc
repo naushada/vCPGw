@@ -183,6 +183,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
   ACE_OS::memcpy((void *)eth->dest, (const void *)&in[TransportIF::ETH_ALEN], TransportIF::ETH_ALEN);
 
   eth->proto = htons(TransportIF::ETH_P_IP);
+  mb->wr_ptr(sizeof(TransportIF::ETH));
 
   /*Populating IP Header.*/
   ip->len = 0x5;
@@ -198,8 +199,12 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
   /*1 - ICMP, 2 - IGMP, 6 - TCP, 17 - UDP*/
   ip->proto = 0x11;
   ip->chksum = 0x0000;
-  ip->src_ip = htonl(0x00);
-  ip->dest_ip = htonl(0x00);
+
+  struct in_addr addr;
+  inet_aton(parent.getMyIP().c_str(), &addr);
+
+  ip->src_ip = addr.s_addr;
+  ip->dest_ip = 0x00;
 
   /*Populating UDP Header.*/
   udp->src_port = htons(67);
@@ -236,8 +241,8 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
            sizeof(TransportIF::UDP) + sizeof(TransportIF::DHCP);
 
   ACE_Byte cookie[] = {0x63, 0x82, 0x53, 0x63};
-  ACE_OS::memcpy((void *)&rsp[offset], cookie, 4);
-  offset += 4;
+  ACE_OS::memcpy((void *)&rsp[offset], cookie, TransportIF::DHCP_COOKIE_LEN);
+  offset += TransportIF::DHCP_COOKIE_LEN;
 
   RFC2131::DhcpOption *elm = NULL;
   ACE_UINT8 tag = RFC2131::OPTION_MESSAGE_TYPE;
@@ -256,6 +261,8 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
     else if(RFC2131::REQUEST == elm->m_value[0])
     {
       rsp[offset++] = RFC2131::ACK;
+      /*Update DHCP Client IP Address Now.*/
+      ip->dest_ip = htonl(parent.ipAddr());
     }
   }
 
@@ -274,50 +281,52 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
       case RFC2131::OPTION_SUBNET_MASK:
         rsp[offset++] = RFC2131::OPTION_SUBNET_MASK;
         rsp[offset++] = 4;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
+        *((ACE_UINT32 *)&rsp[offset]) = htonl(0xFFFFFF00);
         offset += 4;
         break;
 
       case RFC2131::OPTION_ROUTER:
         rsp[offset++] = RFC2131::OPTION_ROUTER;
         rsp[offset++] = 4;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
+        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x01020304);
         offset += 4;
         break;
 
       case RFC2131::OPTION_TIME_SERVER:
         rsp[offset++] = RFC2131::OPTION_TIME_SERVER;
         rsp[offset++] = 4;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
+        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x01020304);
         offset += 4;
         break;
 
       case RFC2131::OPTION_NAME_SERVER:
         rsp[offset++] = RFC2131::OPTION_NAME_SERVER;
         rsp[offset++] = 4;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
+        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x08080808);
         offset += 4;
         break;
 
       case RFC2131::OPTION_HOST_NAME:
         rsp[offset++] = RFC2131::OPTION_HOST_NAME;
-        rsp[offset++] = 0;
+        rsp[offset++] = parent.hostName().length();
           /*Host Machine Name to be updated.*/;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
-        offset += 4;
+        ACE_OS::memcpy((void *)&rsp[offset], parent.hostName().c_str(),
+                       parent.hostName().length());
+        offset += parent.hostName().length();
         break;
 
       case RFC2131::OPTION_DOMAIN_NAME:
         rsp[offset++] = RFC2131::OPTION_DOMAIN_NAME;
-        rsp[offset++] = 0;
+        rsp[offset++] = parent.domainName().length();
           /*Host Machine Name to be updated.*/;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
-        offset += 4;
+        ACE_OS::memcpy((void *)&rsp[offset], parent.domainName().c_str(),
+                       parent.domainName().length());
+        offset += parent.domainName().length();
         break;
 
       case RFC2131::OPTION_MTU:
         rsp[offset++] = RFC2131::OPTION_MTU;
-        rsp[offset++] = 0;
+        rsp[offset++] = 2;
           /*Host Machine Name to be updated.*/;
         *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
         offset += 4;
@@ -404,9 +413,9 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
   offset += 2;
 
   rsp[offset++] = RFC2131::OPTION_SERVER_IDENTIFIER;
-  rsp[offset++] = 0;
-  *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
-  offset += 4;
+  rsp[offset++] = parent.getMacAddress().length();
+  ACE_OS::memcpy((void *)&rsp[offset], parent.getMacAddress().c_str(),
+                 parent.getMacAddress().length());
 
   rsp[offset++] = RFC2131::OPTION_END;
 

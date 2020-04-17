@@ -5,6 +5,7 @@ SUBDIRS=Arp Dns
 noinst_LIBRARIES = libDhcps.a
 
 libDhcps_a_SOURCES = Src/DhcpServer.cc \
+										 Src/DhcpCommon.cc \
 										 Src/DhcpServerUser.cc \
 										 Src/DhcpServerState.cc \
 										 Src/DhcpServerStateDecline.cc \

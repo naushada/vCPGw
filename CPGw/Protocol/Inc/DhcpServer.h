@@ -43,14 +43,21 @@ namespace DHCP
     /*Back Pointrt to parent.*/
     DhcpServerUser *m_dhcpServerUser;
     ACE_UINT32 m_lease;
+    /*DHCP Client's Host Name.*/
     ACE_CString m_sname;
-    ACE_CString m_macAddress;
     /*IP Address of DHCP Client.*/
     ACE_UINT32 m_ipAddr;
 
+    /*DHCP's Server macAddress.*/
+    ACE_CString m_macAddress;
+    ACE_CString m_myIP;
+    ACE_CString m_hostName;
+    ACE_CString m_domainName;
+
   public:
     Server();
-    Server(DhcpServerUser *user, ACE_CString mac);
+    Server(DhcpServerUser *user, ACE_CString mac, ACE_CString ip,
+           ACE_CString hostName, ACE_CString domainName);
     virtual ~Server();
 
     void setState(DhcpServerState *st);
@@ -79,6 +86,14 @@ namespace DHCP
     ACE_UINT32 ipAddr(void);
     void ipAddr(ACE_UINT32 ip);
     void ipAddr(ACE_CString ip);
+    void setMyIP(ACE_CString ip);
+    ACE_CString &getMyIP(void);
+
+    ACE_CString &hostName(void);
+    void hostName(ACE_CString &hName);
+    ACE_CString &domainName(void);
+    void domainName(ACE_CString &dName);
+
   };
 }
 

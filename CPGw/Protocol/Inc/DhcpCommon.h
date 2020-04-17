@@ -3,6 +3,7 @@
 
 #include <ace/Basic_Types.h>
 #include "ace/SString.h"
+#include "ace/Log_Msg.h"
 
 namespace RFC2131
 {
@@ -72,93 +73,33 @@ namespace RFC2131
     ACE_Byte m_sname[64];
 
   public:
-    DhcpCtx()
-    {
-      m_xid = 0;
-      m_ciaddr = 0;
-      m_yiaddr = 0;
-      m_siaddr = 0;
-      m_giaddr = 0;
-      m_chaddrLen = 0;
-      ACE_OS::memset((void *)m_chaddr, 0, sizeof(m_chaddr));
-      ACE_OS::memset((void *)m_sname, 0, sizeof(m_sname));
-    }
+    DhcpCtx();
 
-    ~DhcpCtx()
-    {
-    }
+    ~DhcpCtx();
 
-    ACE_UINT32 xid(void)
-    {
-      return(m_xid);
-    }
-    void xid(ACE_UINT32 xid)
-    {
-      m_xid = xid;
-    }
+    ACE_UINT32 xid(void);
+    void xid(ACE_UINT32 xid);
 
-    ACE_UINT32 ciaddr(void)
-    {
-      return(m_ciaddr);
-    }
-    void ciaddr(ACE_UINT32 ciaddr)
-    {
-      m_ciaddr = ciaddr;
-    }
+    ACE_UINT32 ciaddr(void);
+    void ciaddr(ACE_UINT32 ciaddr);
 
-    ACE_UINT32 yiaddr(void)
-    {
-      return(m_yiaddr);
-    }
-    void yiaddr(ACE_UINT32 yiaddr)
-    {
-      m_yiaddr = yiaddr;
-    }
+    ACE_UINT32 yiaddr(void);
+    void yiaddr(ACE_UINT32 yiaddr);
 
-    ACE_UINT32 siaddr(void)
-    {
-      return(m_siaddr);
-    }
-    void siaddr(ACE_UINT32 siaddr)
-    {
-      m_siaddr = siaddr;
-    }
+    ACE_UINT32 siaddr(void);
+    void siaddr(ACE_UINT32 siaddr);
 
-    ACE_UINT32 giaddr(void)
-    {
-      return(m_giaddr);
-    }
-    void giaddr(ACE_UINT32 giaddr)
-    {
-      m_giaddr = giaddr;
-    }
+    ACE_UINT32 giaddr(void);
+    void giaddr(ACE_UINT32 giaddr);
 
-    ACE_UINT32 chaddrLen(void)
-    {
-      return(m_chaddrLen);
-    }
-    void chaddrLen(ACE_UINT8 len)
-    {
-      m_chaddrLen = len;
-    }
+    ACE_UINT8 chaddrLen(void);
+    void chaddrLen(ACE_UINT8 len);
 
-    ACE_Byte *chaddr(void)
-    {
-      return((ACE_Byte *)m_chaddr);
-    }
-    void chaddr(ACE_Byte *chaddr)
-    {
-      ACE_OS::memcpy((void *)m_chaddr, (const void *)chaddr, chaddrLen());
-    }
-
-    ACE_Byte *sname(void)
-    {
-      return((ACE_Byte *)m_sname);
-    }
-    void sname(ACE_Byte *sname)
-    {
-      ACE_OS::strcpy((char *)m_sname,(const char *)sname);
-    }
+    ACE_Byte *chaddr(void);
+    void chaddr(ACE_Byte *caddr);
+    void getChaddr(ACE_Byte *caddr);
+    ACE_Byte *sname(void);
+    void sname(ACE_Byte *sname);
   };
 
   struct DhcpOption
@@ -201,7 +142,7 @@ namespace RFC2131
     void setValue(ACE_Byte *value, ACE_UINT8 len)
     {
       setLen(len);
-      ACE_OS::memcpy((void *)m_value, (const void *)&value, (size_t)len);
+      ACE_OS::memcpy((void *)m_value, (const void *)value, (size_t)len);
     }
 
     ACE_Byte getValue(ACE_Byte *value)

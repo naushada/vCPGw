@@ -10,17 +10,20 @@
 #include "DhcpServer.h"
 #include "DhcpServerStateDiscover.h"
 
-DHCP::Server::Server(DhcpServerUser *parent, ACE_CString mac)
+DHCP::Server::Server(DhcpServerUser *parent, ACE_CString mac,
+                     ACE_CString ip, ACE_CString hName, ACE_CString dName)
 {
   setDhcpServerUser(parent);
   setMacAddress(mac);
+  hostName(hName);
+  domainName(dName);
   lease(0);
   ipAddr(0);
+  setMyIP(ip);
   m_mb = NULL;
   m_description.set("DhcpServer");
   m_state = NULL;
   m_optionMap.unbind_all();
-  m_ipAddr = 0;
 
   /*context of DHCP Client's dhcp-header.*/
   m_ctx = new RFC2131::DhcpCtx();
@@ -163,6 +166,16 @@ void DHCP::Server::ipAddr(ACE_UINT32 ip)
   m_ipAddr = ip;
 }
 
+void DHCP::Server::setMyIP(ACE_CString ip)
+{
+  m_myIP = ip;
+}
+
+ACE_CString &DHCP::Server::getMyIP(void)
+{
+  return(m_myIP);
+}
+
 void DHCP::Server::ipAddr(ACE_CString IPStr)
 {
   ACE_UINT32 ip = ipAddr();
@@ -174,6 +187,26 @@ void DHCP::Server::ipAddr(ACE_CString IPStr)
   {
     IPStr.set(ipStr, ACE_OS::strlen(ipStr));
   }
+}
+
+ACE_CString &DHCP::Server::hostName(void)
+{
+  return(m_hostName);
+}
+
+void DHCP::Server::hostName(ACE_CString &hName)
+{
+  m_hostName = hName;
+}
+
+ACE_CString &DHCP::Server::domainName(void)
+{
+  return(m_domainName);
+}
+
+void DHCP::Server::domainName(ACE_CString &dName)
+{
+  m_domainName = dName;
 }
 
 #endif /*__DHCP_SERVER_CC__*/

@@ -293,11 +293,15 @@ CPGateway::CPGateway(ACE_CString intfName, ACE_CString ip,
   ethIntfName(intfName);
   ipAddr(ip);
 
+  ACE_DEBUG((LM_DEBUG, "IP %s len %u\n", ipAddr().c_str(), ipAddr().length()));
 
   if(open() < 0)
   {
     ACE_ERROR((LM_ERROR, "%Iopen for ethernet Interface %s failed\n", intfName.c_str()));
   }
+
+  struct in_addr adr;
+  inet_aton(ipAddr().c_str(), &adr);
 
   ACE_NEW_NORETURN(m_dhcpUser, DhcpServerUser(this));
   /*Mske CPGateway state machine Activated State.*/
@@ -314,10 +318,14 @@ CPGateway::CPGateway(ACE_CString intfName, ACE_CString ip,
   ACE_CString hhname((const char *)hname);
   hostName(hhname);
 
+  ACE_CString dName("balaagh.net");
+  domainName(dName);
 
+
+  ACE_DEBUG((LM_DEBUG, "IP Addr 0x%X\n", adr.s_addr));
   /*Instantiating DNS instance.*/
   ACE_NEW_NORETURN(m_dnsUser, DNS::CPGwDns(this, getMacAddress(), hostName(),
-                                           domainName(), (ACE_UINT32)addr.get_ip_address()));
+                                           domainName(), adr.s_addr));
 
 }
 
@@ -356,6 +364,12 @@ void CPGateway::ethIntfName(ACE_CString eth)
 
 ACE_CString &CPGateway::getMacAddress(void)
 {
+  ACE_DEBUG((LM_DEBUG, "MAC- %X:", m_macAddress.c_str()[0] & 0xFF));
+  ACE_DEBUG((LM_DEBUG, "%X:", m_macAddress.c_str()[1] & 0xFF));
+  ACE_DEBUG((LM_DEBUG, "%X:", m_macAddress.c_str()[2] & 0xFF));
+  ACE_DEBUG((LM_DEBUG, "%X:", m_macAddress.c_str()[3] & 0xFF));
+  ACE_DEBUG((LM_DEBUG, "%X:", m_macAddress.c_str()[4] & 0xFF));
+  ACE_DEBUG((LM_DEBUG, "%X\n", m_macAddress.c_str()[5] & 0xFF));
   return(m_macAddress);
 }
 
@@ -366,6 +380,7 @@ ACE_CString &CPGateway::ipAddr(void)
 
 ACE_CString &CPGateway::hostName(void)
 {
+  ACE_DEBUG((LM_DEBUG, "The Host Name is %s\n", m_hostName.c_str()));
   return(m_hostName);
 }
 

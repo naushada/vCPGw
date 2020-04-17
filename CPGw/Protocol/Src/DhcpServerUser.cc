@@ -108,6 +108,7 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
 
    ACE_CString haddr((const char *)dhcpHdr->chaddr, TransportIF::ETH_ALEN);
 
+   ACE_DEBUG((LM_DEBUG, "DhcpServerUser::processRequest\n"));
    ACE_DEBUG((LM_DEBUG, "chaddr %X:",  haddr.c_str()[0] & 0xFF));
    ACE_DEBUG((LM_DEBUG, "%X:",  haddr.c_str()[1] & 0xFF));
    ACE_DEBUG((LM_DEBUG, "%X:",  haddr.c_str()[2] & 0xFF));
@@ -125,7 +126,11 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
    }
    else
    {
-     ACE_NEW_NORETURN(sess, DHCP::Server(this, cpGw().getMacAddress()));
+     ACE_NEW_NORETURN(sess, DHCP::Server(this,
+                                         cpGw().getMacAddress(),
+                                         cpGw().ipAddr(),
+                                         cpGw().hostName(),
+                                         cpGw().domainName()));
 
      addSubscriber(sess, haddr);
      sess->getState().rx(*sess, in, inLen);
@@ -345,16 +350,17 @@ void DhcpServerUser::updateResolver(ACE_CString hName, ACE_CString ip)
   }
 }
 
-ACE_TCHAR *DhcpServerUser::getResolverIP(ACE_CString hName)
+ACE_Byte *DhcpServerUser::getResolverIP(ACE_CString &hName)
 {
   ACE_CString ipStr;
-  ACE_TCHAR *IP = NULL;
+  ACE_Byte *IP = NULL;
 
   if(m_name2IPMap.find(hName, ipStr) != -1)
   {
     ACE_DEBUG((LM_DEBUG, "The hName %s IP Address %s\n", hName.c_str(),
                ipStr.c_str()));
-    ACE_NEW_NORETURN(IP, ACE_TCHAR[4]);
+
+    ACE_NEW_NORETURN(IP, ACE_Byte[4]);
     IP[0] = ipStr.c_str()[0] & 0xFF;
     IP[1] = ipStr.c_str()[1] & 0xFF;
     IP[2] = ipStr.c_str()[2] & 0xFF;

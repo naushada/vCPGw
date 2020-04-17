@@ -33,14 +33,6 @@ ACE_UINT32 CPGatewayState::processRequest(CPGateway &parent,
 
   ACE_DEBUG((LM_DEBUG, "CPGatewayState::processRequest len %u\n", inLen));
 
-  for(int idx = 0; idx < inLen; idx++)
-  {
-    if(!(idx%16))
-      ACE_DEBUG((LM_DEBUG, "\n"));
-
-    ACE_DEBUG((LM_DEBUG, "%0.2X ", in[idx] & 0xFF));
-  }
-
   TransportIF::ETH *ethHdr = (TransportIF::ETH *)in;
 
   if(TransportIF::ETH_P_IP == ntohs(ethHdr->proto))
