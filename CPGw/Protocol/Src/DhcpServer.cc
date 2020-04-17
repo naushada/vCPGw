@@ -17,7 +17,7 @@ DHCP::Server::Server(DhcpServerUser *parent, ACE_CString mac,
   setMacAddress(mac);
   hostName(hName);
   domainName(dName);
-  lease(0);
+  lease(5);
   ipAddr(0);
   setMyIP(ip);
   m_mb = NULL;

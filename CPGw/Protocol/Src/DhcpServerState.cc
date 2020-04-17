@@ -183,7 +183,6 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
   ACE_OS::memcpy((void *)eth->dest, (const void *)&in[TransportIF::ETH_ALEN], TransportIF::ETH_ALEN);
 
   eth->proto = htons(TransportIF::ETH_P_IP);
-  mb->wr_ptr(sizeof(TransportIF::ETH));
 
   /*Populating IP Header.*/
   ip->len = 0x5;
@@ -235,6 +234,9 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
                  (size_t)parent.ctx().chaddrLen());
 
   /*Fill DHCP Server Host Name.*/
+  ACE_OS::memcpy((void *)dhcp->sname,
+                 (const void *)parent.hostName().c_str(),
+                 (size_t)parent.hostName().length());
 
   /*Filling up the dhcp option.*/
   offset = sizeof(TransportIF::ETH) + sizeof(TransportIF::IP) +
@@ -328,13 +330,13 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
         rsp[offset++] = RFC2131::OPTION_MTU;
         rsp[offset++] = 2;
           /*Host Machine Name to be updated.*/;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
-        offset += 4;
+        *((ACE_UINT16 *)&rsp[offset]) = htonl(1500);
+        offset += 2;
         break;
 
       case RFC2131::OPTION_BROADCAST_ADDRESS:
         rsp[offset++] = RFC2131::OPTION_BROADCAST_ADDRESS;
-        rsp[offset++] = 0;
+        rsp[offset++] = 4;
           /*Host Machine Name to be updated.*/;
         *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
         offset += 4;
@@ -342,7 +344,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
       case RFC2131::OPTION_NIS_DOMAIN:
         rsp[offset++] = RFC2131::OPTION_NIS_DOMAIN;
-        rsp[offset++] = 0;
+        rsp[offset++] = 4;
           /*Host Machine Name to be updated.*/;
         *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
         offset += 4;
@@ -350,7 +352,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
       case RFC2131::OPTION_NIS:
         rsp[offset++] = RFC2131::OPTION_NIS;
-        rsp[offset++] = 0;
+        rsp[offset++] = 4;
           /*Host Machine Name to be updated.*/;
         *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
         offset += 4;
@@ -358,7 +360,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
       case RFC2131::OPTION_NTP_SERVER:
         rsp[offset++] = RFC2131::OPTION_NTP_SERVER;
-        rsp[offset++] = 0;
+        rsp[offset++] = 4;
           /*Host Machine Name to be updated.*/;
         *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
         offset += 4;
@@ -366,7 +368,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
       case RFC2131::OPTION_REQUESTED_IP_ADDRESS:
         rsp[offset++] = RFC2131::OPTION_REQUESTED_IP_ADDRESS;
-        rsp[offset++] = 0;
+        rsp[offset++] = 4;
           /*Host Machine Name to be updated.*/;
         *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
         offset += 4;
@@ -374,15 +376,15 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
       case RFC2131::OPTION_IP_LEASE_TIME:
         rsp[offset++] = RFC2131::OPTION_IP_LEASE_TIME;
-        rsp[offset++] = 0;
+        rsp[offset++] = 4;
           /*Host Machine Name to be updated.*/;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
+        *((ACE_UINT32 *)&rsp[offset]) = htonl(parent.lease());
         offset += 4;
         break;
 
       case RFC2131::OPTION_OVERLOAD:
         rsp[offset++] = RFC2131::OPTION_OVERLOAD;
-        rsp[offset++] = 0;
+        rsp[offset++] = 4;
           /*Host Machine Name to be updated.*/;
         *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
         offset += 4;
@@ -390,9 +392,9 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
       case RFC2131::OPTION_SERVER_IDENTIFIER:
         rsp[offset++] = RFC2131::OPTION_SERVER_IDENTIFIER;
-        rsp[offset++] = 0;
+        rsp[offset++] = 4;
           /*Host Machine Name to be updated.*/;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
+        *((ACE_UINT32 *)&rsp[offset]) = htonl(parent.ipAddr());
         offset += 4;
         break;
 
@@ -409,13 +411,13 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
   rsp[offset++] = RFC2131::OPTION_MTU;
   rsp[offset++] = 2;
-  *((ACE_UINT16 *)&rsp[offset]) = htons(0x00);
+  *((ACE_UINT16 *)&rsp[offset]) = htons(1500);
   offset += 2;
 
   rsp[offset++] = RFC2131::OPTION_SERVER_IDENTIFIER;
-  rsp[offset++] = parent.getMacAddress().length();
-  ACE_OS::memcpy((void *)&rsp[offset], parent.getMacAddress().c_str(),
-                 parent.getMacAddress().length());
+  rsp[offset++] = 4;
+  *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
+  offset += 4;
 
   rsp[offset++] = RFC2131::OPTION_END;
 
@@ -425,7 +427,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
   /*calculate the checksum now.*/
   ip->chksum = chksumIP(ip, (sizeof(ACE_UINT32) * ip->len));
-  udp->chksum = chksumUDP(ip);
+  //udp->chksum = chksumUDP(ip);
   /*Update the length*/
   mb->wr_ptr(offset);
 

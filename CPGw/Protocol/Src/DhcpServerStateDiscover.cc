@@ -87,7 +87,7 @@ ACE_UINT32 DhcpServerStateDiscover::discover(DHCP::Server &parent, ACE_Byte *inP
   /*Prelare DHCP Offer Message .*/
   ACE_Message_Block &mb = buildResponse(parent, inPtr, inLen);
 
-  ACE_CString cha((const char *)parent.ctx().chaddr());
+  ACE_CString cha((const char *)parent.ctx().chaddr(), parent.ctx().chaddrLen());
   parent.getDhcpServerUser().sendResponse(cha, (ACE_Byte *)mb.rd_ptr(), mb.length());
 
   /*Move to next state to process DHCP Request.*/
