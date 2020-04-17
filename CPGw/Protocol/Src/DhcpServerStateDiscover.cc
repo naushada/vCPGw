@@ -59,7 +59,7 @@ ACE_UINT32 DhcpServerStateDiscover::request(DHCP::Server &parent, ACE_Byte *in, 
   /*Prepare Request ACK.*/
   ACE_Message_Block &mb = buildResponse(parent, in, inLen);
 
-  ACE_CString cha((const char *)parent.ctx().chaddr());
+  ACE_CString cha((const char *)parent.ctx().chaddr(), parent.ctx().chaddrLen());
   parent.getDhcpServerUser().sendResponse(cha, (ACE_Byte *)mb.rd_ptr(), mb.length());
 
   /*start the leaseTimer again by kicking the state machine.*/

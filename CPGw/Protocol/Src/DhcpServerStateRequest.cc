@@ -79,7 +79,7 @@ ACE_UINT32 DhcpServerStateRequest::request(DHCP::Server &parent, ACE_Byte *in, A
   /*Prepare Request ACK.*/
   ACE_Message_Block &mb = buildResponse(parent, in, inLen);
 
-  ACE_CString cha((const char *)parent.ctx().chaddr());
+  ACE_CString cha((const char *)parent.ctx().chaddr(), parent.ctx().chaddrLen());
   parent.getDhcpServerUser().sendResponse(cha, (ACE_Byte *)mb.rd_ptr(), mb.length());
 
   /*Move to next State.*/
