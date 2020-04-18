@@ -53,6 +53,17 @@ ACE_UINT32 DhcpServerStateDiscover::offer(DHCP::Server &parent, ACE_Byte *inPtr,
   return(0);
 }
 
+/*
+ * @brief This member function processes DHCP Request in this state.
+ *        DHCP Request can come in this state if DHCP server is crahsed
+ *        or DHCP client supports fast commit and execute/exchange just two
+ *        messages REQUEST/ACK..
+ * @param Reference to dhcp server instance.
+ * @param received byte buffer.
+ * @param length of received byte buffer.
+ *
+ * @return 0.
+ * */
 ACE_UINT32 DhcpServerStateDiscover::request(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerStateDiscover::request\n");
@@ -62,6 +73,7 @@ ACE_UINT32 DhcpServerStateDiscover::request(DHCP::Server &parent, ACE_Byte *in, 
   ACE_CString cha((const char *)parent.ctx().chaddr(), parent.ctx().chaddrLen());
   parent.getDhcpServerUser().sendResponse(cha, (ACE_Byte *)mb.rd_ptr(), mb.length());
 
+  delete &mb;
   /*start the leaseTimer again by kicking the state machine.*/
   parent.setState(DhcpServerStateLeaseExpire::instance());
 
@@ -80,6 +92,15 @@ ACE_UINT32 DhcpServerStateDiscover::leaseTO(DHCP::Server &parent, ACE_Byte *inPt
   return(0);
 }
 
+/*
+ * @brief This member function processes DHCP Discover request in this state.
+ *
+ * @param Reference to dhcp server instance.
+ * @param received byte buffer.
+ * @param length of received byte buffer.
+ *
+ * @return 0.
+ * */
 ACE_UINT32 DhcpServerStateDiscover::discover(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerStateDiscover::discover\n");
@@ -90,6 +111,7 @@ ACE_UINT32 DhcpServerStateDiscover::discover(DHCP::Server &parent, ACE_Byte *inP
   ACE_CString cha((const char *)parent.ctx().chaddr(), parent.ctx().chaddrLen());
   parent.getDhcpServerUser().sendResponse(cha, (ACE_Byte *)mb.rd_ptr(), mb.length());
 
+  delete &mb;
   /*Move to next state to process DHCP Request.*/
   parent.setState(DhcpServerStateRequest::instance());
   return(0);

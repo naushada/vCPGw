@@ -177,9 +177,9 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
  * @param  argument which was passed while starting the timer.
  * @return 0 for success else for failure.
  */
-ACE_INT32 DhcpServerUser::handle_timeout(ACE_Time_Value &tv, const void *arg)
+ACE_HANDLE DhcpServerUser::handle_timeout(ACE_Time_Value &tv, const void *arg)
 {
-  ACE_TRACE(("DhcpServerUser::handle_timeout\n"));
+  ACE_DEBUG((LM_DEBUG,"DhcpServerUser::handle_timeout\n"));
   process_timeout(arg);
   return(0);
 }
@@ -195,9 +195,12 @@ long DhcpServerUser::start_timer(ACE_UINT32 to,
                                  const void *act,
                                  ACE_Time_Value interval)
 {
-  ACE_TRACE(("DhcpServerUser::start_timer\n"));
+  ACE_DEBUG((LM_DEBUG, "DhcpServerUser::start_timer\n"));
   ACE_Time_Value delay(to);
   long tid = 0;
+
+  ACE_Reactor::instance()->register_handler(this,
+                                            ACE_Event_Handler::TIMER_MASK);
 
   tid = ACE_Reactor::instance()->schedule_timer(this,
                                                 act,

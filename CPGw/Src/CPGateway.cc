@@ -104,6 +104,7 @@ int CPGateway::sendResponse(ACE_CString chaddr, ACE_Byte *in, ACE_UINT32 inLen)
 int CPGateway::handle_input(ACE_HANDLE fd)
 {
   ACE_TRACE("CPGateway::handle_input\n");
+
   struct sockaddr_ll sa;
   int addr_len = sizeof(sa);
   ACE_INT32 len = -1;
@@ -122,6 +123,7 @@ int CPGateway::handle_input(ACE_HANDLE fd)
   m_mb->wr_ptr(len);
 
   char *dd = m_mb->rd_ptr();
+#if 0
   for(int idx = 0; idx < len; idx++)
   {
     if(!(idx%16))
@@ -131,9 +133,13 @@ int CPGateway::handle_input(ACE_HANDLE fd)
   }
 
   ACE_DEBUG((LM_DEBUG, "%I CPGateway length %u\n", len));
+#endif
+
   /*Check wheather CPGateway is administrative locked/error state.*/
   getState().processRequest(*this, (ACE_Byte *)m_mb->rd_ptr(), m_mb->length());
 
+  /*re-claim the allocated Memory now.*/
+  delete m_mb;
   return(0);
 }
 

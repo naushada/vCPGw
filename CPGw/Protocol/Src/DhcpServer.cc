@@ -11,7 +11,8 @@
 #include "DhcpServerStateDiscover.h"
 
 DHCP::Server::Server(DhcpServerUser *parent, ACE_CString mac,
-                     ACE_CString ip, ACE_CString hName, ACE_CString dName)
+                     ACE_CString ip, ACE_CString hName,
+                     ACE_CString dName)
 {
   setDhcpServerUser(parent);
   setMacAddress(mac);
@@ -26,7 +27,8 @@ DHCP::Server::Server(DhcpServerUser *parent, ACE_CString mac,
   m_optionMap.unbind_all();
 
   /*context of DHCP Client's dhcp-header.*/
-  m_ctx = new RFC2131::DhcpCtx();
+  ACE_NEW_NORETURN(m_ctx, RFC2131::DhcpCtx());
+
   /*The start state is Discover.*/
   setState(DhcpServerStateDiscover::instance());
 }
@@ -35,7 +37,7 @@ DHCP::Server::Server(DhcpServerUser *parent, ACE_CString mac,
 DHCP::Server::Server()
 {
   /*context of DHCP Client's dhcp-header.*/
-  m_ctx = new RFC2131::DhcpCtx();
+  ACE_NEW_NORETURN(m_ctx, RFC2131::DhcpCtx());
 
   /*The start state is Discover.*/
   setState(DhcpServerStateDiscover::instance());
@@ -76,16 +78,6 @@ DhcpServerState &DHCP::Server::getState(void)
 {
   ACE_TRACE("DHCP::Server::getState\n");
   return(*m_state);
-}
-
-void DHCP::Server::xid(ACE_UINT32 xid)
-{
-  m_ctx->xid(xid);
-}
-
-ACE_UINT32 DHCP::Server::xid(void)
-{
-  return(m_ctx->xid());
 }
 
 RFC2131::DhcpCtx &DHCP::Server::ctx(void)

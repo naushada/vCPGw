@@ -72,8 +72,6 @@ namespace DHCP
     ACE_CString &sname(void);
     void sname(ACE_CString &sname);
 
-    void xid(ACE_UINT32 xid);
-    ACE_UINT32 xid(void);
     RFC2131::DhcpCtx &ctx(void);
     ElemDef &optionMap(void);
 
