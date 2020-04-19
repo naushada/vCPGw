@@ -17,7 +17,7 @@ RFC2131::DhcpCtx::DhcpCtx()
 
 RFC2131::DhcpCtx::~DhcpCtx()
 {
-  ACE_DEBUG((LM_INFO, "RFC2131::DhcpCtx::~DhcpCtx\n"));
+  ACE_DEBUG((LM_INFO, ACE_TEXT("%D %M %N:%l RFC2131::DhcpCtx::~DhcpCtx\n")));
 }
 
 ACE_UINT32 RFC2131::DhcpCtx::xid(void)
@@ -88,13 +88,12 @@ void RFC2131::DhcpCtx::getChaddr(ACE_Byte *mac)
 void RFC2131::DhcpCtx::chaddr(ACE_Byte *caddr)
 {
   ACE_OS::memcpy((void *)m_chaddr, (const void *)caddr, chaddrLen());
-  ACE_DEBUG((LM_DEBUG, "\nNN::\n"));
-  ACE_DEBUG((LM_DEBUG, "%X:", m_chaddr[0]));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l From chaddr %X:"), m_chaddr[0]));
   ACE_DEBUG((LM_DEBUG, "%X:", m_chaddr[1]));
   ACE_DEBUG((LM_DEBUG, "%X:", m_chaddr[2]));
   ACE_DEBUG((LM_DEBUG, "%X:", m_chaddr[3]));
   ACE_DEBUG((LM_DEBUG, "%X:", m_chaddr[4]));
-  ACE_DEBUG((LM_DEBUG, "%X\n", m_chaddr[5]));
+  ACE_DEBUG((LM_DEBUG, "%X ", m_chaddr[5]));
   ACE_DEBUG((LM_DEBUG, "len %u\n", chaddrLen()));
 }
 
