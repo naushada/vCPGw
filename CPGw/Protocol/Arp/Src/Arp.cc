@@ -47,7 +47,7 @@ ACE_UINT32 ARP::CPGwArp::processRequest(CPGateway &parent, ACE_Byte *in, ACE_UIN
     {
       mb = buildResponse(parent, in, inLen);
       parent.sendResponse(getMac(), (ACE_Byte *)mb->rd_ptr(), mb->length());
-      ACE_DEBUG((LM_DEBUG, "ARP Response of length %u sent\n", mb->length()));
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l ARP Response of length %u sent\n"), mb->length()));
       mb->release();
       return(0);
     }

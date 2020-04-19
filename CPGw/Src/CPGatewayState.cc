@@ -31,7 +31,7 @@ ACE_UINT32 CPGatewayState::processRequest(CPGateway &parent,
 {
   ACE_TRACE("CPGatewayState::processRequest\n");
 
-  //ACE_DEBUG((LM_DEBUG, "CPGatewayState::processRequest len %u\n", inLen));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CPGatewayState::processRequest len %u\n"), inLen));
 
   TransportIF::ETH *ethHdr = (TransportIF::ETH *)in;
 
@@ -69,7 +69,7 @@ ACE_UINT32 CPGatewayState::processRequest(CPGateway &parent,
       /*Remember peerIP and peerMAC now.*/
       parent.getDhcpServerUser().addSession(parent.getArpUser().peerIp(),
                                             parent.getArpUser().peerMac());
-      ACE_DEBUG((LM_DEBUG, "peerIp and peerMac are Updated in DhcpServer\n"));
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l peerIp and peerMac are Updated in DhcpServer\n")));
     }
 
   }

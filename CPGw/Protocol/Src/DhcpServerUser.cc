@@ -51,12 +51,12 @@ ACE_UINT8 DhcpServerUser::isSubscriberFound(ACE_CString macAddress)
 {
   if(m_instMap.find(macAddress) == -1)
   {
-    ACE_DEBUG((LM_ERROR, "This client %X:",  macAddress.c_str()[0] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "%X:",  macAddress.c_str()[1] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "%X:",  macAddress.c_str()[2] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "%X:",  macAddress.c_str()[3] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "%X:",  macAddress.c_str()[4] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "%X not found\n", macAddress.c_str()[5] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l This client %X:"),  macAddress.c_str()[0] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:",  macAddress.c_str()[1] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:",  macAddress.c_str()[2] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:",  macAddress.c_str()[3] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:",  macAddress.c_str()[4] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X not found\n", macAddress.c_str()[5] & 0xFF));
     return(0);
   }
 
@@ -87,7 +87,12 @@ DHCP::Server *DhcpServerUser::getSubscriber(ACE_CString macAddress)
   DHCP::Server *sess = NULL;
   if(m_instMap.find(macAddress, sess) == -1)
   {
-    ACE_DEBUG((LM_ERROR, "No session for client %s is found\n", macAddress.c_str()));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l No session for client %X:"), macAddress.c_str()[0] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:",  macAddress.c_str()[1] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:",  macAddress.c_str()[2] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:",  macAddress.c_str()[3] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:",  macAddress.c_str()[4] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X\n", macAddress.c_str()[5] & 0xFF));
   }
 
   return(sess);
@@ -98,12 +103,12 @@ ACE_UINT8 DhcpServerUser::deleteSubscriber(ACE_CString cha)
   DHCP::Server *sess = NULL;
   if(m_instMap.find(cha, sess) != -1)
   {
-    ACE_DEBUG((LM_ERROR, "subscriber is found for client %X:", cha.c_str()[0] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "%X:", cha.c_str()[1] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "%X:", cha.c_str()[2] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "%X:", cha.c_str()[3] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "%X:", cha.c_str()[4] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "%X\n",cha.c_str()[5] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l subscriber is found for client %X:"), cha.c_str()[0] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:", cha.c_str()[1] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:", cha.c_str()[2] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:", cha.c_str()[3] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X:", cha.c_str()[4] & 0xFF));
+    ACE_DEBUG((LM_DEBUG, "%X\n",cha.c_str()[5] & 0xFF));
     m_instMap.unbind(cha);
     return(1);
   }
@@ -124,7 +129,7 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
 
    ACE_CString haddr((const char *)dhcpHdr->chaddr, TransportIF::ETH_ALEN);
 
-   ACE_DEBUG((LM_DEBUG, "DhcpServerUser::processRequest\n"));
+   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l DhcpServerUser::processRequest for ")));
    ACE_DEBUG((LM_DEBUG, "chaddr %X:",  haddr.c_str()[0] & 0xFF));
    ACE_DEBUG((LM_DEBUG, "%X:",  haddr.c_str()[1] & 0xFF));
    ACE_DEBUG((LM_DEBUG, "%X:",  haddr.c_str()[2] & 0xFF));
@@ -136,7 +141,7 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
 
    if(isSubscriberFound(haddr))
    {
-     ACE_DEBUG((LM_INFO, "%I subscriber is found\n"));
+     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l subscriber is found\n")));
      sess = getSubscriber(haddr);
      sess->getState().rx(*sess, in, inLen);
    }
@@ -166,7 +171,7 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
      {
        /*IP address is not allocated yet.*/
        addResolver(hName, ip);
-       ACE_DEBUG((LM_INFO, "%I IP Address is not Allocated YET for host %s\n",
+       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP Address is not Allocated YET for host %s\n"),
                   hName.c_str()));
      }
      else
@@ -178,7 +183,7 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
        ACE_CString hName((const char *)val, len);
        sess->ipAddr(ip);
        updateResolver(hName, ip);
-       ACE_DEBUG((LM_INFO, "%I IP Address %s for host %s\n",
+       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP Address %s for host %s\n"),
                   ip.c_str(), hName.c_str()));
      }
    }
@@ -195,7 +200,7 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
  */
 ACE_HANDLE DhcpServerUser::handle_timeout(const ACE_Time_Value &tv, const void *arg)
 {
-  ACE_DEBUG((LM_DEBUG,"DhcpServerUser::handle_timeout\n"));
+  ACE_DEBUG((LM_DEBUG,ACE_TEXT("%D %M %N:%l DhcpServerUser::handle_timeout\n")));
   process_timeout(arg);
   return(0);
 }
@@ -211,7 +216,7 @@ long DhcpServerUser::start_timer(ACE_UINT32 to,
                                  const void *act,
                                  ACE_Time_Value interval)
 {
-  ACE_DEBUG((LM_DEBUG, "DhcpServerUser::start_timer\n"));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l DhcpServerUser::start_timer\n")));
   ACE_Time_Value delay(to,0);
   long tid = 0;
 
@@ -240,18 +245,19 @@ void DhcpServerUser::reset_timer(long tId, ACE_UINT32 timeOutInSec)
 
 ACE_INT32 DhcpServerUser::process_timeout(const void *act)
 {
-  ACE_DEBUG((LM_DEBUG, "DhcpServerUser::process_timeout\n"));
   TIMER_ID *timerId = (TIMER_ID *)act;
-
   DHCP::Server *sess = NULL;
+
   ACE_CString cha((const char *)timerId->chaddr(), timerId->chaddrLen());
+
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l DhcpServerUser::process_timeout\n")));
 
   if(isSubscriberFound(cha) && (sess = getSubscriber(cha)))
   {
     switch(timerId->timerType())
     {
     case DHCP::PURGE_TIMER_MSG_ID:
-      ACE_DEBUG((LM_DEBUG, "PURGE_TIMER_MSG_ID is expired tid %d\n", timerId->tid()));
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l PURGE_TIMER_MSG_ID is expired tid %d\n"), timerId->tid()));
       /*Kick the state machine.*/
       sess->getState().guardTimerExpiry(*sess, (const void *)act);
       deleteSubscriber(cha);
@@ -266,7 +272,7 @@ ACE_INT32 DhcpServerUser::process_timeout(const void *act)
       break;
 
     case DHCP::LEASE_TIMER_MSG_ID:
-      ACE_DEBUG((LM_DEBUG, "LEASE_TIMER_MSG_ID is expired\n"));
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l LEASE_TIMER_MSG_ID is expired tid %d\n"), timerId->tid()));
       /*Kick the state machine.*/
       sess->getState().leaseTimerExpiry(*sess, (const void *)act);
       deleteSubscriber(cha);
@@ -301,7 +307,7 @@ void DhcpServerUser::addSession(ACE_UINT32 ipAddr, ACE_CString macAddr)
   if(m_sessMap.find(ipAddr) == -1)
   {
     /*Not Found in thme map.*/
-    ACE_DEBUG((LM_DEBUG, "IP %u not found in the m_sessMap\n", ipAddr));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP %u not found in the m_sessMap\n"), ipAddr));
     m_sessMap.bind(ipAddr, macAddr);
   }
 }
@@ -313,7 +319,7 @@ void DhcpServerUser::deleteSession(ACE_UINT32 ipAddr)
   {
     /*Session is removed now.*/
     m_sessMap.unbind(ipAddr);
-    ACE_DEBUG((LM_DEBUG, "session for IP %u is removed\n", ipAddr));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l session for IP %u is removed\n"), ipAddr));
   }
 }
 
@@ -324,7 +330,7 @@ void DhcpServerUser::addResolver(ACE_CString hName, ACE_CString ip)
   {
     /*Not Found. Add into it.*/
     m_name2IPMap.bind(hName, ip);
-    ACE_DEBUG((LM_DEBUG, "IP %u hName %s not found in the m_name2IPMap\n", 
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP %u hName %s not found in the m_name2IPMap\n"),
                ip.c_str(), hName.c_str()));
   }
 }
@@ -335,7 +341,7 @@ void DhcpServerUser::deleteResolver(ACE_CString hName)
   if(m_name2IPMap.find(hName, ipStr) != -1)
   {
     m_name2IPMap.unbind(hName);
-    ACE_DEBUG((LM_DEBUG, "Resolver hostName %s IP %u are removed\n",
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Resolver hostName %s IP %u are removed\n"),
                hName.c_str(), ipStr.c_str()));
   }
 }
@@ -349,7 +355,7 @@ void DhcpServerUser::updateResolver(ACE_CString hName, ACE_CString ip)
     /*rebind - newValue, newValue, oldValue, oldValue.*/
     if(m_name2IPMap.rebind(hName, ip, hName, ipStr) == -1)
     {
-      ACE_DEBUG((LM_DEBUG, "old IP %s old hName %s new IP %s new hName failed to update in m_name2IPMap\n", 
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l old IP %s old hName %s new IP %s new hName failed to update in m_name2IPMap\n"), 
                ipStr.c_str(), hName.c_str(), ip.c_str(), hName.c_str()));
     }
   }
@@ -362,7 +368,7 @@ ACE_Byte *DhcpServerUser::getResolverIP(ACE_CString &hName)
 
   if(m_name2IPMap.find(hName, ipStr) != -1)
   {
-    ACE_DEBUG((LM_DEBUG, "The hName %s IP Address %s\n", hName.c_str(),
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The hName %s IP Address %s\n"), hName.c_str(),
                ipStr.c_str()));
 
     ACE_NEW_NORETURN(IP, ACE_Byte[4]);

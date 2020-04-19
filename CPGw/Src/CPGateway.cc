@@ -174,23 +174,16 @@ ACE_INT32 CPGateway::get_index(void)
 
     m_macAddress.set(ifr.ifr_addr.sa_data, TransportIF::ETH_ALEN, 1);
 
-    ACE_DEBUG((LM_ERROR, "sa_data[0] 0x%X ", ifr.ifr_addr.sa_data[0] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "sa_data[1] 0x%X ", ifr.ifr_addr.sa_data[1] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "sa_data[2] 0x%X ", ifr.ifr_addr.sa_data[2] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "sa_data[3] 0x%X ", ifr.ifr_addr.sa_data[3] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "sa_data[4] 0x%X ", ifr.ifr_addr.sa_data[4] & 0xFF));
-    ACE_DEBUG((LM_ERROR, "sa_data[5] 0x%X\n",ifr.ifr_addr.sa_data[5] & 0xFF));
-
-    ACE_DEBUG((LM_DEBUG, "The MAC[0] 0x%0.2X ", m_macAddress.c_str()[0] & 0xFF));
-    ACE_DEBUG((LM_DEBUG, "The MAC[1] 0x%0.2X ", m_macAddress.c_str()[1] & 0xFF));
-    ACE_DEBUG((LM_DEBUG, "The MAC[2] 0x%0.2X ", m_macAddress.c_str()[2] & 0xFF));
-    ACE_DEBUG((LM_DEBUG, "The MAC[3] 0x%0.2X ", m_macAddress.c_str()[3] & 0xFF));
-    ACE_DEBUG((LM_DEBUG, "The MAC[4] 0x%0.2X ", m_macAddress.c_str()[4] & 0xFF));
-    ACE_DEBUG((LM_DEBUG, "The MAC[5] 0x%0.2X\n", m_macAddress.c_str()[5] & 0xFF));
+    ACE_DEBUG((LM_ERROR, ACE_TEXT("%D %M %N:%l chaddr %X:"), ifr.ifr_addr.sa_data[0] & 0xFF));
+    ACE_DEBUG((LM_ERROR, "%X:", ifr.ifr_addr.sa_data[1] & 0xFF));
+    ACE_DEBUG((LM_ERROR, "%X:", ifr.ifr_addr.sa_data[2] & 0xFF));
+    ACE_DEBUG((LM_ERROR, "%X:", ifr.ifr_addr.sa_data[3] & 0xFF));
+    ACE_DEBUG((LM_ERROR, "%X:", ifr.ifr_addr.sa_data[4] & 0xFF));
+    ACE_DEBUG((LM_ERROR, "%X\n",ifr.ifr_addr.sa_data[5] & 0xFF));
 
     if(ACE_OS::ioctl(handle, SIOCGIFINDEX, &ifr) < 0)
     {
-      ACE_ERROR((LM_ERROR, "%IRetrieval of ethernet Index failed for handle %d", handle));
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Retrieval of ethernet Index failed for handle %d\n"), handle));
       ACE_OS::close(handle);
       break;
     }
@@ -218,7 +211,7 @@ ACE_INT32 CPGateway::open(void)
 
     if(handle < 0)
     {
-      ACE_ERROR((LM_ERROR, "%ICreation of handle for RAW Socket Failed\n"));
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Creation of handle for RAW Socket Failed\n")));
       break;
     }
 
@@ -229,7 +222,7 @@ ACE_INT32 CPGateway::open(void)
 
     if(ACE_OS::ioctl(handle, SIOCGIFFLAGS, &ifr) < 0)
     {
-      ACE_ERROR((LM_ERROR, "%IRetrieval of IFFLAG failed for handle %d intfName %s\n", handle, ifr.ifr_name));
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Retrieval of IFFLAG failed for handle %d intfName %s\n"), handle, ifr.ifr_name));
       ACE_OS::close(handle);
       break;
     }
@@ -238,7 +231,7 @@ ACE_INT32 CPGateway::open(void)
 
     if(ACE_OS::ioctl(handle, SIOCSIFFLAGS, &ifr) < 0)
     {
-      ACE_ERROR((LM_ERROR, "%ISeting of PROMISC and NOARP failed for handle %d\n", handle));
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Seting of PROMISC and NOARP failed for handle %d\n"), handle));
       ACE_OS::close(handle);
       break;
     }
@@ -249,7 +242,7 @@ ACE_INT32 CPGateway::open(void)
 
     if(ACE_OS::setsockopt(handle, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (const char *)&mr, sizeof(mr)) < 0)
     {
-      ACE_ERROR((LM_ERROR, "%IAdding membership failed for handle %d\n", handle));
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Adding membership failed for handle %d\n"), handle));
       ACE_OS::close(handle);
       break;
     }
@@ -261,7 +254,7 @@ ACE_INT32 CPGateway::open(void)
 
     if(ACE_OS::bind(handle, (struct sockaddr *)&sa, sizeof(sa)) < 0)
     {
-      ACE_ERROR((LM_ERROR, "%Ibind failed for handle %d\n", handle));
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l bind failed for handle %d\n"), handle));
       ACE_OS::close(handle);
       break;
     }
@@ -299,11 +292,11 @@ CPGateway::CPGateway(ACE_CString intfName, ACE_CString ip,
   ethIntfName(intfName);
   ipAddr(ip);
 
-  ACE_DEBUG((LM_DEBUG, "IP %s len %u\n", ipAddr().c_str(), ipAddr().length()));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP %s len %u\n"), ipAddr().c_str(), ipAddr().length()));
 
   if(open() < 0)
   {
-    ACE_ERROR((LM_ERROR, "%Iopen for ethernet Interface %s failed\n", intfName.c_str()));
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l open for ethernet Interface %s failed\n"), intfName.c_str()));
   }
 
   struct in_addr adr;
@@ -329,7 +322,7 @@ CPGateway::CPGateway(ACE_CString intfName, ACE_CString ip,
   domainName(dName);
 
 
-  ACE_DEBUG((LM_DEBUG, "IP Addr 0x%X\n", adr.s_addr));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP Addr 0x%X\n"), adr.s_addr));
   /*Instantiating DNS instance.*/
   ACE_NEW_NORETURN(m_dnsUser, DNS::CPGwDns(this, getMacAddress(), hostName(),
                                            domainName(), adr.s_addr));
@@ -346,7 +339,7 @@ CPGateway::CPGateway(ACE_CString intfName)
 
   if(open() < 0)
   {
-    ACE_ERROR((LM_ERROR, "%Iopen for ethernet Interface %s failed\n", intfName.c_str()));
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l open for ethernet Interface %s failed\n"), intfName.c_str()));
   }
 
   /*Make CPGateway state machine Activated State.*/
@@ -371,7 +364,7 @@ void CPGateway::ethIntfName(ACE_CString eth)
 
 ACE_CString &CPGateway::getMacAddress(void)
 {
-  ACE_DEBUG((LM_DEBUG, "MAC- %X:", m_macAddress.c_str()[0] & 0xFF));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l MAC- %X:"), m_macAddress.c_str()[0] & 0xFF));
   ACE_DEBUG((LM_DEBUG, "%X:", m_macAddress.c_str()[1] & 0xFF));
   ACE_DEBUG((LM_DEBUG, "%X:", m_macAddress.c_str()[2] & 0xFF));
   ACE_DEBUG((LM_DEBUG, "%X:", m_macAddress.c_str()[3] & 0xFF));
@@ -387,7 +380,7 @@ ACE_CString &CPGateway::ipAddr(void)
 
 ACE_CString &CPGateway::hostName(void)
 {
-  ACE_DEBUG((LM_DEBUG, "The Host Name is %s\n", m_hostName.c_str()));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The Host Name is %s\n"), m_hostName.c_str()));
   return(m_hostName);
 }
 
@@ -450,7 +443,7 @@ int main(int argc, char *argv[])
 
   if(!cp->start())
   {
-    ACE_ERROR((LM_ERROR, "%I CPGateway instantiation failed\n"));
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l CPGateway instantiation failed\n")));
     delete cp;
     return(-1);
   }

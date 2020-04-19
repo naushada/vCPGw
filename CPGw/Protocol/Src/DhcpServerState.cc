@@ -354,7 +354,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
   if(parent.optionMap().find(tag, elm) != -1)
   {
     ACE_UINT32 idx = 0;
-    ACE_DEBUG((LM_DEBUG, "%I length of DHCP Param List is %u\n", elm->m_len));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l length of DHCP Param List is %u\n"), elm->m_len));
 
     for(idx = 0; idx < elm->m_len; idx++)
     {
@@ -641,7 +641,7 @@ ACE_UINT32 DhcpServerState::rx(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 in
     ACE_Byte len = 0;
     len = elm->getValue(val);
     msgType =(ACE_UINT8)val[0];
-    ACE_DEBUG((LM_DEBUG, "messageType tag(%u) is found\n", msgType));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l messageType tag(%u) is found\n"), msgType));
   }
 
   switch(msgType)
@@ -667,7 +667,7 @@ ACE_UINT32 DhcpServerState::rx(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 in
       parent.getState().nack(parent, in, inLen);
       break;
     default:
-      ACE_ERROR((LM_ERROR, "%I the DHCP opcode %u is not supported\n", msgType));
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l DHCP opcode %u is not supported\n"), msgType));
       break;
   }
 

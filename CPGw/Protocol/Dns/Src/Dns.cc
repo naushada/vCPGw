@@ -367,7 +367,7 @@ void DNS::CPGwDns::getDomainNameFromQuery(std::vector<ACE_CString *> domainName)
                            qData[0]->value(),
                            qData[1]->value());
 
-    ACE_DEBUG((LM_DEBUG, "The domain Name is %s\n", dName));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The domain Name is %s\n"), dName));
 
     ACE_CString *dd = NULL;
     ACE_NEW_NORETURN(dd, ACE_CString((const ACE_TCHAR *)dName, len));
@@ -399,7 +399,7 @@ void DNS::CPGwDns::getHostNameFromQuery(std::vector<ACE_CString *> hostName)
     /*get rid of last dot. */
     hName[hostLen-1] = 0;
 
-    ACE_DEBUG((LM_DEBUG, "The hostName is %s\n", hName));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The hostName is %s\n"), hName));
 
     ACE_CString *dd = NULL;
     ACE_NEW_NORETURN(dd, ACE_CString(hName, hostLen));

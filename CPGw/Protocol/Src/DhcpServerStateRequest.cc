@@ -112,7 +112,7 @@ ACE_UINT32 DhcpServerStateRequest::release(DHCP::Server &parent,ACE_Byte *in, AC
 /*Guard Timer is stared if next request is expected to complete the Flow.*/
 ACE_UINT32 DhcpServerStateRequest::guardTimerExpiry(DHCP::Server &parent, const void *act)
 {
-  ACE_DEBUG((LM_DEBUG, "DhcpServerStateRequest::guardTimerExpiry\n"));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l DhcpServerStateRequest::guardTimerExpiry\n")));
   return(0);
 }
 
