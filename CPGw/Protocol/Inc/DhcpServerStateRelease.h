@@ -11,6 +11,7 @@ private:
 public:
   virtual ~DhcpServerStateRelease();
   static DhcpServerStateRelease *instance();
+  static DhcpServerStateRelease *get_instance(void);
   void onEntry(DHCP::Server &parent);
   void onExit(DHCP::Server &parent);
   ACE_UINT32 offer(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 inLen);

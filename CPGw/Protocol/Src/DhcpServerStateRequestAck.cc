@@ -4,7 +4,7 @@
 #include "DhcpServerStateRequestAck.h"
 #include "ace/Log_Msg.h"
 
-DhcpServerStateRequestAck *DhcpServerStateRequestAck::m_instance = NULL;
+DhcpServerStateRequestAck *DhcpServerStateRequestAck::m_instance = nullptr;
 
 DhcpServerStateRequestAck *DhcpServerStateRequestAck::instance()
 {
@@ -14,6 +14,11 @@ DhcpServerStateRequestAck *DhcpServerStateRequestAck::instance()
     ACE_NEW_NORETURN(m_instance, DhcpServerStateRequestAck());
   }
 
+  return(m_instance);
+}
+
+DhcpServerStateRequestAck *DhcpServerStateRequestAck::get_instance(void)
+{
   return(m_instance);
 }
 

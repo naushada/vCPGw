@@ -17,7 +17,7 @@ RFC2131::DhcpCtx::DhcpCtx()
 
 RFC2131::DhcpCtx::~DhcpCtx()
 {
-  ACE_DEBUG((LM_INFO, ACE_TEXT("%D %M %N:%l RFC2131::DhcpCtx::~DhcpCtx\n")));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l RFC2131::DhcpCtx::~DhcpCtx\n")));
 }
 
 ACE_UINT32 RFC2131::DhcpCtx::xid(void)

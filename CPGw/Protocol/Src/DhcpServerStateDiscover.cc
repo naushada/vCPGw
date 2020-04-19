@@ -9,7 +9,7 @@
 #include "ace/Log_Msg.h"
 #include "ace/Message_Block.h"
 
-DhcpServerStateDiscover *DhcpServerStateDiscover::m_instance = NULL;
+DhcpServerStateDiscover *DhcpServerStateDiscover::m_instance = nullptr;
 
 DhcpServerStateDiscover *DhcpServerStateDiscover::instance()
 {
@@ -20,6 +20,11 @@ DhcpServerStateDiscover *DhcpServerStateDiscover::instance()
     ACE_NEW_NORETURN(m_instance, DhcpServerStateDiscover());
   }
 
+  return(m_instance);
+}
+
+DhcpServerStateDiscover *DhcpServerStateDiscover::get_instance(void)
+{
   return(m_instance);
 }
 

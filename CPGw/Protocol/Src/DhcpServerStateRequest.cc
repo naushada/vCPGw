@@ -8,7 +8,7 @@
 #include "DhcpServerUser.h"
 #include "ace/Log_Msg.h"
 
-DhcpServerStateRequest *DhcpServerStateRequest::m_instance = NULL;
+DhcpServerStateRequest *DhcpServerStateRequest::m_instance = nullptr;
 
 DhcpServerStateRequest *DhcpServerStateRequest::instance()
 {
@@ -18,6 +18,11 @@ DhcpServerStateRequest *DhcpServerStateRequest::instance()
     ACE_NEW_NORETURN(m_instance, DhcpServerStateRequest());
   }
 
+  return(m_instance);
+}
+
+DhcpServerStateRequest *DhcpServerStateRequest::get_instance(void)
+{
   return(m_instance);
 }
 

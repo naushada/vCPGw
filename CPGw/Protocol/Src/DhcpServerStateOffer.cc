@@ -4,7 +4,7 @@
 #include "DhcpServerStateOffer.h"
 #include "ace/Log_Msg.h"
 
-DhcpServerStateOffer *DhcpServerStateOffer::m_instance = NULL;
+DhcpServerStateOffer *DhcpServerStateOffer::m_instance = nullptr;
 
 DhcpServerStateOffer *DhcpServerStateOffer::instance()
 {
@@ -15,6 +15,11 @@ DhcpServerStateOffer *DhcpServerStateOffer::instance()
   }
 
   return (m_instance);
+}
+
+DhcpServerStateOffer *DhcpServerStateOffer::get_instance(void)
+{
+  return(m_instance);
 }
 
 DhcpServerStateOffer::~DhcpServerStateOffer()

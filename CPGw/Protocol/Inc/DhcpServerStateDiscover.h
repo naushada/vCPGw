@@ -12,6 +12,7 @@ private:
 public:
   virtual ~DhcpServerStateDiscover();
   static DhcpServerStateDiscover *instance();
+  static DhcpServerStateDiscover *get_instance(void);
 
   void onEntry(DHCP::Server &parent);
   void onExit(DHCP::Server &parent);

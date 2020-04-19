@@ -8,7 +8,7 @@
 #include "DhcpServer.h"
 #include "DhcpServerUser.h"
 
-DhcpServerStateRelease *DhcpServerStateRelease::m_instance = NULL;
+DhcpServerStateRelease *DhcpServerStateRelease::m_instance = nullptr;
 
 DhcpServerStateRelease *DhcpServerStateRelease::instance()
 {
@@ -18,6 +18,11 @@ DhcpServerStateRelease *DhcpServerStateRelease::instance()
     ACE_NEW_NORETURN(m_instance, DhcpServerStateRelease());
   }
 
+  return(m_instance);
+}
+
+DhcpServerStateRelease *DhcpServerStateRelease::get_instance(void)
+{
   return(m_instance);
 }
 

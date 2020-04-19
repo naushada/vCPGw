@@ -8,7 +8,7 @@
 #include "ace/Log_Msg.h"
 #include "ace/SString.h"
 
-DhcpServerStateLeaseExpire *DhcpServerStateLeaseExpire::m_instance = NULL;
+DhcpServerStateLeaseExpire *DhcpServerStateLeaseExpire::m_instance = nullptr;
 
 DhcpServerStateLeaseExpire *DhcpServerStateLeaseExpire::instance()
 {
@@ -18,6 +18,11 @@ DhcpServerStateLeaseExpire *DhcpServerStateLeaseExpire::instance()
     ACE_NEW_NORETURN(m_instance, DhcpServerStateLeaseExpire());
   }
 
+  return(m_instance);
+}
+
+DhcpServerStateLeaseExpire *DhcpServerStateLeaseExpire::get_instance(void)
+{
   return(m_instance);
 }
 

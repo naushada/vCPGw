@@ -11,6 +11,7 @@ private:
 public:
   virtual ~DhcpServerStateOffer();
   static DhcpServerStateOffer *instance();
+  static DhcpServerStateOffer *get_instance(void);
   void onEntry(DHCP::Server &parent);
   void onExit(DHCP::Server &parent);
   ACE_UINT32 offer(DHCP::Server &parent);

@@ -40,6 +40,13 @@ DhcpServerUser::~DhcpServerUser()
     m_instMap.unbind(cha);
     delete inst;
   }
+
+  /*re-claim the heap memory now. of singelton instance.*/
+  delete DhcpServerStateDiscover::get_instance();
+  delete DhcpServerStateInit::get_instance();
+  delete DhcpServerStateLeaseExpire::get_instance();
+  delete DhcpServerStateRelease::get_instance();
+  delete DhcpServerStateRequest::get_instance();
 }
 
 CPGateway &DhcpServerUser::cpGw(void)
@@ -259,15 +266,10 @@ ACE_INT32 DhcpServerUser::process_timeout(const void *act)
     case DHCP::PURGE_TIMER_MSG_ID:
       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l PURGE_TIMER_MSG_ID is expired tid %d\n"), timerId->tid()));
       /*Kick the state machine.*/
-      sess->getState().guardTimerExpiry(*sess, (const void *)act);
+      sess->getState().guardTimerExpiry(*sess, act);
       deleteSubscriber(cha);
 
-      /*re-claim the heap memory now.*/
-      delete DhcpServerStateDiscover::instance();
-      delete DhcpServerStateInit::instance();
-      delete DhcpServerStateLeaseExpire::instance();
-      delete DhcpServerStateRelease::instance();
-      delete DhcpServerStateRequest::instance();
+       /*delete DHCP::Server instance now.*/
       delete sess;
       break;
 
@@ -277,12 +279,7 @@ ACE_INT32 DhcpServerUser::process_timeout(const void *act)
       sess->getState().leaseTimerExpiry(*sess, (const void *)act);
       deleteSubscriber(cha);
 
-      /*re-claim the heap memory now.*/
-      delete DhcpServerStateDiscover::instance();
-      delete DhcpServerStateInit::instance();
-      delete DhcpServerStateLeaseExpire::instance();
-      delete DhcpServerStateRelease::instance();
-      delete DhcpServerStateRequest::instance();
+      /*delete DHCP::Server instance now.*/
       delete sess;
       break;
 

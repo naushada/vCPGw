@@ -12,6 +12,7 @@ private:
 public:
   virtual ~DhcpServerStateLeaseExpire();
   static DhcpServerStateLeaseExpire *instance();
+  static DhcpServerStateLeaseExpire *get_instance(void);
 
   void onEntry(DHCP::Server &parent);
   void onExit(DHCP::Server &parent);
