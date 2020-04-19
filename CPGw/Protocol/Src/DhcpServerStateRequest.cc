@@ -31,7 +31,6 @@ DhcpServerStateRequest::DhcpServerStateRequest()
 DhcpServerStateRequest::~DhcpServerStateRequest()
 {
   ACE_TRACE("DhcpServerStateRequest::~DhcpServerStateRequest\n");
-  delete m_instance;
   m_instance = NULL;
 }
 
@@ -43,7 +42,7 @@ void DhcpServerStateRequest::onEntry(DHCP::Server &parent)
   ACE_UINT32 to = 2;
 
   TIMER_ID *act = new TIMER_ID();
-  act->timerType(DHCP::EXPECTED_REQUEST_GUARD_TIMER_ID);
+  act->timerType(DHCP::PURGE_TIMER_ID);
   act->chaddrLen(parent.ctx().chaddrLen());
   ACE_OS::memcpy((void *)act->chaddr(), (const void *)parent.ctx().chaddr(),
                  parent.ctx().chaddrLen());
@@ -82,6 +81,7 @@ ACE_UINT32 DhcpServerStateRequest::request(DHCP::Server &parent, ACE_Byte *in, A
   ACE_CString cha((const char *)parent.ctx().chaddr(), parent.ctx().chaddrLen());
   parent.getDhcpServerUser().sendResponse(cha, (ACE_Byte *)mb.rd_ptr(), mb.length());
 
+  delete &mb;
   /*Move to next State.*/
   parent.setState(DhcpServerStateLeaseExpire::instance());
   return(0);
@@ -111,18 +111,7 @@ ACE_UINT32 DhcpServerStateRequest::release(DHCP::Server &parent,ACE_Byte *in, AC
 /*Guard Timer is stared if next request is expected to complete the Flow.*/
 ACE_UINT32 DhcpServerStateRequest::guardTimerExpiry(DHCP::Server &parent, const void *act)
 {
-  ACE_TRACE("DhcpServerStateRequest::guardTimerExpiry\n");
-  DHCP::ElemDef_iter iter = parent.optionMap().begin();
-  RFC2131::DhcpOption *opt = NULL;
-
-  for(; iter != parent.optionMap().end(); iter++)
-  {
-    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    opt = (RFC2131::DhcpOption *)((*iter).int_id_);
-    parent.optionMap().unbind(opt->getTag());
-    delete opt;
-  }
-
+  ACE_DEBUG((LM_DEBUG, "DhcpServerStateRequest::guardTimerExpiry\n"));
   return(0);
 }
 

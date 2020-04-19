@@ -28,7 +28,7 @@ void DhcpServerStateLeaseExpire::onEntry(DHCP::Server &parent)
   ACE_UINT32 to = parent.lease();
 
   TIMER_ID *act = new TIMER_ID();
-  act->timerType(DHCP::LEASE_GUARD_TIMER_ID);
+  act->timerType(DHCP::LEASE_TIMER_ID);
   act->chaddrLen(parent.ctx().chaddrLen());
   ACE_OS::memcpy((void *)act->chaddr(), (const void *)parent.ctx().chaddr(),
                  parent.ctx().chaddrLen());
@@ -78,7 +78,6 @@ DhcpServerStateLeaseExpire::DhcpServerStateLeaseExpire()
 DhcpServerStateLeaseExpire::~DhcpServerStateLeaseExpire()
 {
   ACE_TRACE("DhcpServerStateLeaseExpire::~DhcpServerStateLeaseExpire\n");
-  delete m_instance;
   m_instance = NULL;
 }
 
@@ -95,17 +94,6 @@ ACE_UINT32 DhcpServerStateLeaseExpire::release(DHCP::Server &parent,ACE_Byte *in
 ACE_UINT32 DhcpServerStateLeaseExpire::guardTimerExpiry(DHCP::Server &parent, const void *act)
 {
   ACE_TRACE("DhcpServerStateLeaseExpire::guardTimerExpiry\n");
-
-  DHCP::ElemDef_iter iter = parent.optionMap().begin();
-  RFC2131::DhcpOption *opt = NULL;
-
-  for(; iter != parent.optionMap().end(); iter++)
-  {
-    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    opt = (RFC2131::DhcpOption *)((*iter).int_id_);
-    parent.optionMap().unbind(opt->getTag());
-    delete opt;
-  }
 
   return(0);
 }
@@ -128,6 +116,7 @@ ACE_UINT32 DhcpServerStateLeaseExpire::request(DHCP::Server &parent, ACE_Byte *i
   ACE_CString cha((const char *)parent.ctx().chaddr());
   parent.getDhcpServerUser().sendResponse(cha, (ACE_Byte *)mb.rd_ptr(), mb.length());
 
+  delete &mb;
   /*start the leaseTimer again by kicking the state machine.*/
   parent.setState(DhcpServerStateLeaseExpire::instance());
   return(0);

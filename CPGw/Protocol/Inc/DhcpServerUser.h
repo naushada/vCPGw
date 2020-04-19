@@ -117,7 +117,7 @@ public:
 
   ACE_INT32 process_timeout(const void *act);
 
-  ACE_HANDLE handle_timeout(ACE_Time_Value &tv,
+  ACE_HANDLE handle_timeout(const ACE_Time_Value &tv,
                            const void *act=0);
 
   long start_timer(ACE_UINT32 delay, const void *act,

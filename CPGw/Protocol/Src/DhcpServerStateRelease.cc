@@ -29,7 +29,6 @@ DhcpServerStateRelease::DhcpServerStateRelease()
 DhcpServerStateRelease::~DhcpServerStateRelease()
 {
   ACE_TRACE("DhcpServerStateRelease::~DhcpServerStateRelease\n");
-  delete m_instance;
   m_instance = NULL;
 }
 
@@ -40,7 +39,7 @@ void DhcpServerStateRelease::onEntry(DHCP::Server &parent)
   ACE_UINT32 to = 1;
 
   TIMER_ID *act = new TIMER_ID();
-  act->timerType(DHCP::EXPECTED_REQUEST_GUARD_TIMER_ID);
+  act->timerType(DHCP::PURGE_TIMER_ID);
   act->chaddrLen(parent.ctx().chaddrLen());
   ACE_OS::memcpy((void *)act->chaddr(), (const void *)parent.ctx().chaddr(),
                  parent.ctx().chaddrLen());
@@ -94,17 +93,6 @@ ACE_UINT32 DhcpServerStateRelease::release(DHCP::Server &parent,ACE_Byte *in, AC
 ACE_UINT32 DhcpServerStateRelease::guardTimerExpiry(DHCP::Server &parent, const void *act)
 {
   ACE_TRACE("DhcpServerStateRelease::guardTimerExpiry\n");
-  DHCP::ElemDef_iter iter = parent.optionMap().begin();
-  RFC2131::DhcpOption *opt = NULL;
-
-  for(; iter != parent.optionMap().end(); iter++)
-  {
-    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    opt = (RFC2131::DhcpOption *)((*iter).int_id_);
-    parent.optionMap().unbind(opt->getTag());
-    delete opt;
-  }
-
   return(0);
 }
 

@@ -14,8 +14,8 @@ class DhcpServerUser;
 
 namespace DHCP
 {
-  static const ACE_UINT32 EXPECTED_REQUEST_GUARD_TIMER_ID = 0x01;
-  static const ACE_UINT32 LEASE_GUARD_TIMER_ID = 0x02;
+  static const ACE_UINT32 PURGE_TIMER_ID = 0x01;
+  static const ACE_UINT32 LEASE_TIMER_ID = 0x02;
 
   static const ACE_UINT32 SIZE_64MB = (1 << 26);
   static const ACE_UINT32 SIZE_32MB = (1 << 25);

@@ -177,7 +177,7 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
  * @param  argument which was passed while starting the timer.
  * @return 0 for success else for failure.
  */
-ACE_HANDLE DhcpServerUser::handle_timeout(ACE_Time_Value &tv, const void *arg)
+ACE_HANDLE DhcpServerUser::handle_timeout(const ACE_Time_Value &tv, const void *arg)
 {
   ACE_DEBUG((LM_DEBUG,"DhcpServerUser::handle_timeout\n"));
   process_timeout(arg);
@@ -196,11 +196,8 @@ long DhcpServerUser::start_timer(ACE_UINT32 to,
                                  ACE_Time_Value interval)
 {
   ACE_DEBUG((LM_DEBUG, "DhcpServerUser::start_timer\n"));
-  ACE_Time_Value delay(to);
+  ACE_Time_Value delay(to,0);
   long tid = 0;
-
-  ACE_Reactor::instance()->register_handler(this,
-                                            ACE_Event_Handler::TIMER_MASK);
 
   tid = ACE_Reactor::instance()->schedule_timer(this,
                                                 act,
@@ -239,20 +236,22 @@ void DhcpServerUser::stop_timer(long tId)
 
 ACE_INT32 DhcpServerUser::process_timeout(const void *act)
 {
-  ACE_TRACE("DhcpServerUser::process_timeout\n");
+  ACE_DEBUG((LM_DEBUG, "DhcpServerUser::process_timeout\n"));
   TIMER_ID *timerId = (TIMER_ID *)act;
 
   DHCP::Server *sess = NULL;
-  ACE_CString cha((const char *)timerId->chaddr());
+
+  ACE_CString cha((const char *)timerId->chaddr(), timerId->chaddrLen());
   if(m_instMap.find(cha, sess) != -1)
   {
     switch(timerId->timerType())
     {
-    case DHCP::EXPECTED_REQUEST_GUARD_TIMER_ID:
-      ACE_DEBUG((LM_DEBUG, "EXPECTED_REQUEST_GUARD_TIMER_ID is expired\n"));
+    case DHCP::PURGE_TIMER_ID:
+      ACE_DEBUG((LM_DEBUG, "PURGE_TIMER_ID is expired\n"));
       /*Kick the state machine.*/
       sess->getState().guardTimerExpiry(*sess, (const void *)act);
       m_instMap.unbind(cha);
+      delete timerId;
 
       /*re-claim the heap memory now.*/
       delete DhcpServerStateDiscover::instance();
@@ -263,11 +262,12 @@ ACE_INT32 DhcpServerUser::process_timeout(const void *act)
       delete sess;
       break;
 
-    case DHCP::LEASE_GUARD_TIMER_ID:
-      ACE_DEBUG((LM_DEBUG, "LEASE_GUARD_TIMER_ID is expired\n"));
+    case DHCP::LEASE_TIMER_ID:
+      ACE_DEBUG((LM_DEBUG, "LEASE_TIMER_ID is expired\n"));
       /*Kick the state machine.*/
       sess->getState().leaseTimerExpiry(*sess, (const void *)act);
       m_instMap.unbind(cha);
+      delete timerId;
 
       /*re-claim the heap memory now.*/
       delete DhcpServerStateDiscover::instance();
