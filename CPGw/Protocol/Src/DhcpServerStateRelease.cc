@@ -24,6 +24,8 @@ DhcpServerStateRelease *DhcpServerStateRelease::instance()
 DhcpServerStateRelease::DhcpServerStateRelease()
 {
   ACE_TRACE("DhcpServerStateRelease::DhcpServerStateRelease\n");
+  ACE_CString desc("DhcpServerStateRelease");
+  m_description = desc;
 }
 
 DhcpServerStateRelease::~DhcpServerStateRelease()
@@ -38,14 +40,14 @@ void DhcpServerStateRelease::onEntry(DHCP::Server &parent)
   /*1 second of grace period before removing the subscriber.*/
   ACE_UINT32 to = 1;
 
-  TIMER_ID *act = new TIMER_ID();
-  act->timerType(DHCP::PURGE_TIMER_ID);
-  act->chaddrLen(parent.ctx().chaddrLen());
-  ACE_OS::memcpy((void *)act->chaddr(), (const void *)parent.ctx().chaddr(),
-                 parent.ctx().chaddrLen());
+  /*Start house keeping of timer's contents now.*/
+  parent.purgeTid().timerType(DHCP::PURGE_TIMER_MSG_ID);
+  parent.purgeTid().chaddrLen(parent.ctx().chaddrLen());
+  parent.purgeTid().chaddr(parent.ctx().chaddr());
 
   /*Start a timer of 1seconds*/
-  parent.getDhcpServerUser().guardTid(parent.getDhcpServerUser().start_timer(to, (const void *)act));
+  long timerId = parent.getDhcpServerUser().start_timer(to, (const void *)parent.purgeInst());
+  parent.purgeTid().tid(timerId);
 }
 
 void DhcpServerStateRelease::onExit(DHCP::Server &parent)

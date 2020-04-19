@@ -27,21 +27,21 @@ void DhcpServerStateLeaseExpire::onEntry(DHCP::Server &parent)
   /*Starting the lease timer, upon its expity, subscriber IP will be purged off..*/
   ACE_UINT32 to = parent.lease();
 
-  TIMER_ID *act = new TIMER_ID();
-  act->timerType(DHCP::LEASE_TIMER_ID);
-  act->chaddrLen(parent.ctx().chaddrLen());
-  ACE_OS::memcpy((void *)act->chaddr(), (const void *)parent.ctx().chaddr(),
-                 parent.ctx().chaddrLen());
+  /*Start house keeping of timer's contents now.*/
+  parent.purgeTid().timerType(DHCP::PURGE_TIMER_MSG_ID);
+  parent.purgeTid().chaddrLen(parent.ctx().chaddrLen());
+  parent.purgeTid().chaddr(parent.ctx().chaddr());
 
-  /*Start a timer of leaseTO*/
-  parent.getDhcpServerUser().leaseTid(parent.getDhcpServerUser().start_timer(to, (const void *)act));
+  /*Start a timer of 2seconds*/
+  long timerId = parent.getDhcpServerUser().start_timer(to, (const void *)parent.purgeInst());
+  parent.purgeTid().tid(timerId);
 }
 
 void DhcpServerStateLeaseExpire::onExit(DHCP::Server &parent)
 {
   ACE_TRACE("DhcpServerStateLeaseExpire::onExit");
   /*stop leaseExpiry Timer now.*/
-  parent.getDhcpServerUser().stop_timer(parent.getDhcpServerUser().leaseTid());
+  parent.getDhcpServerUser().stop_timer(parent.purgeTid().tid());
 }
 
 ACE_UINT32 DhcpServerStateLeaseExpire::offer(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 inLen)
@@ -84,6 +84,9 @@ DhcpServerStateLeaseExpire::~DhcpServerStateLeaseExpire()
 ACE_UINT32 DhcpServerStateLeaseExpire::release(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerStateLeaseExpire::release\n");
+
+  parent.getDhcpServerUser().stop_timer(parent.purgeTid().tid());
+
   /*just kick the state machine so that, a timer is started.*/
   parent.setState(DhcpServerStateRelease::instance());
 
@@ -110,14 +113,17 @@ ACE_UINT32 DhcpServerStateLeaseExpire::request(DHCP::Server &parent, ACE_Byte *i
 {
   ACE_TRACE("DhcpServerStateLeaseExpire::request\n");
 
+  /*Stop the timer now.*/
+  parent.getDhcpServerUser().stop_timer(parent.purgeTid().tid());
   /*Prepare Request ACK.*/
   ACE_Message_Block &mb = buildResponse(parent, in, inLen);
 
-  ACE_CString cha((const char *)parent.ctx().chaddr());
+  ACE_CString cha((const char *)parent.ctx().chaddr(), parent.ctx().chaddrLen());
   parent.getDhcpServerUser().sendResponse(cha, (ACE_Byte *)mb.rd_ptr(), mb.length());
 
   delete &mb;
-  /*start the leaseTimer again by kicking the state machine.*/
+
+  /*start the lease Timer again by kicking the state machine.*/
   parent.setState(DhcpServerStateLeaseExpire::instance());
   return(0);
 }

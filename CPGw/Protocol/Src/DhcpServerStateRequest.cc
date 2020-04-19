@@ -41,20 +41,20 @@ void DhcpServerStateRequest::onEntry(DHCP::Server &parent)
   /*2 seconds.*/
   ACE_UINT32 to = 2;
 
-  TIMER_ID *act = new TIMER_ID();
-  act->timerType(DHCP::PURGE_TIMER_ID);
-  act->chaddrLen(parent.ctx().chaddrLen());
-  ACE_OS::memcpy((void *)act->chaddr(), (const void *)parent.ctx().chaddr(),
-                 parent.ctx().chaddrLen());
+  /*Start house keeping of timer's contents now.*/
+  parent.purgeTid().timerType(DHCP::PURGE_TIMER_MSG_ID);
+  parent.purgeTid().chaddrLen(parent.ctx().chaddrLen());
+  parent.purgeTid().chaddr(parent.ctx().chaddr());
 
   /*Start a timer of 2seconds*/
-  parent.getDhcpServerUser().guardTid(parent.getDhcpServerUser().start_timer(to, (const void *)act));
+  long timerId = parent.getDhcpServerUser().start_timer(to, (const void *)parent.purgeInst());
+  parent.purgeTid().tid(timerId);
 }
 
 void DhcpServerStateRequest::onExit(DHCP::Server &parent)
 {
   ACE_TRACE("DhcpServerStateRequest::onExit\n");
-  parent.getDhcpServerUser().stop_timer(parent.getDhcpServerUser().guardTid());
+  parent.getDhcpServerUser().stop_timer(parent.purgeTid().tid());
 }
 
 ACE_UINT32 DhcpServerStateRequest::offer(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 inLen)
@@ -73,7 +73,7 @@ ACE_UINT32 DhcpServerStateRequest::request(DHCP::Server &parent, ACE_Byte *in, A
 {
   ACE_TRACE("DhcpServerStateRequest::request\n");
 
-  parent.getDhcpServerUser().stop_timer(parent.getDhcpServerUser().guardTid());
+  parent.getDhcpServerUser().stop_timer(parent.purgeTid().tid());
 
   /*Prepare Request ACK.*/
   ACE_Message_Block &mb = buildResponse(parent, in, inLen);
@@ -82,6 +82,7 @@ ACE_UINT32 DhcpServerStateRequest::request(DHCP::Server &parent, ACE_Byte *in, A
   parent.getDhcpServerUser().sendResponse(cha, (ACE_Byte *)mb.rd_ptr(), mb.length());
 
   delete &mb;
+
   /*Move to next State.*/
   parent.setState(DhcpServerStateLeaseExpire::instance());
   return(0);
@@ -103,7 +104,7 @@ ACE_UINT32 DhcpServerStateRequest::release(DHCP::Server &parent,ACE_Byte *in, AC
 {
   ACE_TRACE("DhcpServerStateRequest::release\n");
   /*stop leaseExpiry Timer now.*/
-  parent.getDhcpServerUser().stop_timer(parent.getDhcpServerUser().leaseTid());
+  parent.getDhcpServerUser().stop_timer(parent.purgeTid().tid());
   parent.setState(DhcpServerStateRelease::instance());
 
   return(0);

@@ -25,14 +25,16 @@ DHCP::Server::Server(DhcpServerUser *parent, ACE_CString mac,
   m_description.set("DhcpServer");
   m_state = NULL;
   m_optionMap.unbind_all();
+  m_purgeTid = NULL;
 
   /*context of DHCP Client's dhcp-header.*/
   ACE_NEW_NORETURN(m_ctx, RFC2131::DhcpCtx());
 
+  ACE_NEW_NORETURN(m_purgeTid, TIMER_ID());
+
   /*The start state is Discover.*/
   setState(DhcpServerStateDiscover::instance());
 }
-
 
 DHCP::Server::Server()
 {
@@ -49,6 +51,9 @@ DHCP::Server::~Server()
   delete m_ctx;
   m_ctx = NULL;
 
+  delete m_purgeTid;
+  m_purgeTid = NULL;
+
   DHCP::ElemDef_iter iter = m_optionMap.begin();
   RFC2131::DhcpOption *opt = NULL;
 
@@ -58,7 +63,10 @@ DHCP::Server::~Server()
     opt = (RFC2131::DhcpOption *)((*iter).int_id_);
     m_optionMap.unbind(opt->getTag());
     delete opt;
+    opt = NULL;
   }
+
+  m_state = NULL;
 }
 
 void DHCP::Server::setState(DhcpServerState *st)
@@ -70,6 +78,7 @@ void DHCP::Server::setState(DhcpServerState *st)
     m_state->onExit(*this);
   }
 
+  /*Address of derived class instance. */
   m_state = st;
   m_state->onEntry(*this);
 }
@@ -88,6 +97,21 @@ RFC2131::DhcpCtx &DHCP::Server::ctx(void)
 DHCP::ElemDef &DHCP::Server::optionMap(void)
 {
   return(m_optionMap);
+}
+
+void DHCP::Server::purgeTid(TIMER_ID *t)
+{
+  m_purgeTid = t;
+}
+
+TIMER_ID &DHCP::Server::purgeTid(void)
+{
+  return(*m_purgeTid);
+}
+
+TIMER_ID *DHCP::Server::purgeInst(void)
+{
+  return(m_purgeTid);
 }
 
 ACE_UINT32 DHCP::Server::start()

@@ -23,51 +23,6 @@ typedef ACE_Hash_Map_Manager<ACE_UINT32, ACE_CString, ACE_Null_Mutex>::iterator 
 typedef ACE_Hash_Map_Manager<ACE_CString, ACE_CString , ACE_Null_Mutex>ResolverMap_t;
 typedef ACE_Hash_Map_Manager<ACE_UINT32, ACE_CString, ACE_Null_Mutex>::iterator ResolverMap_iter;
 
-typedef struct TIMER_ID
-{
-  TIMER_ID()
-  {
-    m_timerType = 0;
-    m_chaddrLen = 0;
-    ACE_OS::memset((void *)m_chaddr, 0, sizeof(m_chaddr));
-  }
-
-  ACE_UINT32 m_timerType;
-  ACE_UINT8 m_chaddrLen;
-  ACE_Byte m_chaddr[16];
-
-  ACE_UINT32 timerType(void)
-  {
-    return(m_timerType);
-  }
-
-  void timerType(ACE_UINT32 tType)
-  {
-    m_timerType = tType;
-  }
-
-  ACE_UINT8 chaddrLen(void)
-  {
-    return(m_chaddrLen);
-  }
-
-  void chaddrLen(ACE_UINT8 len)
-  {
-    m_chaddrLen = len;
-  }
-
-  ACE_Byte *chaddr(void)
-  {
-    return(m_chaddr);
-  }
-
-  void chaddr(ACE_Byte *cha)
-  {
-    ACE_OS::memcpy((void *)m_chaddr, (const void *)cha, chaddrLen());
-  }
-
-}TIMER_ID;
-
 class DhcpServerUser : public ACE_Event_Handler
 {
 private:
@@ -77,10 +32,6 @@ private:
   SessionMap_t m_sessMap;
   /*HostName to IP map for Resolving IP.*/
   ResolverMap_t m_name2IPMap;
-  /*Guard Timer for next request.*/
-  long m_guardTid;
-  /*lease Expire timeout.*/
-  long m_leaseTid;
   /*back pointer*/
   CPGateway *m_cpGw;
 
@@ -88,12 +39,6 @@ public:
 
   DhcpServerUser(CPGateway *parent);
   virtual ~DhcpServerUser();
-
-  void guardTid(long gTid);
-  long guardTid(void);
-
-  void leaseTid(long lTid);
-  long leaseTid(void);
 
   CPGateway &cpGw(void);
 

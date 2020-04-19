@@ -12,10 +12,68 @@
 class DhcpServerState;
 class DhcpServerUser;
 
+typedef struct TIMER_ID
+{
+  TIMER_ID()
+  {
+    m_tid = 0;
+    m_timerType = 0;
+    m_chaddrLen = 0;
+    ACE_OS::memset((void *)m_chaddr, 0, sizeof(m_chaddr));
+  }
+
+  long m_tid;
+  ACE_UINT32 m_timerType;
+  ACE_UINT8 m_chaddrLen;
+  ACE_Byte m_chaddr[16];
+
+  long tid(void)
+  {
+    return(m_tid);
+  }
+
+  void tid(long t)
+  {
+    m_tid = t;
+  }
+
+  ACE_UINT32 timerType(void)
+  {
+    return(m_timerType);
+  }
+
+  void timerType(ACE_UINT32 tType)
+  {
+    m_timerType = tType;
+  }
+
+  ACE_UINT8 chaddrLen(void)
+  {
+    return(m_chaddrLen);
+  }
+
+  void chaddrLen(ACE_UINT8 len)
+  {
+    m_chaddrLen = len;
+  }
+
+  ACE_Byte *chaddr(void)
+  {
+    return(m_chaddr);
+  }
+
+  void chaddr(ACE_Byte *cha)
+  {
+    ACE_OS::memcpy((void *)m_chaddr, (const void *)cha, chaddrLen());
+  }
+
+}TIMER_ID;
+
+
 namespace DHCP
 {
-  static const ACE_UINT32 PURGE_TIMER_ID = 0x01;
-  static const ACE_UINT32 LEASE_TIMER_ID = 0x02;
+  static const ACE_UINT32 PURGE_TIMER_MSG_ID = 0x01;
+  static const ACE_UINT32 LEASE_TIMER_MSG_ID = 0x02;
 
   static const ACE_UINT32 SIZE_64MB = (1 << 26);
   static const ACE_UINT32 SIZE_32MB = (1 << 25);
@@ -33,6 +91,8 @@ namespace DHCP
   class Server
   {
   private:
+    /*TimerId of purging the cache/instance. This is used to stop the timer explicitly.*/
+    TIMER_ID *m_purgeTid;
     ACE_Message_Block *m_mb;
     ACE_CString m_description;
     /*State Machine Instance.*/
@@ -92,6 +152,9 @@ namespace DHCP
     ACE_CString &domainName(void);
     void domainName(ACE_CString &dName);
 
+    void purgeTid(TIMER_ID *tId);
+    TIMER_ID &purgeTid(void);
+    TIMER_ID *purgeInst(void);
   };
 }
 
