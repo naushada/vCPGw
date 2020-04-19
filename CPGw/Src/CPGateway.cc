@@ -310,6 +310,7 @@ CPGateway::CPGateway(ACE_CString intfName, ACE_CString ip,
   inet_aton(ipAddr().c_str(), &adr);
 
   ACE_NEW_NORETURN(m_dhcpUser, DhcpServerUser(this));
+
   /*Mske CPGateway state machine Activated State.*/
   setState(CPGatewayStateActivated::instance());
 

@@ -69,6 +69,7 @@ public:
                    ACE_Time_Value interval = ACE_Time_Value::zero);
 
   void stop_timer(long timerId);
+  void reset_timer(long tId, ACE_UINT32 timeOutInSec);
 };
 
 class DhcpConf

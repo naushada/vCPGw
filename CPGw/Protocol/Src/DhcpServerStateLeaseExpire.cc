@@ -123,8 +123,8 @@ ACE_UINT32 DhcpServerStateLeaseExpire::request(DHCP::Server &parent, ACE_Byte *i
 
   delete &mb;
 
-  /*start the lease Timer again by kicking the state machine.*/
-  parent.setState(DhcpServerStateLeaseExpire::instance());
+  /*Reset the timer now*/
+  parent.getDhcpServerUser().reset_timer(parent.purgeTid().tid(), parent.lease());
   return(0);
 }
 
