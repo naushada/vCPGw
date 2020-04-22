@@ -253,7 +253,7 @@ void DhcpServerUser::reset_timer(long tId, ACE_UINT32 timeOutInSec)
 ACE_INT32 DhcpServerUser::process_timeout(const void *act)
 {
   TIMER_ID *timerId = (TIMER_ID *)act;
-  DHCP::Server *sess = NULL;
+  DHCP::Server *sess = nullptr;
 
   ACE_CString cha((const char *)timerId->chaddr(), timerId->chaddrLen());
 

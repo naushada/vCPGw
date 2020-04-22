@@ -5,6 +5,9 @@ AC_PROG_CXX
 AC_PROG_CC
 #AC_PROG_AR
 
+AC_PROG_YACC
+AC_PROG_LEX
+
 AC_PROG_AWK
 AC_PROG_CPP
 AC_PROG_INSTALL
@@ -24,6 +27,7 @@ AC_CONFIG_FILES([
  CPGw/Protocol/Arp/Makefile
  CPGw/Protocol/Dns/Makefile
  CPGw/Makefile
+ CPGw/Parser/Json/Makefile
 ])
 
 ## This will create Makefile.in in each folder
