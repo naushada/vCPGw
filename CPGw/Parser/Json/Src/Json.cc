@@ -1,6 +1,7 @@
 #ifndef __JSON_CC__
 #define __JSON_CC__
 
+#include <iostream>
 #include "Json.h"
 #include "JsonParser.hh"
 #include "JsonLexer.hh"
@@ -24,7 +25,7 @@ JSON *JSON::get_instance(void)
 
 JSON::JSON()
 {
-  m_value = nullptr;
+  ACE_NEW_NORETURN(m_value, JSONValue());
 }
 
 JSON::~JSON()
@@ -60,7 +61,7 @@ int JSON::start(const ACE_TCHAR *fname)
   yyset_in(in, scanner);
 
   ret = yyparse(scanner, this);
-
+  std::cout << "Value of ret " << ret << std::endl;
   yylex_destroy(scanner);
 
   if(in != nullptr)
@@ -206,7 +207,7 @@ JSON::JSONMember *JSON::json_new(JSONValue *key, JSONValue *value)
   member->m_key = key;
   member->m_value = value;
   member->m_next = nullptr;
-
+  std::cout << "Key " << key << ": " << value << std::endl;
   return(member);
 }
 

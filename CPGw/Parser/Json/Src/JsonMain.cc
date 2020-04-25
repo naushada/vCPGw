@@ -4,14 +4,20 @@
 #include "Json.h"
 #include "JsonParser.hh"
 
-
+/*
+ * @brief
+ * @param
+ * @param
+ *
+ * @return
+ * */
 
 int main(int argc, char *argv[])
 {
 
   JSON *inst = JSON::instance();
 
-  inst->start(nullptr);
+  inst->start(argv[1]);
   return(0);
 }
 
