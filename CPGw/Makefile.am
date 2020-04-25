@@ -1,6 +1,6 @@
 #/*!Name of the binary*/
 
-SUBDIRS=Common Ipc Protocol Parser/Json/
+SUBDIRS=Parser/Json Common Ipc Protocol
 
 bin_PROGRAMS=CPGateway
 

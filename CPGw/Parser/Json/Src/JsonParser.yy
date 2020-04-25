@@ -3,11 +3,12 @@
   #include <cstddef>
   #include "Json.h"
   #include "JsonParser.hh"
+  /*#include "JsonLexer.hh"*/
 
   using namespace std;
   typedef void* yyscan_t;
-  extern int yylex(YYSTYPE*, YYLTYPE*, yyscan_t);
-  void yyerror(YYLTYPE*, yyscan_t scanner, JSON *pJson, const char *);
+  extern int yylex(YYSTYPE *stype, YYLTYPE *ltype, yyscan_t scanner);
+  void yyerror(YYLTYPE *ltype, yyscan_t scanner, JSON *pJson, const char *msg);
 
 %}
 
@@ -15,7 +16,10 @@
 %code requires {
 #include "Json.h"
 #include "JsonParser.hh"
+/*#include "JsonLexer.hh"*/
 typedef void* yyscan_t;
+/*extern int yylex(YYSTYPE *stype, YYLTYPE *ltype, yyscan_t scanner);*/
+/*void yyerror(YYLTYPE*, yyscan_t scanner, JSON *pJson, const char *);*/
 }
 
 

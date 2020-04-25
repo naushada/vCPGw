@@ -21,13 +21,13 @@ AC_CONFIG_FILES([
  Makefile
  vAPSh/Makefile
  vTYSh/Makefile
+ CPGw/Parser/Json/Makefile
  CPGw/Common/Makefile
  CPGw/Ipc/Makefile
  CPGw/Protocol/Makefile
  CPGw/Protocol/Arp/Makefile
  CPGw/Protocol/Dns/Makefile
  CPGw/Makefile
- CPGw/Parser/Json/Makefile
 ])
 
 ## This will create Makefile.in in each folder

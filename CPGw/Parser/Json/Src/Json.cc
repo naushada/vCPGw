@@ -2,7 +2,8 @@
 #define __JSON_CC__
 
 #include "Json.h"
-//#include "JsonParser.hh"
+#include "JsonParser.hh"
+#include "JsonLexer.hh"
 
 JSON *JSON::m_instance = nullptr;
 
@@ -45,13 +46,13 @@ void JSON::value(JSONValue *value)
 int JSON::start(const ACE_TCHAR *fname)
 {
   int ret = -1;
-#if 0
+
   FILE *in = nullptr;
 
   yyscan_t scanner;
 
   if(fname)
-    fopen_s(&in, fname, "r");
+    in = fopen(fname, "r");
   else
     in = stdin;
 
@@ -67,7 +68,7 @@ int JSON::start(const ACE_TCHAR *fname)
     fclose(in);
     in = nullptr;
   }
-#endif
+
   return(ret);
 }
 

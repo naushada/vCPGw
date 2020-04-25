@@ -1,10 +1,13 @@
 %{
 #include <iostream>
-#include "Json.h"
 #include "JsonParser.hh"
+#include "Json.h"
+
+extern void yyerror(YYLTYPE *ltype, yyscan_t scanner, JSON *pJson, const char *msg);
 %}
 
- /*%option outfile="Src/JsonLexer.cc"*/
+ /*%option outfile="JsonLexer.cc"*/
+
 %option header-file="JsonLexer.hh"
 
 %option 8bit reentrant noyywrap

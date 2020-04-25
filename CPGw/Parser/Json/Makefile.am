@@ -1,6 +1,7 @@
 bin_PROGRAMS=PARSER
 
 AM_YFLAGS=-d
+AM_LFLAGS=-d
 
 PARSER_SOURCES=Src/Json.cc \
 							 Src/JsonParser.yy \
