@@ -108,7 +108,7 @@ public:
   JSONMember *json_value_add_member(JSONMember *member, JSONValue *key, JSONValue *value);
 
   JSONValue *json_value_at_index(JSONValue *value, int index);
-  JSONValue *json_value_at_key(JSONValue *value, char *key);
+  JSONValue *json_value_at_key(JSONValue *value, const char *key);
 
   /*Array operator overloading.*/
   JSONValue *operator [] (int index);

@@ -72,6 +72,13 @@ int JSON::start(const ACE_TCHAR *fname)
   yyset_in(in, scanner);
 
   ret = yyparse(scanner, this);
+  JSONValue *jValue = json_value_at_key(json_value_at_index(json_value_at_key(json_value_at_key(this->value(), "menu"), "items"), 1), "id");
+
+  if(jValue && jValue->m_type == JSON_VALUE_TYPE_STRING)
+  {
+    std::cout << "value of id is " << jValue->m_svalue << std::endl;
+  }
+
   yylex_destroy(scanner);
 
   if(in != nullptr)
@@ -402,7 +409,7 @@ JSON::JSONValue *JSON::json_value_at_index(JSONValue *value, int index)
   return(nullptr);
 }
 
-JSON::JSONValue *JSON::json_value_at_key(JSONValue *value, char *key)
+JSON::JSONValue *JSON::json_value_at_key(JSONValue *value, const char *key)
 {
   JSONMembers *m = nullptr;
 
