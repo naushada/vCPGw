@@ -35,6 +35,7 @@ char            [\x20 -\x7F]
 except_quote    [^\x22]
 
 double_quote    (\")
+empty_string    (\"){2}
 hex             [0-9a-fA-F]
 double          ({integer}|{number})[eE][+-]?{integer}+
 
@@ -63,13 +64,15 @@ double          ({integer}|{number})[eE][+-]?{integer}+
 
 {double}        {yylval->m_jvalue = yyextra->json_new_value_double(strtod(yytext, nullptr)); return LITERAL;}
 
+{empty_string}  {yylval->m_jvalue = yyextra->json_new_value_str(yytext); return(lSTRING);}
+
 {double_quote}  {BEGIN(STRING_ST);}
 
  /*The default state of flex is INITIAL the STRING_ST is required because string in double quote
   *can have json delimiters. the delimiters of json is : or ,
   */
 
-<STRING_ST>{except_quote}* {yylval->m_jvalue = yyextra->json_new_value_str(yytext); return(lSTRING);}
+<STRING_ST>{except_quote}+ {yylval->m_jvalue = yyextra->json_new_value_str(yytext); return(lSTRING);}
 
 <STRING_ST>{double_quote}  {BEGIN(INITIAL);}
 
