@@ -1,24 +1,20 @@
 %{
-  #include <iostream>
-  #include <cstddef>
-  #include "Json.h"
-  #include "JsonParser.hh"
+#include <iostream>
+#include <cstddef>
+#include "Json.h"
+#include "JsonParser.hh"
 
-  using namespace std;
-  typedef void* yyscan_t;
-  extern int yylex(YYSTYPE *stype, YYLTYPE *ltype, yyscan_t scanner);
-  void yyerror(YYLTYPE *ltype, yyscan_t scanner, JSON *pJson, const char *msg);
-
+using namespace std;
+typedef void* yyscan_t;
+extern int yylex(YYSTYPE *stype, YYLTYPE *ltype, yyscan_t scanner);
+void yyerror(YYLTYPE *ltype, yyscan_t scanner, JSON *pJson, const char *msg);
 %}
 
 
 %code requires {
 #include "Json.h"
 #include "JsonParser.hh"
-/*#include "JsonLexer.hh"*/
 typedef void* yyscan_t;
-/*extern int yylex(YYSTYPE *stype, YYLTYPE *ltype, yyscan_t scanner);*/
-/*void yyerror(YYLTYPE*, yyscan_t scanner, JSON *pJson, const char *);*/
 }
 
 
@@ -33,22 +29,25 @@ typedef void* yyscan_t;
   JSON::JSONArray *m_jarray;
   JSON::JSONElement *m_jelement;
   JSON::JSONValue *m_jvalue;
+  JSON::JSONMembers *m_jmembers;
 }
 
 %token <m_jvalue> lSTRING LITERAL
 
 %type <m_jobject> object
 %type <m_jmember> member
+%type <m_jmembers> members
 %type <m_jarray> array
 %type <m_jelement> element
 %type <m_jvalue> value
 
- /*%define "Inc/JsonParser.h"*/
+ /*%defines "Inc/JsonParser.h"*/
  /*%output "Src/JsonParser.cc"*/
 
 %locations
-%verbose
-%define parse.trace
+ /*%verbose*/
+%define parse.error verbose
+%define parse.lac full
 %define api.pure full
 
 %param {yyscan_t scanner}
@@ -61,34 +60,38 @@ typedef void* yyscan_t;
 %%
 
 input
- : /*empty*/
+ : %empty
  | value {pJson->value($1);}
  ;
 
 value
  : LITERAL
  | lSTRING
- | object   {$$ = pJson->json_new_value($1);}
- | array    {$$ = pJson->json_new_value($1);}
+ | object   {$$ = pJson->json_new_value_object($1);}
+ | array    {$$ = pJson->json_new_value_array($1);}
  ;
 
 object
- : '{' '}'        {$$ = pJson->json_new_object();}
- | '{' member '}' {$$ = pJson->json_new($2);}
+ : '{' '}'        {$$ = pJson->json_new_object(nullptr);}
+ | '{' members '}' {$$ = pJson->json_new_object($2);}
+ ;
+
+members
+ : member              {$$ = pJson->json_new_members($1);}
+ | members ',' member  {$$ = pJson->json_add_member_in_members($1, $3);}
  ;
 
 member
- : lSTRING ':' value            {pJson->json_new($1, $3);}
- | member ',' lSTRING ':' value {$$ = pJson->json_value_add_member($1, $3, $5);}
+ : lSTRING ':' value   {$$ = pJson->json_new_member($1, $3);}
  ;
 
 array
- : '[' ']'         {$$ = pJson->json_new_array();}
- | '[' element ']' {$$ = pJson->json_new($2);}
+ : '[' ']'         {$$ = pJson->json_new_array(nullptr);}
+ | '[' element ']' {$$ = pJson->json_new_array($2);}
  ;
 
 element
- : value             {$$ = pJson->json_new($1);}
+ : value             {$$ = pJson->json_new_element($1);}
  | element ',' value {$$ = pJson->json_value_add_element($1, $3);}
  ;
 

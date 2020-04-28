@@ -3,9 +3,9 @@ bin_PROGRAMS=PARSER
 AM_YFLAGS=-d
 AM_LFLAGS=-d
 
-PARSER_SOURCES=Src/Json.cc \
-							 Src/JsonParser.yy \
+PARSER_SOURCES=Src/JsonParser.yy \
 							 Src/JsonLexer.ll \
+							 Src/Json.cc \
 							 Src/JsonMain.cc
 
 PARSER_CPPFLAGS=-I$(srcdir)/Inc \

@@ -2,6 +2,7 @@
 #define __JSON_CC__
 
 #include <iostream>
+#include "ace/Log_Msg.h"
 #include "Json.h"
 #include "JsonParser.hh"
 #include "JsonLexer.hh"
@@ -31,6 +32,8 @@ JSON::JSON()
 JSON::~JSON()
 {
   m_instance = nullptr;
+  delete m_value;
+
   m_value = nullptr;
 }
 
@@ -53,7 +56,15 @@ int JSON::start(const ACE_TCHAR *fname)
   yyscan_t scanner;
 
   if(fname)
+  {
     in = fopen(fname, "r");
+    if(!in)
+    {
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l opening of file %s filed\n"), fname));
+      return(0);
+    }
+
+  }
   else
     in = stdin;
 
@@ -81,7 +92,7 @@ JSON::JSONValue *JSON::json_new_value(void)
   return(value);
 }
 
-JSON::JSONValue *JSON::json_new_value(int i)
+JSON::JSONValue *JSON::json_new_value_int(int i)
 {
   JSONValue *value = json_new_value();
 
@@ -94,7 +105,7 @@ JSON::JSONValue *JSON::json_new_value(int i)
   return(value);
 }
 
-JSON::JSONValue *JSON::json_new_value(double d)
+JSON::JSONValue *JSON::json_new_value_double(double d)
 {
   JSONValue *value = json_new_value();
 
@@ -107,7 +118,7 @@ JSON::JSONValue *JSON::json_new_value(double d)
   return(value);
 }
 
-JSON::JSONValue *JSON::json_new_value(char *str)
+JSON::JSONValue *JSON::json_new_value_str(char *str)
 {
   JSONValue *value = json_new_value();
 
@@ -125,7 +136,7 @@ JSON::JSONValue *JSON::json_new_value(char *str, int size)
   return(nullptr);
 }
 
-JSON::JSONValue *JSON::json_new_value(JSONObject *object)
+JSON::JSONValue *JSON::json_new_value_object(JSONObject *object)
 {
   if(nullptr == object)
     return(nullptr);
@@ -137,7 +148,7 @@ JSON::JSONValue *JSON::json_new_value(JSONObject *object)
   return(value);
 }
 
-JSON::JSONValue *JSON::json_new_value(JSONArray *array)
+JSON::JSONValue *JSON::json_new_value_array(JSONArray *array)
 {
   if(nullptr == array)
     return(nullptr);
@@ -149,7 +160,7 @@ JSON::JSONValue *JSON::json_new_value(JSONArray *array)
   return(value);
 }
 
-JSON::JSONValue *JSON::json_new_value(const ACE_UINT8 tOF)
+JSON::JSONValue *JSON::json_new_value_bool(const ACE_UINT8 tOF)
 {
   JSONValue *value = json_new_value();
 
@@ -175,7 +186,7 @@ JSON::JSONValue *JSON::json_new_value(std::nullptr_t nullp)
   return(value);
 }
 
-JSON::JSONElement *JSON::json_new(JSONValue *value)
+JSON::JSONElement *JSON::json_new_element(JSONValue *value)
 {
   JSONElement *element = nullptr;
 
@@ -187,7 +198,7 @@ JSON::JSONElement *JSON::json_new(JSONValue *value)
   return(element);
 }
 
-JSON::JSONArray *JSON::json_new(JSONElement *element)
+JSON::JSONArray *JSON::json_new_array(JSONElement *element)
 {
   JSONArray *array = nullptr;
 
@@ -198,7 +209,7 @@ JSON::JSONArray *JSON::json_new(JSONElement *element)
   return(array);
 }
 
-JSON::JSONMember *JSON::json_new(JSONValue *key, JSONValue *value)
+JSON::JSONMember *JSON::json_new_member(JSONValue *key, JSONValue *value)
 {
   JSONMember *member = nullptr;
 
@@ -206,20 +217,52 @@ JSON::JSONMember *JSON::json_new(JSONValue *key, JSONValue *value)
 
   member->m_key = key;
   member->m_value = value;
-  member->m_next = nullptr;
-  std::cout << "Key " << key << ": " << value << std::endl;
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Value of Key is %s\n"), key->m_svalue));
   return(member);
 }
 
-JSON::JSONObject *JSON::json_new(JSONMember *member)
+JSON::JSONObject *JSON::json_new_object(JSONMembers *members)
 {
   JSONObject *object = nullptr;
 
-  ACE_NEW_RETURN(object, JSONObject(), 0);
+  if(nullptr == members)
+    return(nullptr);
 
-  object->m_members = member;
+  ACE_NEW_NORETURN(object, JSONObject());
+
+  object->m_members = members;
 
   return(object);
+}
+
+JSON::JSONMembers *JSON::json_add_member_in_members(JSONMembers *members, JSONMember *member)
+{
+  if(nullptr == members)
+  {
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l members is nullptr\n")));
+    return(json_new_members(member));
+  }
+
+  JSONMembers *m = nullptr;
+
+  for(m = members; m->m_next != nullptr; m = m->m_next)
+    ;
+
+  m->m_next = json_new_members(member);
+
+  return(members);
+}
+
+JSON::JSONMembers *JSON::json_new_members(JSONMember *member)
+{
+  JSONMembers *members = nullptr;
+
+  ACE_NEW_RETURN(members, JSONMembers(), 0);
+
+  members->m_member = member;
+  members->m_next = nullptr;
+
+  return(members);
 }
 
 JSON::JSONObject *JSON::json_new_object(void)
@@ -292,7 +335,6 @@ void JSON::json_free(JSONMember *member)
   if(nullptr == member)
     return;
 
-  json_free(member->m_next);
   json_free(member->m_key);
   json_free(member->m_value);
 
@@ -304,29 +346,32 @@ void JSON::json_free(JSONObject *object)
   if(nullptr == object)
     return;
 
-  json_free(object->m_members);
+  //json_free(object->m_members);
   delete object;
 }
 
 JSON::JSONElement *JSON::json_value_add_element(JSONElement *element, JSONValue *value)
 {
   if(nullptr == element)
-    return(json_new(value));
+    return(json_new_element(value));
 
   JSONElement *e = nullptr;
   for(e = element; e->m_next != nullptr; e = e->m_next)
     ;
 
-  e->m_next = json_new(value);
+  e->m_next = json_new_element(value);
 
   return(element);
 }
 
+#if 0
 JSON::JSONMember *JSON::json_value_add_member(JSONMember *member, JSONValue *key, JSONValue *value)
 {
   return(json_member_add_member(member, json_new(key, value)));
 }
+#endif
 
+#if 0
 JSON::JSONMember *JSON::json_member_add_member(JSONMember *member, JSONMember *value)
 {
   if(nullptr == member)
@@ -340,6 +385,7 @@ JSON::JSONMember *JSON::json_member_add_member(JSONMember *member, JSONMember *v
 
   return(member);
 }
+#endif
 
 JSON::JSONValue *JSON::operator[](int index)
 {
@@ -382,7 +428,7 @@ JSON::JSONValue *JSON::json_value_at_index(JSONValue *value, int index)
 
 JSON::JSONValue *JSON::json_value_at_key(JSONValue *value, char *key)
 {
-  JSONMember *m = nullptr;
+  JSONMembers *m = nullptr;
 
   if((nullptr == value) ||
      (value->m_type != JSON::JSON_VALUE_TYPE_OBJECT) ||
@@ -391,10 +437,10 @@ JSON::JSONValue *JSON::json_value_at_key(JSONValue *value, char *key)
 
   for(m = value->m_ovalue->m_members; m != nullptr; m = m->m_next)
   {
-    if((m->m_key->m_type == JSON::JSON_VALUE_TYPE_STRING) &&
-       (!strcmp(m->m_key->m_svalue, key)))
+    if((m->m_member->m_key->m_type == JSON::JSON_VALUE_TYPE_STRING) &&
+       (!strcmp(m->m_member->m_key->m_svalue, key)))
     {
-      return(m->m_value);
+      return(m->m_member->m_value);
     }
   }
 

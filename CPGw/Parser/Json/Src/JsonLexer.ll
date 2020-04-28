@@ -14,7 +14,8 @@ extern void yyerror(YYLTYPE *ltype, yyscan_t scanner, JSON *pJson, const char *m
 
 %option stack
 
-%option warn nodefault
+%option warn
+%option default
 
 %option bison-bridge bison-locations
 
@@ -35,7 +36,8 @@ number  {integer}\.{digit}
 alpha   [a-zA-Z]
  /*ASCII Character*/
 char    [\x20 -\x7F]
-str     [\"\']+{char}*[\"\']+
+id      [0-9a-zA-Z\-\_. ]
+str     [\"\']+{id}*[\"\']+
 hex     [0-9a-fA-F]
 double  ({integer}|{number})[eE][+-]?{integer}+
 
@@ -53,13 +55,14 @@ double  ({integer}|{number})[eE][+-]?{integer}+
 
  /*yyextra holds the pointer to instance of JSON.*/
  /*yylval is of YYSTYPE and YYSTYPE mapped to union defined in .y file.*/
-"true"     {yylval->m_jvalue = yyextra->json_new_value(JSON::TRUE); return LITERAL;}
-"false"    {yylval->m_jvalue = yyextra->json_new_value(JSON::FALSE); return LITERAL;}
+"true"     {yylval->m_jvalue = yyextra->json_new_value_bool(JSON::TRUE); return LITERAL;}
+"false"    {yylval->m_jvalue = yyextra->json_new_value_bool(JSON::FALSE); return LITERAL;}
 "null"     {yylval->m_jvalue = yyextra->json_new_value(nullptr); return LITERAL;}
-{integer}  {yylval->m_jvalue = yyextra->json_new_value(atoi(yytext)); return LITERAL;}
-{number}   {yylval->m_jvalue = yyextra->json_new_value(atof(yytext)); return LITERAL;}
-{double}   {yylval->m_jvalue = yyextra->json_new_value(strtod(yytext, nullptr)); return LITERAL;}
-{str}      {yylval->m_jvalue = yyextra->json_new_value(yytext); return lSTRING;}
+{integer}  {yylval->m_jvalue = yyextra->json_new_value_int(atoi(yytext)); return LITERAL;}
+ /*{number}   {yylval->m_jvalue = yyextra->json_new_value_float(atof(yytext)); return LITERAL;}*/
+{double}   {yylval->m_jvalue = yyextra->json_new_value_double(strtod(yytext, nullptr)); return LITERAL;}
+{str}      {yylval->m_jvalue = yyextra->json_new_value_str(yytext); return lSTRING;}
 
+. {std::cout << "bad input "<<yytext <<"linr no:"<<yylineno;}
 
 %%
