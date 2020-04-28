@@ -48,7 +48,7 @@ double          ({integer}|{number})[eE][+-]?{integer}+
 ":" return ':';
 
  /*eating up all the spaceses */
-{space}* {;}
+{space}*        {;}
 
  /*yyextra holds the pointer to instance of JSON.*/
  /*yylval is of YYSTYPE and YYSTYPE mapped to union defined in .yy file.*/
