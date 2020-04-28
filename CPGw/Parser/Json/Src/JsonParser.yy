@@ -24,35 +24,30 @@ typedef void* yyscan_t;
 }
 
 %union {
-  JSON::JSONObject *m_jobject;
-  JSON::JSONMember *m_jmember;
-  JSON::JSONArray *m_jarray;
+  JSON::JSONObject  *m_jobject;
+  JSON::JSONMember  *m_jmember;
+  JSON::JSONArray   *m_jarray;
   JSON::JSONElement *m_jelement;
-  JSON::JSONValue *m_jvalue;
+  JSON::JSONValue   *m_jvalue;
   JSON::JSONMembers *m_jmembers;
 }
 
 %token <m_jvalue> lSTRING LITERAL
 
-%type <m_jobject> object
-%type <m_jmember> member
+%type <m_jobject>  object
+%type <m_jmember>  member
 %type <m_jmembers> members
-%type <m_jarray> array
+%type <m_jarray>   array
 %type <m_jelement> element
-%type <m_jvalue> value
-
- /*%defines "Inc/JsonParser.h"*/
- /*%output "Src/JsonParser.cc"*/
+%type <m_jvalue>   value
 
 %locations
- /*%verbose*/
 %define parse.error verbose
 %define parse.lac full
 %define api.pure full
 
 %param {yyscan_t scanner}
 %parse-param {JSON *pJson}
-
 
 %start input
 
@@ -72,7 +67,7 @@ value
  ;
 
 object
- : '{' '}'        {$$ = pJson->json_new_object(nullptr);}
+ : '{' '}'         {$$ = pJson->json_new_object(nullptr);}
  | '{' members '}' {$$ = pJson->json_new_object($2);}
  ;
 

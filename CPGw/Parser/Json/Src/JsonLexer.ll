@@ -74,6 +74,6 @@ double          ({integer}|{number})[eE][+-]?{integer}+
 <STRING_ST>{double_quote}  {BEGIN(INITIAL);}
 
  /*This is the default rule if none of above matches. withour this flex reports \"flex is jammed error.\"*/
-.               {std::cout << "unsupported input "<< yytext << "line no:"<<yylineno;}
+.               {std::cout << "unsupported input "<< yytext << "line no:"<<yylineno << std::endl;}
 
 %%

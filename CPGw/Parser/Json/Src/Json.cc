@@ -72,7 +72,6 @@ int JSON::start(const ACE_TCHAR *fname)
   yyset_in(in, scanner);
 
   ret = yyparse(scanner, this);
-  std::cout << "Value of ret " << ret << std::endl;
   yylex_destroy(scanner);
 
   if(in != nullptr)
@@ -363,29 +362,6 @@ JSON::JSONElement *JSON::json_value_add_element(JSONElement *element, JSONValue 
 
   return(element);
 }
-
-#if 0
-JSON::JSONMember *JSON::json_value_add_member(JSONMember *member, JSONValue *key, JSONValue *value)
-{
-  return(json_member_add_member(member, json_new(key, value)));
-}
-#endif
-
-#if 0
-JSON::JSONMember *JSON::json_member_add_member(JSONMember *member, JSONMember *value)
-{
-  if(nullptr == member)
-    return(member);
-
-  JSONMember *m = nullptr;
-
-  for(m = member; m->m_next != nullptr; m = m->m_next)
-    ;
-  m->m_next = value;
-
-  return(member);
-}
-#endif
 
 JSON::JSONValue *JSON::operator[](int index)
 {
