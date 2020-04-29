@@ -38,6 +38,8 @@ JSON::~JSON()
 {
   m_instance = nullptr;
 
+  json_free(m_value);
+
   /*reclaim the heap memory now.*/
   delete m_value;
   m_value = nullptr;
@@ -55,6 +57,8 @@ void JSON::value(JSONValue *value)
 
 int JSON::stop(void)
 {
+  json_free(m_value);
+  /*don't free m_value itself.*/
   return(0);
 }
 
@@ -243,7 +247,6 @@ JSON::JSONMember *JSON::json_new_member(JSONValue *key, JSONValue *value)
 
   member->m_key = key;
   member->m_value = value;
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Value of Key is %s\n"), key->m_svalue));
   return(member);
 }
 
@@ -335,7 +338,6 @@ void JSON::json_free(JSONValue *value)
     break;
   }
 
-  delete value;
 }
 
 void JSON::json_free(JSONElement *element)
@@ -344,7 +346,6 @@ void JSON::json_free(JSONElement *element)
     return;
 
   json_free(element->m_next);
-  delete element;
 }
 
 void JSON::json_free(JSONArray *array)
@@ -353,7 +354,6 @@ void JSON::json_free(JSONArray *array)
     return;
 
   json_free(array->m_elements);
-  delete array;
 }
 
 void JSON::json_free(JSONMember *member)
@@ -364,7 +364,15 @@ void JSON::json_free(JSONMember *member)
   json_free(member->m_key);
   json_free(member->m_value);
 
-  delete member;
+}
+
+void JSON::json_free(JSONMembers *members)
+{
+  if(nullptr == members)
+    return;
+
+  json_free(members->m_member);
+  json_free(members->m_next);
 }
 
 void JSON::json_free(JSONObject *object)
@@ -372,8 +380,7 @@ void JSON::json_free(JSONObject *object)
   if(nullptr == object)
     return;
 
-  //json_free(object->m_members);
-  delete object;
+  json_free(object->m_members);
 }
 
 JSON::JSONElement *JSON::json_value_add_element(JSONElement *element, JSONValue *value)
@@ -443,11 +450,65 @@ JSON::JSONValue *JSON::json_value_at_key(JSONValue *value, const char *key)
   return(nullptr);
 }
 
-void JSON::display(JSONValue &value)
+void JSON::display(JSONValue *value)
 {
-  JSONObject &object = *value.m_ovalue;
-  JSONArray &array = *value.m_avalue;
+  if(nullptr == value)
+    return;
 
+  switch(value->m_type)
+  {
+  case JSON_VALUE_TYPE_STRING:
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l %s \n"), value->m_svalue));
+    break;
+  case JSON_VALUE_TYPE_OBJECT:
+    display(value->m_ovalue);
+    break;
+  case JSON_VALUE_TYPE_ARRAY:
+    display(value->m_avalue);
+    break;
+  default:
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Type not supported\n")));
+
+  }
+}
+
+void JSON::display(JSONMembers *members)
+{
+  if(nullptr == members)
+    return;
+
+  if(members->m_member)
+  {
+    display(members->m_member->m_key);
+    display(members->m_member->m_value);
+    display(members->m_next);
+  }
 
 }
+
+void JSON::display(JSONObject *object)
+{
+  if(nullptr == object)
+    return;
+
+  display(object->m_members);
+}
+
+void JSON::display(JSONElement *element)
+{
+  if(nullptr == element)
+    return;
+
+  display(element->m_value);
+  display(element->m_next);
+}
+
+void JSON::display(JSONArray *array)
+{
+  if(nullptr == array)
+    return;
+
+  display(array->m_elements);
+}
+
 #endif /*__JSON_CC__*/

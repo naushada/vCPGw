@@ -103,6 +103,7 @@ public:
   void json_free(JSONArray *array);
   void json_free(JSONMember *member);
   void json_free(JSONObject *object);
+  void json_free(JSONMembers *members);
 
   JSONElement *json_value_add_element(JSONElement *element, JSONValue *value);
   JSONMember *json_value_add_member(JSONMember *member, JSONValue *key, JSONValue *value);
@@ -120,7 +121,13 @@ public:
   static JSON *get_instance(void);
   int start(const ACE_TCHAR *fname);
   int stop(void);
-  void display(JSONValue &value);
+
+  void display(JSONValue *value);
+  void display(JSONObject *object);
+  void display(JSONArray *array);
+  void display(JSONElement *element);
+  void display(JSONMembers *members);
+
   JSON(JSONValue *);
 
 private:
