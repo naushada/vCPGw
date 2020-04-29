@@ -24,6 +24,11 @@ JSON *JSON::get_instance(void)
   return(m_instance);
 }
 
+JSON::JSON(JSONValue *value)
+{
+  m_value = value;
+}
+
 JSON::JSON()
 {
   ACE_NEW_NORETURN(m_value, JSONValue());
@@ -32,8 +37,9 @@ JSON::JSON()
 JSON::~JSON()
 {
   m_instance = nullptr;
-  delete m_value;
 
+  /*reclaim the heap memory now.*/
+  delete m_value;
   m_value = nullptr;
 }
 
@@ -45,6 +51,11 @@ JSON::JSONValue *JSON::value(void)
 void JSON::value(JSONValue *value)
 {
   m_value = value;
+}
+
+int JSON::stop(void)
+{
+  return(0);
 }
 
 int JSON::start(const ACE_TCHAR *fname)
@@ -72,12 +83,6 @@ int JSON::start(const ACE_TCHAR *fname)
   yyset_in(in, scanner);
 
   ret = yyparse(scanner, this);
-  JSONValue *jValue = json_value_at_key(json_value_at_index(json_value_at_key(json_value_at_key(this->value(), "menu"), "items"), 1), "id");
-
-  if(jValue && jValue->m_type == JSON_VALUE_TYPE_STRING)
-  {
-    std::cout << "value of id is " << jValue->m_svalue << std::endl;
-  }
 
   yylex_destroy(scanner);
 
@@ -85,6 +90,20 @@ int JSON::start(const ACE_TCHAR *fname)
   {
     fclose(in);
     in = nullptr;
+  }
+
+  //JSONValue *jValue = json_value_at_key(json_value_at_index(json_value_at_key(json_value_at_key(this->value(), "menu"), "items"), 1), "id");
+  //JSONValue *arr = json_value_at_key(json_value_at_key(this->value(), "menu"), "items");
+  JSONValue *menu = (*this)["menu"];
+  JSON objMenu(menu);
+  JSONValue *items = objMenu["items"];
+  //JSONValue *arr = json_value_at_key(json_value_at_key(this->value(), "menu"), "items");
+  JSON ob(items);
+  JSONValue *jValue = json_value_at_key(ob[3], "label");
+
+  if(jValue && jValue->m_type == JSON_VALUE_TYPE_STRING)
+  {
+    std::cout << "value of id is " << jValue->m_svalue << std::endl;
   }
 
   return(ret);
@@ -372,19 +391,7 @@ JSON::JSONElement *JSON::json_value_add_element(JSONElement *element, JSONValue 
 
 JSON::JSONValue *JSON::operator[](int index)
 {
-  JSONElement *e = nullptr;
-
-  if(m_value->m_type != JSON::JSON_VALUE_TYPE_ARRAY)
-    return(nullptr);
-
-  for(e = m_value->m_avalue->m_elements; index && (e != nullptr); index--, e = e->m_next)
-    ;
-
-  if(e != nullptr)
-    return(e->m_value);
-
-  return(nullptr);
-
+  return(json_value_at_index(m_value, index));
 }
 /*
  * @brief
@@ -409,6 +416,11 @@ JSON::JSONValue *JSON::json_value_at_index(JSONValue *value, int index)
   return(nullptr);
 }
 
+JSON::JSONValue *JSON::operator[](const char *key)
+{
+  return(json_value_at_key(m_value, key));
+}
+
 JSON::JSONValue *JSON::json_value_at_key(JSONValue *value, const char *key)
 {
   JSONMembers *m = nullptr;
@@ -430,4 +442,11 @@ JSON::JSONValue *JSON::json_value_at_key(JSONValue *value, const char *key)
   return(nullptr);
 }
 
+void JSON::display(JSONValue &value)
+{
+  JSONObject &object = *value.m_ovalue;
+  JSONArray &array = *value.m_avalue;
+
+
+}
 #endif /*__JSON_CC__*/

@@ -112,6 +112,7 @@ public:
 
   /*Array operator overloading.*/
   JSONValue *operator [] (int index);
+  JSONValue *operator [] (const char *key);
   JSONValue *value(void);
   void value(JSONValue *value);
 
@@ -119,6 +120,8 @@ public:
   static JSON *get_instance(void);
   int start(const ACE_TCHAR *fname);
   int stop(void);
+  void display(JSONValue &value);
+  JSON(JSONValue *);
 
 private:
   static JSON *m_instance;
