@@ -94,6 +94,7 @@ int JSON::start(const ACE_TCHAR *fname)
 
   //JSONValue *jValue = json_value_at_key(json_value_at_index(json_value_at_key(json_value_at_key(this->value(), "menu"), "items"), 1), "id");
   //JSONValue *arr = json_value_at_key(json_value_at_key(this->value(), "menu"), "items");
+#if 0
   JSONValue *menu = (*this)["menu"];
   JSON objMenu(menu);
   JSONValue *items = objMenu["items"];
@@ -105,7 +106,7 @@ int JSON::start(const ACE_TCHAR *fname)
   {
     std::cout << "value of id is " << jValue->m_svalue << std::endl;
   }
-
+#endif
   return(ret);
 }
 
@@ -391,7 +392,7 @@ JSON::JSONElement *JSON::json_value_add_element(JSONElement *element, JSONValue 
 
 JSON::JSONValue *JSON::operator[](int index)
 {
-  return(json_value_at_index(m_value, index));
+  return(json_value_at_index(value(), index));
 }
 /*
  * @brief
