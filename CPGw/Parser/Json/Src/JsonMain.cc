@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
 
   inst->display(inst->value());
 
+#if 0
   JSON root(inst->value());
 
   JSON::JSONValue *menu = root["menu"];
@@ -35,7 +36,7 @@ int main(int argc, char *argv[])
   {
     std::cout << "value of jValue is " << jValue->m_svalue << std::endl;
   }
-
+#endif
   inst->stop();
   delete inst;
   return(0);
