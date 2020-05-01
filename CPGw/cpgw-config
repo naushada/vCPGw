@@ -1,0 +1,93 @@
+{
+  "cp-gateway": {
+    "instances" : {
+      "dhcp-server": ["dhcp1", "dhcp2", "dhcp3"],
+      "dhcp-agent": ["dhcp-agent1", "dhcp-agent2", "dhcp-agent3", "dhcp-agent4"],
+      "http-server": ["http1", "http2", "http3"],
+      "cp-gw": ["cpgw1", "cpgw2", "cpgw3"],
+      "access-points": ["ap1", "ap2", "ap3", "ap4"]
+    },
+    "peers": {
+      "access-points": ["ap1", "ap2", "ap3", "ap4"],
+      "aaa-server": ["radius1", "radius2", "radius3"]
+    }
+  },
+
+  "ap1": {
+  "name": "ap-name",
+  "ssd-id": "ssd-name",
+  "country": "IN",
+  "hw-mode": "g",
+  "channel": "1-6",
+  "auth-algs": 3,
+  "wpa": 2,
+  "wpa-passphrase": "passphrase",
+  "wpa-key-mgmt": "WPA-PSK",
+  "wpa-pairwise": "TKIP",
+  "rsn-pairwise": "CCMP",
+  "driver": "nl80211"
+  },
+
+  "dhcp-agent1": {
+  "dhcp-server-ip": "a.a.a.a",
+  "ip" : "a.a.a.a",
+  "subnet-mask": "b.b.b.b",
+  "start-ip": "a.a.a.a",
+  "end-ip": "b.b.b.b",
+  "exclude-ip": ["x.x.x.x", "y.y.y.y"]
+  },
+
+  "dhcp-server-profiles": ["dhcp-profile", "dhcp-profile1", "dhcp-profile2"],
+  "dhcp-agent-profile": [""],
+
+  "dhcp-profile": {
+  "mtu" : 1500,
+  "dns-ip" : "8.8.8.8",
+  "dns-name" : "example.com",
+  "lease-time": 24
+  },
+
+  "dhcp-profile1": {
+  "mtu" : 1500,
+  "dns-ip" : "8.8.8.8",
+  "dns-name" : "example.com",
+  "lease-time": 24
+  },
+
+  "dhcp1": {
+  "port": "ens1",
+  "profile-name": "dhcp-profile",
+  "subnet-mask" : "255.255.0.0",
+  "ip" : "10.10.2.1",
+  "host-name" : "adam",
+  "start-ip": "a.a.a.a",
+  "end-ip": "b.b.b.b",
+  "exclude-ip": ["ip1", "ip2", "ip3", "ip4"]
+  },
+
+  "dhcp2": {
+  "port": "ens2",
+  "profile-name": "dhcp-profile",
+  "subnet-mask" : "255.255.0.0",
+  "ip" : "10.10.2.1",
+  "host-name" : "adam",
+  "start-ip": "a.a.a.a",
+  "end-ip": "b.b.b.b",
+  "exclude-ip": ["ip1", "ip2", "ip3", "ip4"]
+  },
+
+  "virtual-networks" : [
+  {"name" : "nw1", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}},
+  {"name" : "nw2", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}},
+  {"name" : "nw3", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}},
+  {"name" : "nw4", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}}
+  ],
+
+  "ports" : [
+  {"name": "ens1", "type": "physical"},
+  {"name": "ens2", "type": "physical"},
+  {"name": "ens3", "type": "physical"},
+  {"name": "ens4", "type": "physical"}
+  ]
+}
+
