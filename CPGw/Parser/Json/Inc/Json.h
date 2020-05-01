@@ -143,6 +143,7 @@ public:
 
 private:
   static JSON *m_instance;
+  static ACE_UINT32 m_ref;
   JSONValue *m_value;
   JSON();
 

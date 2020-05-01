@@ -9,6 +9,7 @@
 #include "ace/Log_Msg.h"
 
 JSON *JSON::m_instance = nullptr;
+ACE_UINT32 JSON::m_ref = 0;
 
 JSON *JSON::instance(void)
 {
@@ -17,13 +18,20 @@ JSON *JSON::instance(void)
     ACE_NEW_NORETURN(m_instance, JSON());
   }
 
+  m_ref++;
   return(m_instance);
 }
 
 void JSON::destroy(void)
 {
-  delete m_instance;
-  m_instance = nullptr;
+  m_ref--;
+
+  if(!m_ref)
+  {
+    delete m_instance;
+    m_instance = nullptr;
+    m_ref = 0;
+  }
 }
 
 JSON *JSON::get_instance(void)
@@ -38,13 +46,12 @@ JSON::JSON(JSONValue *value)
 
 JSON::JSON()
 {
-  ACE_NEW_NORETURN(m_value, JSONValue());
+  m_value = nullptr;
 }
 
 JSON::~JSON()
 {
   /*reclaim the heap memory now.*/
-  delete m_value;
   m_value = nullptr;
 }
 
@@ -61,7 +68,7 @@ void JSON::value(JSONValue *value)
 int JSON::stop(void)
 {
   json_free(m_value);
-  /*don't free m_value itself.*/
+  m_value = nullptr;
   return(0);
 }
 
@@ -88,7 +95,8 @@ int JSON::start(const ACE_TCHAR *fname)
   yylex_init_extra(this, &scanner);
   yyset_in(in, scanner);
 
-  ret = yyparse(scanner, this);
+  if(ret = yyparse(scanner, this))
+    delete m_value;
 
   yylex_destroy(scanner);
 
