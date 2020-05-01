@@ -74,6 +74,7 @@ double          ({integer}|{number})[eE][+-]?{integer}+
 
 <STRING_ST>{except_quote}+ {yylval->m_jvalue = yyextra->json_new_value_str(yytext); return(lSTRING);}
 
+ /*End quote, move to INITIAL state of flex now for further processing of toke.*/
 <STRING_ST>{double_quote}  {BEGIN(INITIAL);}
 
  /*This is the default rule if none of above matches. withour this flex reports \"flex is jammed error.\"*/

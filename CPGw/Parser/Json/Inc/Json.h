@@ -45,6 +45,15 @@ public:
 
   struct JSONArray
   {
+    ~JSONArray()
+    {
+      m_elements = nullptr;
+    }
+
+    JSONArray()
+    {
+    }
+
     JSONElement *m_elements;
   };
 
@@ -68,11 +77,12 @@ public:
     ACE_UINT8 m_type;
     union
     {
-      int m_ivalue;
-      double m_dvalue;
-      char *m_svalue;
+      int        m_ivalue;
+      double     m_dvalue;
+      char       *m_svalue;
+      char       *m_nvalue;
       JSONObject *m_ovalue;
-      JSONArray *m_avalue;
+      JSONArray  *m_avalue;
     };
   };
 
@@ -118,6 +128,7 @@ public:
   void value(JSONValue *value);
 
   static JSON *instance(void);
+  static void destroy(void);
   static JSON *get_instance(void);
   int start(const ACE_TCHAR *fname);
   int stop(void);

@@ -2,10 +2,11 @@
 #define __JSON_CC__
 
 #include <iostream>
-#include "ace/Log_Msg.h"
 #include "Json.h"
 #include "JsonParser.hh"
 #include "JsonLexer.hh"
+
+#include "ace/Log_Msg.h"
 
 JSON *JSON::m_instance = nullptr;
 
@@ -17,6 +18,12 @@ JSON *JSON::instance(void)
   }
 
   return(m_instance);
+}
+
+void JSON::destroy(void)
+{
+  delete m_instance;
+  m_instance = nullptr;
 }
 
 JSON *JSON::get_instance(void)
@@ -36,10 +43,6 @@ JSON::JSON()
 
 JSON::~JSON()
 {
-  m_instance = nullptr;
-
-  json_free(m_value);
-
   /*reclaim the heap memory now.*/
   delete m_value;
   m_value = nullptr;
@@ -72,13 +75,12 @@ int JSON::start(const ACE_TCHAR *fname)
 
   if(fname)
   {
-    in = fopen(fname, "r");
+    in = ACE_OS::fopen(fname, "r");
     if(!in)
     {
       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l opening of file %s filed\n"), fname));
       return(0);
     }
-
   }
   else
     in = stdin;
@@ -92,7 +94,7 @@ int JSON::start(const ACE_TCHAR *fname)
 
   if(in != nullptr)
   {
-    fclose(in);
+    ACE_OS::fclose(in);
     in = nullptr;
   }
 
@@ -118,7 +120,7 @@ JSON::JSONValue *JSON::json_new_value(void)
 {
   JSONValue *value = nullptr;
 
-  ACE_NEW_RETURN(value, JSONValue(), 0);
+  ACE_NEW_RETURN(value, JSONValue(), nullptr);
   return(value);
 }
 
@@ -150,6 +152,7 @@ JSON::JSONValue *JSON::json_new_value_double(double d)
 
 JSON::JSONValue *JSON::json_new_value_str(char *str)
 {
+
   JSONValue *value = json_new_value();
 
   if(value)
@@ -184,6 +187,9 @@ JSON::JSONValue *JSON::json_new_value_array(JSONArray *array)
     return(nullptr);
 
   JSONValue *value = json_new_value();
+  if(nullptr == value)
+    return(nullptr);
+
   value->m_type = JSON::JSON_VALUE_TYPE_ARRAY;
   value->m_avalue = array;
 
@@ -210,8 +216,11 @@ JSON::JSONValue *JSON::json_new_value(std::nullptr_t nullp)
 {
   JSONValue *value = json_new_value();
 
-  if(value)
-    value->m_type = JSON::JSON_VALUE_TYPE_NULL;
+  if(nullptr == value)
+    return(nullptr);
+
+  value->m_type = JSON::JSON_VALUE_TYPE_NULL;
+  value->m_nvalue = ACE_OS::strdup("null");
 
   return(value);
 }
@@ -323,7 +332,15 @@ void JSON::json_free(JSONValue *value)
   switch(value->m_type)
   {
   case JSON::JSON_VALUE_TYPE_STRING:
-    delete value->m_svalue;
+    /*use free and not delete because memory was allocated by
+     * strdup which usages malloc.*/
+    ACE_OS::free((void *)value->m_svalue);
+    break;
+
+  case JSON::JSON_VALUE_TYPE_NULL:
+    /*use free and not delete because memory was allocated
+     *by strdup which usages malloc.*/
+    ACE_OS::free((void *)value->m_nvalue);
     break;
 
   case JSON::JSON_VALUE_TYPE_OBJECT:
@@ -338,6 +355,7 @@ void JSON::json_free(JSONValue *value)
     break;
   }
 
+  delete value;
 }
 
 void JSON::json_free(JSONElement *element)
@@ -346,6 +364,8 @@ void JSON::json_free(JSONElement *element)
     return;
 
   json_free(element->m_next);
+  json_free(element->m_value);
+  delete element;
 }
 
 void JSON::json_free(JSONArray *array)
@@ -354,6 +374,7 @@ void JSON::json_free(JSONArray *array)
     return;
 
   json_free(array->m_elements);
+  delete array;
 }
 
 void JSON::json_free(JSONMember *member)
@@ -363,6 +384,7 @@ void JSON::json_free(JSONMember *member)
 
   json_free(member->m_key);
   json_free(member->m_value);
+  delete member;
 
 }
 
@@ -371,8 +393,10 @@ void JSON::json_free(JSONMembers *members)
   if(nullptr == members)
     return;
 
-  json_free(members->m_member);
   json_free(members->m_next);
+  json_free(members->m_member);
+  delete members;
+
 }
 
 void JSON::json_free(JSONObject *object)
@@ -381,6 +405,7 @@ void JSON::json_free(JSONObject *object)
     return;
 
   json_free(object->m_members);
+  delete object;
 }
 
 JSON::JSONElement *JSON::json_value_add_element(JSONElement *element, JSONValue *value)
@@ -401,6 +426,7 @@ JSON::JSONValue *JSON::operator[](int index)
 {
   return(json_value_at_index(value(), index));
 }
+
 /*
  * @brief
  * @param
