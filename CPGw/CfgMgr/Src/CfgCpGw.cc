@@ -37,7 +37,7 @@ CfgMgr::~CfgMgr()
 {
 }
 
-ACE_INT32 CfgMgr::processCPGWCfg(void)
+ACE_INT32 CfgMgr::processDHCPServerCfg(void)
 {
   ACE_INT32 ret = -1;
   do
@@ -456,7 +456,7 @@ ACE_Byte CfgMgr::start(void)
     }
   }
 
-  processCPGWCfg();
+  processDHCPServerCfg();
 
   /*release the memory.*/
   m_cpGwCfg->stop();

@@ -110,7 +110,12 @@ public:
   HTTPInstMap_t &http(void);
   APInstMap_t &ap(void);
   DHCPInstMap_t &dhcp(void);
+  ACE_INT32 processDHCPServerCfg(void);
+  ACE_INT32 processDHCPAgentCfg(void);
+  ACE_INT32 processHTTPServerCfg(void);
   ACE_INT32 processCPGWCfg(void);
+  ACE_INT32 processAPCfg(void);
+  ACE_INT32 processAAACfg(void);
   ACE_INT32 publishCpGwConfig(void);
   void display(void);
 
