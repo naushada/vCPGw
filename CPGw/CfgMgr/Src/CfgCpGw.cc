@@ -43,8 +43,11 @@ ACE_INT32 CfgMgr::processCPGWCfg(void)
   do
   {
 
-    JSON inst(m_cpGwCfg->value());
+    /*Global Object.*/
+    JSON glob(m_cpGwCfg->value());
 
+    /*For root object.*/
+    JSON inst(m_cpGwCfg->value());
     /*Value of root node of JSON.*/
     JSON::JSONValue *root = inst["cp-gateway"];
     if(!root)
@@ -106,14 +109,14 @@ ACE_INT32 CfgMgr::processCPGWCfg(void)
       dhcp().bind(keyStr, pDhcp);
 
       /*dhcp instance name .*/
-      JSON::JSONValue *dhcpVal = objR[key];
+      JSON::JSONValue *dhcpVal = glob[key];
       JSON objDhcp(dhcpVal);
 
       /*Individual element of dhcp instance start.*/
       JSON::JSONValue *dhcpVirtNw = objDhcp["virtual-nw"];
       if(!dhcpVirtNw)
       {
-        ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Invalid dhcpVirtNw is nullptr\n")));
+        ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Invalid dhcpVirtNw is nullptr key %s\n"), keyStr.c_str()));
         /*reclaim the heap memory.*/
         dhcp().unbind(keyStr);
         delete pDhcp;
@@ -123,7 +126,7 @@ ACE_INT32 CfgMgr::processCPGWCfg(void)
       ACE_CString dhcpVirtNwName(dhcpVirtNw->m_svalue);
 
       /*extracting virtual-networks to scan the network name mentioned in dhcp instance.*/
-      JSON::JSONValue *virtNw = objR["virtual-networks"];
+      JSON::JSONValue *virtNw = glob["virtual-networks"];
       if(!virtNw)
       {
         ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Invalid virtNw is nullptr\n")));
@@ -236,7 +239,7 @@ ACE_INT32 CfgMgr::processCPGWCfg(void)
         break;
       }
 
-      JSON objProfile(objR[dhcpProfile->m_svalue]);
+      JSON objProfile(glob[dhcpProfile->m_svalue]);
 
       vval = objProfile["mtu"];
       if(!vval)
@@ -438,6 +441,7 @@ ACE_Byte CfgMgr::start(void)
   m_cpGwCfg = JSON::instance();
   if(nullptr != m_cpGwCfg)
   {
+    /*start parsing CPGateway Config in JSON format.*/
     if(m_cpGwCfg->start(m_schema.c_str()))
     {
       delete m_cpGwCfg;
@@ -449,6 +453,8 @@ ACE_Byte CfgMgr::start(void)
   }
 
   processCPGWCfg();
+
+  /*release the memory.*/
   m_cpGwCfg->stop();
   delete m_cpGwCfg;
   m_cpGwCfg = nullptr;
@@ -458,7 +464,54 @@ ACE_Byte CfgMgr::start(void)
 
 ACE_Byte CfgMgr::stop(void)
 {
+  _CpGwDHCPInstance_t *inst = NULL;
+  DHCPInstMap_Iter_t iter = dhcp().begin();
+
+  for(; iter != dhcp().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwDHCPInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    dhcp().unbind(instName);
+    delete inst;
+  }
+
   return(0);
 }
 
+void CfgMgr::display(void)
+{
+  _CpGwDHCPInstance_t *inst = NULL;
+  DHCPInstMap_Iter_t iter = dhcp().begin();
+
+  for(; iter != dhcp().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwDHCPInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    /*virtual networks.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_name is %s\n"), inst->m_nw.m_name));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_type is %s\n"), inst->m_nw.m_type));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_nw.m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_mask is 0x%X\n"), inst->m_nw.m_mask.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_port is %s\n"), inst->m_nw.m_port));
+    /*Profile .*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_mtu is %u\n"), inst->m_profile.m_mtu));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_profile.m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_domain_name is %s\n"), inst->m_profile.m_domain_name));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_lease is %u\n"), inst->m_profile.m_lease));
+
+    /*Individual elements.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_mask is 0x%X\n"), inst->m_mask.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_host_name is %s\n"), inst->m_host_name));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_start_ip is 0x%X\n"), inst->m_start_ip));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_end_ip is 0x%X\n"), inst->m_end_ip));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip_count is %u\n"), inst->m_ip_count));
+  }
+}
 #endif /*__CFG_CPGW_CC__*/

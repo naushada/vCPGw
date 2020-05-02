@@ -94,6 +94,12 @@ typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwAAAInstance_t*, ACE_Null_Mutex>AA
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwHTTPInsatnce_t*, ACE_Null_Mutex>HTTPInstMap_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwAPInstance_t*, ACE_Null_Mutex>APInstMap_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwDHCPInstance_t*, ACE_Null_Mutex>DHCPInstMap_t;
+/*Iterator.*/
+typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwAAAInstance_t*, ACE_Null_Mutex>::iterator AAAInstMap_Iter_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwHTTPInsatnce_t*, ACE_Null_Mutex>::iterator HTTPInstMap_Iter_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwAPInstance_t*, ACE_Null_Mutex>::iterator APInstMap_Iter_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwDHCPInstance_t*, ACE_Null_Mutex>::iterator DHCPInstMap_Iter_t;
+
 
 class CfgMgr
 {
@@ -106,6 +112,7 @@ public:
   DHCPInstMap_t &dhcp(void);
   ACE_INT32 processCPGWCfg(void);
   ACE_INT32 publishCpGwConfig(void);
+  void display(void);
 
   ACE_Byte start(void);
   ACE_Byte stop(void);

@@ -5,6 +5,13 @@
 
 int main(int argc, char *argv[])
 {
+  if(argc > 1 && argv[1])
+  {
+    ACE_CString schema(argv[1]);
+    CfgMgr cfgInst(schema);
+    cfgInst.start();
+    cfgInst.display();
+  }
 
   return(0);
 }
