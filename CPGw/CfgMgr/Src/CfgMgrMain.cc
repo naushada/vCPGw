@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
     CfgMgr cfgInst(schema);
     cfgInst.start();
     cfgInst.display();
+    cfgInst.stop();
   }
 
   return(0);

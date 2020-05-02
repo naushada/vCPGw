@@ -120,6 +120,8 @@ ACE_INT32 CfgMgr::processCPGWCfg(void)
         /*reclaim the heap memory.*/
         dhcp().unbind(keyStr);
         delete pDhcp;
+        ACE_OS::free(key);
+        key = nullptr;
         break;
       }
 
@@ -133,6 +135,8 @@ ACE_INT32 CfgMgr::processCPGWCfg(void)
         /*reclaim the heap memory.*/
         dhcp().unbind(keyStr);
         delete pDhcp;
+        ACE_OS::free(key);
+        key = nullptr;
         break;
       }
 
