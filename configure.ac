@@ -21,12 +21,13 @@ AC_CONFIG_FILES([
  Makefile
  vAPSh/Makefile
  vTYSh/Makefile
- CPGw/Parser/Json/Makefile
  CPGw/Common/Makefile
  CPGw/Ipc/Makefile
  CPGw/Protocol/Makefile
  CPGw/Protocol/Arp/Makefile
  CPGw/Protocol/Dns/Makefile
+ CPGw/Parser/Json/Makefile
+ CPGw/CfgMgr/Makefile
  CPGw/Makefile
 ])
 
