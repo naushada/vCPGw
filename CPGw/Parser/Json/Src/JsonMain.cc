@@ -22,21 +22,29 @@ int main(int argc, char *argv[])
 
   inst->display(inst->value());
 
-#if 0
+
   JSON root(inst->value());
 
-  JSON::JSONValue *menu = root["menu"];
-  JSON objMenu(menu);
-  JSON::JSONValue *items = objMenu["items"];
-  JSON ob(items);
+  JSON::JSONValue *r = root["cp-gateway"];
+  JSON obr(r);
+  JSON::JSONValue *rc1 = obr["instances"];
+  JSON obrc1(rc1);
+  JSON::JSONValue *rc11 = obrc1["dhcp-server"];
+  JSON obrc11(rc11);
   //JSON::JSONValue *jValue = inst->json_value_at_key(ob[3], "label");
-  JSON::JSONValue *jValue = objMenu["header"];
+  JSON::JSONValue *jValue = obrc11[0];
 
-  if(jValue && jValue->m_type == JSON::JSON_VALUE_TYPE_STRING)
+  for(int idx = 0;  jValue; jValue = obrc11[idx])
   {
-    std::cout << "value of jValue is " << jValue->m_svalue << std::endl;
+
+    if(jValue->m_type == JSON::JSON_VALUE_TYPE_STRING)
+    {
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l dhcp-server instances %s\n"), jValue->m_svalue));
+    }
+
+    idx++;
   }
-#endif
+
   inst->stop();
   delete inst;
   return(0);
