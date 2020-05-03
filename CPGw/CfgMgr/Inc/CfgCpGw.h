@@ -31,18 +31,17 @@ typedef struct _CpGwAAAInstance
   ACE_Byte m_protocol[8];
   ACE_UINT16 m_auth_port;
   ACE_UINT16 m_acc_port;
-  _ipAddr_t m_peer_ip;
-  ACE_UINT16 m_peer_port;
-
+  ACE_Byte m_admin_user[256];
+  ACE_Byte m_admin_pwd[256];
 }_CpGwAAAInstance_t;
 
-typedef struct _CpGwHTTPInsatnce
+typedef struct _CpGwHTTPInstance
 {
   _CpVirtualNw_t m_nw;
   _ipAddr_t m_ip;
   ACE_UINT16 m_port;
 
-}_CpGwHTTPInsatnce_t;
+}_CpGwHTTPInstance_t;
 
 typedef struct _CpDhcpProfile
 {
@@ -53,21 +52,38 @@ typedef struct _CpDhcpProfile
 
 }_CpDhcpProfile_t;
 
+typedef struct _CpGwAPZone
+{
+  ACE_Byte m_channel_no;
+  ACE_Byte m_hw_mode[8];
+  ACE_Byte m_auth_algo;
+}_CpGwAPZone_t;
+
 typedef struct _CpGwAPInstance
 {
+  _CpGwAPZone_t m_zone;
+  /*Virtual Network.*/
+  _CpVirtualNw_t m_nw;
+  ACE_Byte m_ap_name[255];
+  ACE_Byte m_latitude[255];
+  ACE_Byte m_longitude[255];
+  ACE_Byte m_elevation[255];
+}_CpGwAPInstance_t;
+
+typedef struct _CpGwAPPeer
+{
+  _CpGwAPZone_t m_zone;
   ACE_Byte m_ap_name[255];
   ACE_Byte m_ssid[255];
   ACE_Byte m_cc[64];
-  ACE_Byte m_hw_mode[8];
-  ACE_Byte m_channel_no;
-  ACE_Byte m_auth_algo;
   ACE_Byte m_wap;
   ACE_Byte m_passphrase[255];
   ACE_Byte m_wpa_key_mgmt[16];
   ACE_Byte m_wpa_pairwise[16];
   ACE_Byte m_rsn_pairwise[16];
   ACE_Byte m_driver[16];
-}_CpGwAPInstance_t;
+}_CpGwAPPeer_t;
+
 
 typedef struct _CpGwDHCPInstance
 {
@@ -86,19 +102,46 @@ typedef struct _CpGwDHCPInstance
 
 }_CpGwDHCPInstance_t;
 
+typedef struct _CpGwDHCPAgentInstance
+{
+  /*Virtual Network.*/
+  _CpVirtualNw_t m_nw;
+  _ipAddr_t m_mask;
+  _ipAddr_t m_ip;
+  ACE_Byte m_host_name[255];
+  /*this is the DHCP Server IP.*/
+  _ipAddr_t m_gw_ip;
+
+}_CpGwDHCPAgentInstance_t;
+
+typedef struct _CpGwCPGWInstance
+{
+  /*Virtual Network.*/
+  _CpVirtualNw_t m_nw;
+  _ipAddr_t m_mask;
+  _ipAddr_t m_ip;
+  ACE_Byte m_host_name[255];
+
+}_CpGwCPGWInstance_t;
+
+
 typedef struct _CpGwPeers
 {
 }_CpGwPeers_t;
 
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwAAAInstance_t*, ACE_Null_Mutex>AAAInstMap_t;
-typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwHTTPInsatnce_t*, ACE_Null_Mutex>HTTPInstMap_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwHTTPInstance_t*, ACE_Null_Mutex>HTTPInstMap_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwAPInstance_t*, ACE_Null_Mutex>APInstMap_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwDHCPInstance_t*, ACE_Null_Mutex>DHCPInstMap_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwDHCPAgentInstance_t*, ACE_Null_Mutex>DHCPAgentInstMap_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwCPGWInstance_t*, ACE_Null_Mutex>CPGWInstMap_t;
 /*Iterator.*/
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwAAAInstance_t*, ACE_Null_Mutex>::iterator AAAInstMap_Iter_t;
-typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwHTTPInsatnce_t*, ACE_Null_Mutex>::iterator HTTPInstMap_Iter_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwHTTPInstance_t*, ACE_Null_Mutex>::iterator HTTPInstMap_Iter_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwAPInstance_t*, ACE_Null_Mutex>::iterator APInstMap_Iter_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwDHCPInstance_t*, ACE_Null_Mutex>::iterator DHCPInstMap_Iter_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwDHCPAgentInstance_t*, ACE_Null_Mutex>::iterator DHCPAgentInstMap_Iter_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwCPGWInstance_t*, ACE_Null_Mutex>::iterator CPGWInstMap_Iter_t;
 
 
 class CfgMgr
@@ -106,17 +149,23 @@ class CfgMgr
 public:
   CfgMgr(ACE_CString &schema);
   ~CfgMgr();
+
   AAAInstMap_t &aaa(void);
   HTTPInstMap_t &http(void);
   APInstMap_t &ap(void);
   DHCPInstMap_t &dhcp(void);
+  DHCPAgentInstMap_t &agent(void);
+  CPGWInstMap_t &cpgw(void);
+
   ACE_INT32 processDHCPServerCfg(void);
   ACE_INT32 processDHCPAgentCfg(void);
   ACE_INT32 processHTTPServerCfg(void);
   ACE_INT32 processCPGWCfg(void);
   ACE_INT32 processAPCfg(void);
   ACE_INT32 processAAACfg(void);
+
   ACE_INT32 publishCpGwConfig(void);
+
   void display(void);
 
   ACE_Byte start(void);
@@ -127,9 +176,11 @@ private:
   HTTPInstMap_t m_http;
   APInstMap_t m_ap;
   DHCPInstMap_t m_dhcp;
+  DHCPAgentInstMap_t m_agent;
+  CPGWInstMap_t m_cpgw;
+
   JSON *m_cpGwCfg;
   ACE_CString m_schema;
-
 };
 
 #endif /*__CFG_CPGW_H__*/
