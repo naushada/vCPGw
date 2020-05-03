@@ -547,7 +547,7 @@ ACE_INT32 CfgMgr::processAAACfg(void)
     JSON objR(root);
 
     /*First Child of root node - root.*/
-    JSON::JSONValue *rootInstC1 = objR["peers"];
+    JSON::JSONValue *rootInstC1 = objR["instances"];
     if(!rootInstC1)
     {
       ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Invalid instance child\n")));
@@ -784,6 +784,34 @@ ACE_INT32 CfgMgr::processAAACfg(void)
 
       ACE_OS::strncpy((ACE_TCHAR *)pInst->m_admin_pwd, vval->m_svalue,
                       (sizeof(pInst->m_admin_pwd) - 1));
+
+      vval = objAAA["peer-ip"];
+      if(!vval)
+      {
+        ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Invalid vval[peer-ip] is nullptr\n")));
+        /*reclaim the heap memory.*/
+        aaa().unbind(keyStr);
+        delete pInst;
+        break;
+      }
+
+      sscanf((const ACE_TCHAR *)vval->m_svalue, "%d.%d.%d.%d",
+             (ACE_INT32 *)&pInst->m_peer_ip.m_ips[0],
+             (ACE_INT32 *)&pInst->m_peer_ip.m_ips[1],
+             (ACE_INT32 *)&pInst->m_peer_ip.m_ips[2],
+             (ACE_INT32 *)&pInst->m_peer_ip.m_ips[3]);
+
+      vval = objAAA["peer-port"];
+      if(!vval)
+      {
+        ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Invalid vval[peer-port] is nullptr\n")));
+        /*reclaim the heap memory.*/
+        aaa().unbind(keyStr);
+        delete pInst;
+        break;
+      }
+
+      pInst->m_peer_port = vval->m_ivalue;
     }
 
     ret = 0;
@@ -1876,6 +1904,8 @@ void CfgMgr::displayAAA(void)
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_acc_port is 0x%X\n"), inst->m_acc_port));
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_admin_user is %s\n"), inst->m_admin_user));
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_admin_pwd is %s\n"), inst->m_admin_pwd));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_peer_ip is 0x%X\n"), inst->m_peer_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_peer_port is %u\n"), inst->m_peer_port));
   }
 }
 

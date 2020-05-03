@@ -17,14 +17,14 @@
   },
 
   "cpgw1": {
-    "virtual-nw": "nw",
+    "virtual-nw": "nw1",
     "subnet-mask": "255.255.0.0",
     "ip": "10.100.10.2",
     "host-name": "adam"
   },
 
   "radius1-instance": {
-    "virtual-nw": "nw",
+    "virtual-nw": "nw1",
     "ip": "aa.bb.cc.dd",
     "protocol": "udp",
     "auth-port": 8128,
@@ -44,7 +44,7 @@
 
   "ap1-instance": {
     "virtual-nw": "nw1",
-    "name": "ap-name",
+    "ap-name": "ap-name",
     "latitude": "asw",
     "longitude": "llll",
     "elevation": "ele"
@@ -66,6 +66,7 @@
   },
 
   "dhcp-agent1": {
+    "virtual-nw": "nw1",
     "server-ip": "a.a.a.a",
     "ip" : "a.a.a.a",
     "subnet-mask": "b.b.b.b",

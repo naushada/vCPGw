@@ -33,6 +33,9 @@ typedef struct _CpGwAAAInstance
   ACE_UINT16 m_acc_port;
   ACE_Byte m_admin_user[256];
   ACE_Byte m_admin_pwd[256];
+  _ipAddr_t m_peer_ip;
+  ACE_UINT16 m_peer_port;
+
 }_CpGwAAAInstance_t;
 
 typedef struct _CpGwHTTPInstance
