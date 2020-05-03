@@ -40,6 +40,7 @@ typedef struct _CpGwHTTPInstance
   _CpVirtualNw_t m_nw;
   _ipAddr_t m_ip;
   ACE_UINT16 m_port;
+  _CpGwAAAInstance_t m_aaa;
 
 }_CpGwHTTPInstance_t;
 
@@ -110,7 +111,7 @@ typedef struct _CpGwDHCPAgentInstance
   _ipAddr_t m_ip;
   ACE_Byte m_host_name[255];
   /*this is the DHCP Server IP.*/
-  _ipAddr_t m_gw_ip;
+  _ipAddr_t m_server_ip;
 
 }_CpGwDHCPAgentInstance_t;
 
@@ -157,6 +158,7 @@ public:
   DHCPAgentInstMap_t &agent(void);
   CPGWInstMap_t &cpgw(void);
 
+  ACE_INT32 processCfg(void);
   ACE_INT32 processDHCPServerCfg(void);
   ACE_INT32 processDHCPAgentCfg(void);
   ACE_INT32 processHTTPServerCfg(void);
@@ -166,7 +168,20 @@ public:
 
   ACE_INT32 publishCpGwConfig(void);
 
+  ACE_Byte purgeDHCP(void);
+  ACE_Byte purgeDHCPAgent(void);
+  ACE_Byte purgeAAA(void);
+  ACE_Byte purgeAPInst(void);
+  ACE_Byte purgeHTTP(void);
+  ACE_Byte purgeCPGW(void);
+
   void display(void);
+  void displayDHCP(void);
+  void displayDHCPAgent(void);
+  void displayAAA(void);
+  void displayAPInst(void);
+  void displayHTTP(void);
+  void displayCPGW(void);
 
   ACE_Byte start(void);
   ACE_Byte stop(void);

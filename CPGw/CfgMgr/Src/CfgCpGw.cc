@@ -284,10 +284,10 @@ ACE_INT32 CfgMgr::processDHCPAgentCfg(void)
       }
 
       sscanf((const ACE_TCHAR *)vval->m_svalue, "%d.%d.%d.%d",
-             (ACE_INT32 *)&pInst->m_gw_ip.m_ips[0],
-             (ACE_INT32 *)&pInst->m_gw_ip.m_ips[1],
-             (ACE_INT32 *)&pInst->m_gw_ip.m_ips[2],
-             (ACE_INT32 *)&pInst->m_gw_ip.m_ips[3]);
+             (ACE_INT32 *)&pInst->m_server_ip.m_ips[0],
+             (ACE_INT32 *)&pInst->m_server_ip.m_ips[1],
+             (ACE_INT32 *)&pInst->m_server_ip.m_ips[2],
+             (ACE_INT32 *)&pInst->m_server_ip.m_ips[3]);
     }
 
     ret = 0;
@@ -1615,6 +1615,18 @@ ACE_INT32 CfgMgr::processDHCPServerCfg(void)
   return(ret);
 }
 
+ACE_INT32 CfgMgr::processCfg(void)
+{
+  processDHCPServerCfg();
+  processDHCPAgentCfg();
+  processHTTPServerCfg();
+  processCPGWCfg();
+  processAPCfg();
+  processAAACfg();
+
+  return(0);
+}
+
 ACE_Byte CfgMgr::start(void)
 {
   m_cpGwCfg = JSON::instance();
@@ -1631,7 +1643,7 @@ ACE_Byte CfgMgr::start(void)
     }
   }
 
-  processDHCPServerCfg();
+  processCfg();
 
   /*release the memory.*/
   m_cpGwCfg->stop();
@@ -1642,6 +1654,18 @@ ACE_Byte CfgMgr::start(void)
 }
 
 ACE_Byte CfgMgr::stop(void)
+{
+  purgeDHCP();
+  purgeDHCPAgent();
+  purgeAAA();
+  purgeAPInst();
+  purgeHTTP();
+  purgeCPGW();
+
+  return(0);
+}
+
+ACE_Byte CfgMgr::purgeDHCP(void)
 {
   _CpGwDHCPInstance_t *inst = NULL;
   DHCPInstMap_Iter_t iter = dhcp().begin();
@@ -1660,7 +1684,112 @@ ACE_Byte CfgMgr::stop(void)
   return(0);
 }
 
+ACE_Byte CfgMgr::purgeDHCPAgent(void)
+{
+  _CpGwDHCPAgentInstance_t *inst = NULL;
+  DHCPAgentInstMap_Iter_t iter = agent().begin();
+
+  for(; iter != agent().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwDHCPAgentInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    agent().unbind(instName);
+    delete inst;
+  }
+
+  return(0);
+}
+
+ACE_Byte CfgMgr::purgeAPInst(void)
+{
+  _CpGwAPInstance_t *inst = NULL;
+  APInstMap_Iter_t iter = ap().begin();
+
+  for(; iter != ap().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwAPInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    ap().unbind(instName);
+    delete inst;
+  }
+
+  return(0);
+}
+
+ACE_Byte CfgMgr::purgeHTTP(void)
+{
+  _CpGwHTTPInstance_t *inst = NULL;
+  HTTPInstMap_Iter_t iter = http().begin();
+
+  for(; iter != http().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwHTTPInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    http().unbind(instName);
+    delete inst;
+  }
+
+  return(0);
+}
+
+ACE_Byte CfgMgr::purgeAAA(void)
+{
+  _CpGwAAAInstance_t *inst = NULL;
+  AAAInstMap_Iter_t iter = aaa().begin();
+
+  for(; iter != aaa().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwAAAInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    aaa().unbind(instName);
+    delete inst;
+  }
+
+  return(0);
+}
+
+ACE_Byte CfgMgr::purgeCPGW(void)
+{
+  _CpGwCPGWInstance_t *inst = NULL;
+  CPGWInstMap_Iter_t iter = cpgw().begin();
+
+  for(; iter != cpgw().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwCPGWInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    cpgw().unbind(instName);
+    delete inst;
+  }
+
+  return(0);
+}
+
 void CfgMgr::display(void)
+{
+  displayDHCP();
+  displayDHCPAgent();
+  displayAAA();
+  displayAPInst();
+  displayHTTP();
+  displayCPGW();
+}
+
+void CfgMgr::displayDHCP(void)
 {
   _CpGwDHCPInstance_t *inst = NULL;
   DHCPInstMap_Iter_t iter = dhcp().begin();
@@ -1691,6 +1820,140 @@ void CfgMgr::display(void)
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_start_ip is 0x%X\n"), inst->m_start_ip));
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_end_ip is 0x%X\n"), inst->m_end_ip));
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip_count is %u\n"), inst->m_ip_count));
+  }
+}
+
+void CfgMgr::displayDHCPAgent(void)
+{
+  _CpGwDHCPAgentInstance_t *inst = NULL;
+  DHCPAgentInstMap_Iter_t iter = agent().begin();
+
+  for(; iter != agent().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwDHCPAgentInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    /*virtual networks.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_name is %s\n"), inst->m_nw.m_name));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_type is %s\n"), inst->m_nw.m_type));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_nw.m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_mask is 0x%X\n"), inst->m_nw.m_mask.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_port is %s\n"), inst->m_nw.m_port));
+
+    /*Individual elements.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_mask is 0x%X\n"), inst->m_mask.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_host_name is %s\n"), inst->m_host_name));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_server_ip is 0x%X\n"), inst->m_server_ip.m_ipn));
+  }
+}
+
+void CfgMgr::displayAAA(void)
+{
+  _CpGwAAAInstance_t *inst = NULL;
+  AAAInstMap_Iter_t iter = aaa().begin();
+
+  for(; iter != aaa().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwAAAInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    /*virtual networks.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_name is %s\n"), inst->m_nw.m_name));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_type is %s\n"), inst->m_nw.m_type));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_nw.m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_mask is 0x%X\n"), inst->m_nw.m_mask.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_port is %s\n"), inst->m_nw.m_port));
+
+    /*Individual elements.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_protocol is %s\n"), inst->m_protocol));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_auth_port is 0x%X\n"), inst->m_auth_port));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_acc_port is 0x%X\n"), inst->m_acc_port));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_admin_user is %s\n"), inst->m_admin_user));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_admin_pwd is %s\n"), inst->m_admin_pwd));
+  }
+}
+
+void CfgMgr::displayAPInst(void)
+{
+  _CpGwAPInstance_t *inst = NULL;
+  APInstMap_Iter_t iter = ap().begin();
+
+  for(; iter != ap().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwAPInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    /*virtual networks.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_name is %s\n"), inst->m_nw.m_name));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_type is %s\n"), inst->m_nw.m_type));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_nw.m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_mask is 0x%X\n"), inst->m_nw.m_mask.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_port is %s\n"), inst->m_nw.m_port));
+
+    /*Individual elements.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ap_name is %s\n"), inst->m_ap_name));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_latitude is %s\n"), inst->m_latitude));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_longitude is %s\n"), inst->m_longitude));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_elevation is %s\n"), inst->m_elevation));
+  }
+}
+
+void CfgMgr::displayHTTP(void)
+{
+  _CpGwHTTPInstance_t *inst = NULL;
+  HTTPInstMap_Iter_t iter = http().begin();
+
+  for(; iter != http().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwHTTPInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    /*virtual networks.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_name is %s\n"), inst->m_nw.m_name));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_type is %s\n"), inst->m_nw.m_type));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_nw.m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_mask is 0x%X\n"), inst->m_nw.m_mask.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_port is %s\n"), inst->m_nw.m_port));
+
+    /*Individual elements.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_port is %u\n"), inst->m_port));
+  }
+}
+
+void CfgMgr::displayCPGW(void)
+{
+  _CpGwCPGWInstance_t *inst = NULL;
+  CPGWInstMap_Iter_t iter = cpgw().begin();
+
+  for(; iter != cpgw().end(); iter++)
+  {
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (_CpGwCPGWInstance_t *)((*iter).int_id_);
+    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
+
+    /*virtual networks.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_name is %s\n"), inst->m_nw.m_name));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_type is %s\n"), inst->m_nw.m_type));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_nw.m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_mask is 0x%X\n"), inst->m_nw.m_mask.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_port is %s\n"), inst->m_nw.m_port));
+
+    /*Individual elements.*/
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_mask is 0x%X\n"), inst->m_mask.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_ip.m_ipn));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_host_name is %s\n"), inst->m_host_name));
   }
 }
 #endif /*__CFG_CPGW_CC__*/

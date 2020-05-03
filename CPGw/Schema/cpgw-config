@@ -5,7 +5,8 @@
       "dhcp-agent": ["dhcp-agent1", "dhcp-agent2", "dhcp-agent3", "dhcp-agent4"],
       "http-server": ["http1", "http2", "http3"],
       "cp-gw": ["cpgw1", "cpgw2", "cpgw3"],
-      "access-points": ["ap1", "ap2", "ap3", "ap4"]
+      "access-points": ["ap1-instance", "ap2-instance", "ap3-instance", "ap4-instance"],
+      "aaa-server": ["radius1-instance", "radius2-instance", "radius3-instance"]
     },
     "peers": {
       "access-points": ["ap1", "ap2", "ap3", "ap4"],
@@ -15,7 +16,14 @@
     "tun-interface": ["tun1", "tun2", "tun3"]
   },
 
-  "radius1": {
+  "cpgw1": {
+    "virtual-nw": "nw",
+    "subnet-mask": "255.255.0.0",
+    "ip": "10.100.10.2",
+    "host-name": "adam"
+  },
+
+  "radius1-instance": {
     "virtual-nw": "nw",
     "ip": "aa.bb.cc.dd",
     "protocol": "udp",
@@ -23,13 +31,23 @@
     "acc-port": 8182,
     "peer-ip": "a.a.a.a",
     "peer-port": 1234,
+    "admin-user": "admin",
+    "admin-pwd": "admin"
   },
 
   "http1": {
     "virtual-nw": "nw1",
-    "ip": "a.a.a.a",
+    "ip": "10.10.100.10",
     "port": 8080,
     "aaa-server": "radius1"
+  },
+
+  "ap1-instance": {
+    "virtual-nw": "nw1",
+    "name": "ap-name",
+    "latitude": "asw",
+    "longitude": "llll",
+    "elevation": "ele"
   },
 
   "ap1": {
@@ -48,12 +66,10 @@
   },
 
   "dhcp-agent1": {
-    "dhcp-server-ip": "a.a.a.a",
+    "server-ip": "a.a.a.a",
     "ip" : "a.a.a.a",
     "subnet-mask": "b.b.b.b",
-    "start-ip": "a.a.a.a",
-    "end-ip": "b.b.b.b",
-    "exclude-ip": ["x.x.x.x", "y.y.y.y"]
+    "host-name": "Eve"
   },
 
   "dhcp-server-profiles": ["dhcp-profile", "dhcp-profile1", "dhcp-profile2"],
@@ -79,9 +95,9 @@
     "subnet-mask" : "255.255.0.0",
     "ip" : "10.10.2.1",
     "host-name" : "adam",
-    "start-ip": "a.a.a.a",
-    "end-ip": "b.b.b.b",
-    "exclude-ip": ["ip1", "ip2", "ip3", "ip4"]
+    "start-ip": "10.10.100.2",
+    "end-ip": "10.10.100.16",
+    "exclude-ip": ["10.10.100.3", "10.10.100.5", "10.10.100.9", "10.10.100.11"]
   },
 
   "dhcp2": {
