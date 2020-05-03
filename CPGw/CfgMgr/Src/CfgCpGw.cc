@@ -1986,4 +1986,5 @@ void CfgMgr::displayCPGW(void)
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_host_name is %s\n"), inst->m_host_name));
   }
 }
+
 #endif /*__CFG_CPGW_CC__*/

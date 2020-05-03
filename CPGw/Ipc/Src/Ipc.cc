@@ -115,6 +115,11 @@ ACE_UINT32 UniIPC::get_self_taskId(void)
   return(m_selfTaskId);
 }
 
+void UniIPC::selfTaskId(ACE_UINT32 tId)
+{
+  m_selfTaskId = tId;
+}
+
 void UniIPC::nodeTag(ACE_CString node_tag)
 {
   m_nodeTag = node_tag;
@@ -243,6 +248,11 @@ ACE_UINT32 UniIPC::send_ipc(ACE_UINT32 dstProcId, ACE_UINT8 dstEntity,
   return(len);
 }
 
+ACE_UINT32 UniIPC::handle_ipc(ACE_UINT8 *req, ACE_UINT32 reqLen)
+{
+  ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l not defined in sub-class\n")));
+  return(0);
+}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  *

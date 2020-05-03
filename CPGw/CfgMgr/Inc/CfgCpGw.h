@@ -8,7 +8,6 @@
 #include "ace/Hash_Map_Manager.h"
 #include "ace/Null_Mutex.h"
 
-
 typedef union _ipAddr
 {
   ACE_Byte m_ips[4];
@@ -199,6 +198,7 @@ private:
 
   JSON *m_cpGwCfg;
   ACE_CString m_schema;
+
 };
 
 #endif /*__CFG_CPGW_H__*/

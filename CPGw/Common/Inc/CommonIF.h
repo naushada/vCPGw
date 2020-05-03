@@ -7,18 +7,18 @@
 
 namespace CommonIF {
 
-  static const ACE_UINT8 FACILITY_DHCP       = 0x81;
-  static const ACE_UINT8 FACILITY_DNS        = 0x82;
-  static const ACE_UINT8 FACILITY_REDIR      = 0x83;
-  static const ACE_UINT8 FACILITY_RADIUS     = 0x84;
-  static const ACE_UINT8 FACILITY_AP         = 0x85;
+  static const ACE_UINT8 ENT_CPGW     = 0x81;
+  static const ACE_UINT8 ENT_AAA      = 0x82;
+  static const ACE_UINT8 ENT_CFGMGR   = 0x83;
+  static const ACE_UINT8 ENT_SYSMGR   = 0x84;
+  static const ACE_UINT8 ENT_PROCMGR  = 0x85;
 
-  static const ACE_UINT8 OFFSET              = 0x80;
-  static const ACE_UINT8 CONTAINER           = 0x80;
-  static const ACE_UINT8 INSTANCE1           = 0x01;
-  static const ACE_UINT8 INSTANCE2           = 0x02;
-  static const ACE_UINT8 INSTANCE3           = 0x03;
-  static const ACE_UINT8 INSTANCE4           = 0x04;
+  static const ACE_UINT8 OFFSET       = 0x80;
+  static const ACE_UINT8 CONTAINER    = 0x80;
+  static const ACE_UINT8 INST1        = 0x01;
+  static const ACE_UINT8 INST2        = 0x02;
+  static const ACE_UINT8 INST3        = 0x03;
+  static const ACE_UINT8 INST4        = 0x04;
 
   static const ACE_UINT8 FAILURE = 1;
   static const ACE_UINT8 SUCCESS = 0;
@@ -33,9 +33,25 @@ namespace CommonIF {
   static const ACE_UINT32 SIZE_1KB           = (1 << 10);
 
   ACE_UINT32 get_hash32(const ACE_UINT8 *nodeTag);
-  ACE_UINT16 get_ipc_port(ACE_UINT8 facility, ACE_UINT8 instance);
+  ACE_UINT16 get_ipc_port(ACE_UINT8 entity, ACE_UINT8 instance);
   ACE_UINT16 get_ipc_port(ACE_UINT32 taskId);
-  ACE_UINT32 get_task_id(ACE_UINT8 facility, ACE_UINT8 instance);
+  ACE_UINT32 get_task_id(ACE_UINT8 entity, ACE_UINT8 instance);
+
+  typedef struct _cmHeader
+  {
+    ACE_UINT32 m_procId;
+    ACE_UINT8 m_entId;
+    ACE_UINT8 m_instId;
+  }_cmHeader_t;
+
+  typedef struct _cmMessage
+  {
+    _cmHeader_t m_src;
+    _cmHeader_t m_dst;
+    ACE_UINT32 m_messageLen;
+    ACE_Byte m_message[1];
+
+  }_cmMessage_t;
 };
 
 namespace TransportIF {
@@ -196,7 +212,6 @@ namespace TransportIF {
     ACE_UINT16 arcount;
 
   }__attribute__((packed))DNS;
-
 
 };
 
