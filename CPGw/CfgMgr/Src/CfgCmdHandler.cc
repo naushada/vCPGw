@@ -14,7 +14,7 @@ CfgCmdHandler::CfgCmdHandler(ACE_Thread_Manager *mgr) :
 {
   do
   {
-    if(-1 == m_myAddr.set("/opt/mna/.cliif"))
+    if(-1 == m_myAddr.set("/var/run/.cliif"))
     {
       ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l %P|%t local Unix domain socket creation failed\n")));
       break;
@@ -23,18 +23,24 @@ CfgCmdHandler::CfgCmdHandler(ACE_Thread_Manager *mgr) :
     ACE_OS::unlink(m_myAddr.get_path_name());
     if(-1 == m_unixDgram.open(m_myAddr))
     {
-      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l %P|%t opening of unixSocket Failed\n")));
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l %m opening of unixSocket Failed\n")));
       break;
     }
 
     /*learn the handle now.*/
     handle(m_unixDgram.get_handle());
 
+    /*Set the handle in out-put mode so that it can be sent to peer.*/
+    ACE_Reactor::instance()->register_handler(this,
+                                              ACE_Event_Handler::READ_MASK);
+
   }while(0);
 }
 
 CfgCmdHandler::~CfgCmdHandler()
 {
+  ACE_OS::unlink(m_myAddr.get_path_name());
+  ACE_OS::close(handle());
 }
 
 int CfgCmdHandler::handle_output(ACE_HANDLE fd)
@@ -73,25 +79,34 @@ int CfgCmdHandler::handle_output(ACE_HANDLE fd)
 
 int CfgCmdHandler::handle_input(ACE_HANDLE fd)
 {
-  int ret = -1;
+  int ret = 0;
   ACE_Message_Block *mb = nullptr;
   ACE_NEW_RETURN(mb, ACE_Message_Block(CommonIF::SIZE_64MB), ret);
 
+  if((ret = m_unixDgram.recv(mb->wr_ptr(), CommonIF::SIZE_64MB, m_peerAddr)) < 0)
+  {
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:l %m")));
+    return(ret);
+  }
 
   /*Is this from CLI? pass it on to Active-Object to handle it.*/
+  mb->wr_ptr(ret);
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l got the request %s\n"), mb->rd_ptr()));
+
+  /*post to thread now to process it.*/
   putq(mb);
-  ret = 0;
   return(ret);
 }
 
 ACE_HANDLE CfgCmdHandler::get_handle() const
 {
-  ACE_TRACE("CfgCmdHandler::get_handle");
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CfgCmdHandler::get_handle\n")));
   return(const_cast<CfgCmdHandler *>(this)->handle());
 }
 
 int CfgCmdHandler::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask mask)
 {
+  return(0);
 }
 
 int CfgCmdHandler::open(void *args)
@@ -104,8 +119,11 @@ int CfgCmdHandler::processCommand(ACE_TCHAR *in, int inLen)
 {
   ACE_Message_Block *mb = nullptr;
 
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l process command length %u\n"), inLen));
+
+
   /*Prepare response now and put it into rspQ.*/
-  m_rspQ.enqueue_tail(mb);
+  //m_rspQ.enqueue_tail(mb);
   return(0);
 }
 
@@ -124,6 +142,7 @@ int CfgCmdHandler::svc(void)
         break;
       }
 
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l dequeue equest\n")));
       /*Process the Command Now.*/
       processCommand(mb->rd_ptr(), mb->length());
       /*Set the handle in out-put mode so that it can be sent to peer.*/

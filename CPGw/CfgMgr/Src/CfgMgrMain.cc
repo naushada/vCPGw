@@ -20,7 +20,8 @@ CfgMgrMain::~CfgMgrMain()
 
 ACE_HANDLE CfgMgrMain::get_handle(void) const
 {
-
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CfgMgrMain::get_handle\n")));
+  return(const_cast<CfgMgrMain *>(this)->handle());
 }
 
 ACE_UINT32 CfgMgrMain::handle_ipc(ACE_UINT8 *req, ACE_UINT32 reqLen)
@@ -54,30 +55,29 @@ int main(int argc, char *argv[])
    *argv[2] - ent,
    *argv[3] - inst,
    *argv[4] - nodeTag,
+   *argv[5] - schema,
    **/
-  if(argc > 1 && argv[1])
+
+  if(argc > 4)
   {
-    ACE_CString schema(argv[1]);
+    ACE_CString schema(argv[5]);
     CfgMgr cfgInst(schema);
     cfgInst.start();
     cfgInst.display();
     cfgInst.stop();
+
+    CfgCmdHandler cmdHandler(ACE_Thread_Manager::instance());
+    cmdHandler.open();
+
+    ACE_CString ip(argv[1]);
+    ACE_UINT8 ent = ACE_OS::atoi(argv[2]);
+    ACE_UINT8 inst = ACE_OS::atoi(argv[3]);
+    ACE_CString proc(argv[4]);
+
+    CfgMgrMain cfgMgrMain(ip, ent, inst, proc);
+
+    cfgMgrMain.start();
   }
-
-  CfgCmdHandler cmdHandler(ACE_Thread_Manager::instance());
-  cmdHandler.open();
-
-
-
-  ACE_CString ip(argv[1]);
-  ACE_UINT8 ent = ACE_OS::atoi(argv[2]);
-  ACE_UINT8 inst = ACE_OS::atoi(argv[3]);
-  ACE_CString proc(argv[4]);
-
-  CfgMgrMain cfgMgrMain(ip, ent, inst, proc);
-
-  cfgMgrMain.start();
-
   return(0);
 }
 

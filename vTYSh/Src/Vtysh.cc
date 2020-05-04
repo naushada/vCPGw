@@ -155,7 +155,7 @@ int VtyshCtrlIF::transmit(char *command)
     len = ACE_OS::strlen(command);
 
     /*For UNIX Socket...*/
-    ACE_UNIX_Addr peer("/var/run/vapgCtrl");
+    ACE_UNIX_Addr peer("/var/run/.cliif");
     if(m_unixDgram.send(command, len, peer) < 0)
     {
       ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Sending of command len %d (%s) failed with reason %m\n"), strlen(command), command));

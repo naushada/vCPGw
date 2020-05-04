@@ -85,7 +85,7 @@ int JSON::start(const ACE_TCHAR *fname)
     in = ACE_OS::fopen(fname, "r");
     if(!in)
     {
-      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l opening of file %s filed\n"), fname));
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l opening of file %s failed\n"), fname));
       return(0);
     }
   }
