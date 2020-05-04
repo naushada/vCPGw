@@ -39,7 +39,7 @@ private:
   ACE_LSOCK_Stream    m_unixStream;
   ACE_LSOCK_Acceptor  m_unixAcceptor;
 
-  ACE_LSOCK_Dgram  m_unixDgram;
+  ACE_LSOCK_Dgram  m_lSockDgram;
   ACE_HANDLE       m_handle;
   ACE_Unbounded_Queue<ACE_Message_Block *> m_rspQ;
 

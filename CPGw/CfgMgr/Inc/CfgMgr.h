@@ -1,5 +1,5 @@
-#ifndef __CFG_CPGW_H__
-#define __CFG_CPGW_H__
+#ifndef __CFG_MGR_H__
+#define __CFG_MGR_H__
 
 #include "Json.h"
 
@@ -201,4 +201,4 @@ private:
 
 };
 
-#endif /*__CFG_CPGW_H__*/
+#endif /*__CFG_MGR_H__*/

@@ -1,7 +1,7 @@
 
 bin_PROGRAMS=CFGMGR
 
-CFGMGR_SOURCES=Src/CfgCpGw.cc \
+CFGMGR_SOURCES=Src/CfgMgr.cc \
 							 Src/CfgMgrMain.cc \
 							 Src/CfgCmdHandler.cc
 

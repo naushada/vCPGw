@@ -1,5 +1,5 @@
-#ifndef __IPC_CC__
-#define __IPC_CC__
+#ifndef __UNIIPC_CC__
+#define __UNIIPC_CC__
 
 #include <ace/Reactor.h>
 #include <ace/Basic_Types.h>
@@ -15,7 +15,7 @@
 #include <ace/Timer_Queue_T.h>
 
 #include "CommonIF.h"
-#include "Ipc.h"
+#include "UniIPC.h"
 
 UniIPC::~UniIPC()
 {
@@ -40,6 +40,7 @@ UniIPC::UniIPC(ACE_CString ipAddr, ACE_UINT8 fac,
 {
   do
   {
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l UniIPC\n")));
     ACE_TRACE("UniIPC::UniIPC");
 
     selfProcId(CommonIF::get_hash32(reinterpret_cast<const ACE_UINT8 *>(node_tag.c_str())));
@@ -53,18 +54,19 @@ UniIPC::UniIPC(ACE_CString ipAddr, ACE_UINT8 fac,
     facility(fac);
     instance(ins);
 
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IPC Port %u\n"), m_ipcPort));
     m_ipcAddr.set_port_number(ipcPort());
     m_ipcAddr.set_address(m_ipAddr.rep(), m_ipAddr.length());
 
     if(m_dgram.open(m_ipcAddr, 1) < 0)
     {
-      ACE_ERROR((LM_ERROR, "IPC Socket Creation Failed for 0x%X", m_ipcPort));
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l IPC Socket Creation Failed for 0x%X"), m_ipcPort));
       break;
     }
 
     handle(m_dgram.get_handle());
-    ACE_Reactor::instance()->register_handler(this,
-                                              ACE_Event_Handler::READ_MASK);
+    //ACE_Reactor::instance()->register_handler(this,
+    //                                          ACE_Event_Handler::READ_MASK);
 
   }while(0);
 
@@ -139,6 +141,7 @@ ACE_CString UniIPC::nodeTag(void)
  */
 ACE_HANDLE UniIPC::get_handle(void) const
 {
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l UniIPC handle %u\n"), m_handle));
   return(const_cast<UniIPC *>(this)->handle());
 }
 
@@ -343,4 +346,4 @@ UniTimer::~UniTimer()
 
 
 
-#endif /*__IPC_CC__*/
+#endif /*__UNIIPC_CC__*/

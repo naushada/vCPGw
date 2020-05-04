@@ -21,14 +21,14 @@ CfgCmdHandler::CfgCmdHandler(ACE_Thread_Manager *mgr) :
     }
 
     ACE_OS::unlink(m_myAddr.get_path_name());
-    if(-1 == m_unixDgram.open(m_myAddr))
+    if(-1 == m_lSockDgram.open(m_myAddr))
     {
       ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l %m opening of unixSocket Failed\n")));
       break;
     }
 
     /*learn the handle now.*/
-    handle(m_unixDgram.get_handle());
+    handle(m_lSockDgram.get_handle());
 
     /*Set the handle in out-put mode so that it can be sent to peer.*/
     ACE_Reactor::instance()->register_handler(this,
@@ -65,7 +65,7 @@ int CfgCmdHandler::handle_output(ACE_HANDLE fd)
 
     m_rspQ.dequeue_head(mb);
     /*starts sending the bytes now.*/
-    if((ret = m_unixDgram.send(mb->wr_ptr(), mb->length(), m_peerAddr)) < 0)
+    if((ret = m_lSockDgram.send(mb->wr_ptr(), mb->length(), m_peerAddr)) < 0)
     {
       ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l %m send failed\n")));
     }
@@ -90,7 +90,7 @@ int CfgCmdHandler::handle_input(ACE_HANDLE fd)
   ACE_Message_Block *mb = nullptr;
   ACE_NEW_RETURN(mb, ACE_Message_Block(CommonIF::SIZE_64MB), ret);
 
-  if((ret = m_unixDgram.recv(mb->wr_ptr(), CommonIF::SIZE_64MB, m_peerAddr)) < 0)
+  if((ret = m_lSockDgram.recv(mb->wr_ptr(), CommonIF::SIZE_64MB, m_peerAddr)) < 0)
   {
     ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:l %m")));
     return(ret);
@@ -125,20 +125,31 @@ int CfgCmdHandler::open(void *args)
 
 int CfgCmdHandler::processCommand(ACE_TCHAR *in, int inLen)
 {
+  int ret = -1;
   ACE_Message_Block *mb = nullptr;
 
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l process command length %u\n"), inLen));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l process (%s) command length %u\n"), in, inLen));
 
   ACE_NEW_RETURN(mb, ACE_Message_Block(CommonIF::SIZE_64MB), -1);
 
   ACE_OS::memcpy(mb->wr_ptr(), "Here I am", 9);
   mb->wr_ptr(9);
+
+  if((ret = m_lSockDgram.send(mb->rd_ptr(), mb->length(), m_peerAddr)) < 0)
+  {
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l %m send failed\n")));
+  }
+
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l length %u\n"), ret));
+  /*reclaim the memory now.*/
+  mb->release();
   /*Prepare response now and put it into rspQ.*/
-  m_rspQ.enqueue_tail(mb);
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Registering Write Mask\n")));
-  ACE_Reactor::instance()->register_handler(this,
-                                            ACE_Event_Handler::WRITE_MASK |
-                                            ACE_Event_Handler::READ_MASK);
+  //m_rspQ.enqueue_tail(mb);
+  //ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Registering Write Mask\n")));
+
+  //ACE_Reactor::instance()->register_handler(this,
+  //                                          ACE_Event_Handler::WRITE_MASK |
+  //                                          ACE_Event_Handler::READ_MASK);
   return(0);
 }
 
@@ -160,8 +171,6 @@ int CfgCmdHandler::svc(void)
       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l dequeue equest\n")));
       /*Process the Command Now.*/
       processCommand(mb->rd_ptr(), mb->length());
-      /*Set the handle in out-put mode so that it can be sent to peer.*/
-      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Registering WriteMask\n")));
       /*reclaim the heap memory now. allocated by the sender*/
       mb->release();
     }

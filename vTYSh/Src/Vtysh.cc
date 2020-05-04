@@ -25,7 +25,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 VtyshCtrlIF::~VtyshCtrlIF()
 {
-
+  ACE_OS::unlink(m_unixAddr.get_path_name());
+  ACE_OS::close(handle());
 }
 
 VtyshCtrlIF::VtyshCtrlIF(ACE_Thread_Manager *thrMgr) :
@@ -40,11 +41,9 @@ VtyshCtrlIF::VtyshCtrlIF(ACE_Thread_Manager *thrMgr) :
       break;
     }
 
-#ifdef DEBUG
     ACE_OS::unlink(m_unixAddr.get_path_name());
     struct sockaddr_un *ss = (struct sockaddr_un *)m_unixAddr.get_addr();
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l family %d path %s\n"), ss->sun_family, ss->sun_path));
-#endif
 
     ACE_OS::unlink(m_unixAddr.get_path_name());
     if(-1 == m_unixDgram.open(m_unixAddr))

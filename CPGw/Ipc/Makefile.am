@@ -2,7 +2,7 @@
 
 noinst_LIBRARIES = libIpc.a
 
-libIpc_a_SOURCES = Src/Ipc.cc
+libIpc_a_SOURCES = Src/UniIPC.cc
 
 libIpc_a_CPPFLAGS=-I$(srcdir)/Inc \
                   -I$(srcdir)/../Common/Inc \

@@ -1,7 +1,7 @@
 #ifndef __CFG_MGR_MAIN_H__
 #define __CFG_MGR_MAIN_H__
 
-#include "Ipc.h"
+#include "UniIPC.h"
 
 #include <ace/Basic_Types.h>
 #include <ace/Log_Msg.h>

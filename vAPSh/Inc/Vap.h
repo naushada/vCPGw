@@ -24,8 +24,8 @@
 #include <iostream>
 #include <string>
 
+#include "UniIPC.h"
 
-#include "Ipc.h"
 typedef std::unordered_map<std::string, std::string> ctrlParamUMap_t;
 typedef ctrlParamUMap_t::iterator ctrlParamIter_t;
 

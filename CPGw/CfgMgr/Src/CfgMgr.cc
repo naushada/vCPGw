@@ -1,7 +1,7 @@
-#ifndef __CFG_CPGW_CC__
-#define __CFG_CPGW_CC__
+#ifndef __CFG_MGR_CC__
+#define __CFG_MGR_CC__
 
-#include "CfgCpGw.h"
+#include "CfgMgr.h"
 
 CfgMgr::CfgMgr(ACE_CString &schema)
 {
@@ -1987,4 +1987,4 @@ void CfgMgr::displayCPGW(void)
   }
 }
 
-#endif /*__CFG_CPGW_CC__*/
+#endif /*__CFG_MGR_CC__*/

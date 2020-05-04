@@ -1,5 +1,5 @@
-#ifndef __IPC_H__
-#define __IPC_H__
+#ifndef __UNIIPC_H__
+#define __UNIIPC_H__
 
 #include <cstdio>
 #include <unordered_map>
@@ -155,4 +155,4 @@ class UniIPC : public ACE_Event_Handler
 
 
 
-#endif /*__IPC_H__*/
+#endif /*__UNIIPC_H__*/
