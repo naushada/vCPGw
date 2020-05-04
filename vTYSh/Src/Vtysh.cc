@@ -163,7 +163,7 @@ int VtyshCtrlIF::transmit(char *command)
     }
 
     /*Start Response Guard Timer now.*/
-    ACE_Time_Value to(2, 0);
+    ACE_Time_Value to(9, 0);
     ACE_Time_Value interval = ACE_Time_Value::zero;
     m_rspTimerId = ACE_Reactor::instance()->schedule_timer(this, NULL, to, interval);
     ret = 0;

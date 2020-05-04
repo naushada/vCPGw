@@ -61,9 +61,16 @@ int CfgCmdHandler::handle_output(ACE_HANDLE fd)
       break;
     }
 
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l handle_output\n")));
+
     m_rspQ.dequeue_head(mb);
     /*starts sending the bytes now.*/
+    if((ret = m_unixDgram.send(mb->wr_ptr(), mb->length(), m_peerAddr)) < 0)
+    {
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l %m send failed\n")));
+    }
 
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l rsp %s length %u\n"), mb->rd_ptr(), mb->length()));
     /*reclaim the memory now.*/
     mb->release();
 
@@ -100,12 +107,13 @@ int CfgCmdHandler::handle_input(ACE_HANDLE fd)
 
 ACE_HANDLE CfgCmdHandler::get_handle() const
 {
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CfgCmdHandler::get_handle\n")));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CfgCmdHandler::get_handle %d\n"), m_handle));
   return(const_cast<CfgCmdHandler *>(this)->handle());
 }
 
 int CfgCmdHandler::handle_close(ACE_HANDLE handle, ACE_Reactor_Mask mask)
 {
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CfgCmdHandler::handle_close called\n")));
   return(0);
 }
 
@@ -121,9 +129,16 @@ int CfgCmdHandler::processCommand(ACE_TCHAR *in, int inLen)
 
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l process command length %u\n"), inLen));
 
+  ACE_NEW_RETURN(mb, ACE_Message_Block(CommonIF::SIZE_64MB), -1);
 
+  ACE_OS::memcpy(mb->wr_ptr(), "Here I am", 9);
+  mb->wr_ptr(9);
   /*Prepare response now and put it into rspQ.*/
-  //m_rspQ.enqueue_tail(mb);
+  m_rspQ.enqueue_tail(mb);
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Registering Write Mask\n")));
+  ACE_Reactor::instance()->register_handler(this,
+                                            ACE_Event_Handler::WRITE_MASK |
+                                            ACE_Event_Handler::READ_MASK);
   return(0);
 }
 
@@ -146,8 +161,7 @@ int CfgCmdHandler::svc(void)
       /*Process the Command Now.*/
       processCommand(mb->rd_ptr(), mb->length());
       /*Set the handle in out-put mode so that it can be sent to peer.*/
-      ACE_Reactor::instance()->register_handler(this,
-                                                ACE_Event_Handler::WRITE_MASK);
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Registering WriteMask\n")));
       /*reclaim the heap memory now. allocated by the sender*/
       mb->release();
     }
