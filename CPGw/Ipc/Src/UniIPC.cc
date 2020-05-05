@@ -20,6 +20,7 @@
 UniIPC::~UniIPC()
 {
 	m_magic = 0x00000000;
+  m_sockDgram.close();
 }
 
 UniIPC::UniIPC()
@@ -56,15 +57,16 @@ UniIPC::UniIPC(ACE_CString ipAddr, ACE_UINT8 fac,
 
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IPC Port %u\n"), m_ipcPort));
     m_ipcAddr.set_port_number(ipcPort());
-    m_ipcAddr.set_address(m_ipAddr.rep(), m_ipAddr.length());
+    //m_ipcAddr.set_address(m_ipAddr.rep(), m_ipAddr.length());
+    m_ipcAddr.set_address(m_ipAddr.c_str(), m_ipAddr.length());
 
-    if(m_dgram.open(m_ipcAddr, 1) < 0)
+    if(m_sockDgram.open(m_ipcAddr, 1) < 0)
     {
       ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l IPC Socket Creation Failed for 0x%X"), m_ipcPort));
       break;
     }
 
-    handle(m_dgram.get_handle());
+    handle(m_sockDgram.get_handle());
     //ACE_Reactor::instance()->register_handler(this,
     //                                          ACE_Event_Handler::READ_MASK);
 
@@ -163,7 +165,7 @@ ACE_INT32 UniIPC::handle_input(ACE_HANDLE handle)
   do
   {
 	  memset((void *)mb->wr_ptr(), 0, (CommonIF::SIZE_64MB * sizeof(char)));
-    if((recv_len = m_dgram.recv(mb->wr_ptr(), (CommonIF::SIZE_64MB * sizeof(char)), peer)) < 0)
+    if((recv_len = m_sockDgram.recv(mb->wr_ptr(), (CommonIF::SIZE_64MB * sizeof(char)), peer)) < 0)
     {
       ACE_ERROR((LM_ERROR, "Receive from peer 0x%X Failed\n", peer.get_port_number()));
       break;
@@ -242,7 +244,7 @@ ACE_UINT32 UniIPC::send_ipc(ACE_UINT32 dstProcId, ACE_UINT8 dstEntity,
 
       mb->copy((const char *)req, reqLen);
 
-      len = m_dgram.send(mb->wr_ptr(), mb->length(), to);
+      len = m_sockDgram.send(mb->wr_ptr(), mb->length(), to);
       break;
 	  }
 

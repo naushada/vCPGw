@@ -61,10 +61,10 @@ int main(int argc, char *argv[])
   if(argc > 4)
   {
     ACE_CString schema(argv[5]);
-    CfgMgr cfgInst(schema);
-    cfgInst.start();
-    cfgInst.display();
-    cfgInst.stop();
+    CfgMgr cfgMgr(schema);
+    cfgMgr.start();
+    cfgMgr.display();
+    cfgMgr.stop();
 
     CfgCmdHandler cmdHandler(ACE_Thread_Manager::instance());
     cmdHandler.open();

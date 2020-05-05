@@ -30,7 +30,7 @@ CfgCmdHandler::CfgCmdHandler(ACE_Thread_Manager *mgr) :
     /*learn the handle now.*/
     handle(m_lSockDgram.get_handle());
 
-    /*Set the handle in out-put mode so that it can be sent to peer.*/
+    /*Register this instance to ACE_Reactor for event Handling.*/
     ACE_Reactor::instance()->register_handler(this,
                                               ACE_Event_Handler::READ_MASK);
 
@@ -40,7 +40,7 @@ CfgCmdHandler::CfgCmdHandler(ACE_Thread_Manager *mgr) :
 CfgCmdHandler::~CfgCmdHandler()
 {
   ACE_OS::unlink(m_myAddr.get_path_name());
-  ACE_OS::close(handle());
+  m_lSockDgram.close();
 }
 
 int CfgCmdHandler::handle_output(ACE_HANDLE fd)
@@ -96,12 +96,15 @@ int CfgCmdHandler::handle_input(ACE_HANDLE fd)
     return(ret);
   }
 
-  /*Is this from CLI? pass it on to Active-Object to handle it.*/
+  /*Update the received length.*/
   mb->wr_ptr(ret);
+
+  /*Is this from CLI? pass it on to Active-Object to handle it.*/
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l got the request %s\n"), mb->rd_ptr()));
 
   /*post to thread now to process it.*/
   putq(mb);
+
   return(ret);
 }
 
@@ -144,12 +147,16 @@ int CfgCmdHandler::processCommand(ACE_TCHAR *in, int inLen)
   /*reclaim the memory now.*/
   mb->release();
   /*Prepare response now and put it into rspQ.*/
-  //m_rspQ.enqueue_tail(mb);
-  //ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Registering Write Mask\n")));
+#if 0
+  m_mutex.acquire();
+  m_rspQ.enqueue_tail(mb);
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Registering Write Mask\n")));
 
-  //ACE_Reactor::instance()->register_handler(this,
-  //                                          ACE_Event_Handler::WRITE_MASK |
-  //                                          ACE_Event_Handler::READ_MASK);
+  ACE_Reactor::instance()->register_handler(this,
+                                            ACE_Event_Handler::WRITE_MASK |
+                                            ACE_Event_Handler::READ_MASK);
+  m_mutex.release();
+#endif
   return(0);
 }
 
@@ -169,6 +176,7 @@ int CfgCmdHandler::svc(void)
       }
 
       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l dequeue equest\n")));
+
       /*Process the Command Now.*/
       processCommand(mb->rd_ptr(), mb->length());
       /*reclaim the heap memory now. allocated by the sender*/

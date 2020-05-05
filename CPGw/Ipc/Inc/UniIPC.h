@@ -95,7 +95,7 @@ class UniIPC : public ACE_Event_Handler
     /*IPC - data member */
     ACE_HANDLE m_handle;
     ACE_INET_Addr m_ipcAddr;
-    ACE_SOCK_Dgram m_dgram;
+    ACE_SOCK_Dgram m_sockDgram;
     /*IPC - Details */
 	  ACE_UINT32 m_selfProcId;
 	  ACE_UINT32 m_selfTaskId;

@@ -1696,15 +1696,15 @@ ACE_Byte CfgMgr::stop(void)
 ACE_Byte CfgMgr::purgeDHCP(void)
 {
   _CpGwDHCPInstance_t *inst = NULL;
-  DHCPInstMap_Iter_t iter = dhcp().begin();
+  DHCPInstMap_Iter_t iter(dhcp().begin());
 
-  for(; iter != dhcp().end(); iter++)
+  for(DHCPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);)
   {
     /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    inst = (_CpGwDHCPInstance_t *)((*iter).int_id_);
-    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    inst = (_CpGwDHCPInstance_t *)((*entry).int_id_);
+    ACE_CString instName = (ACE_CString)((*entry).ext_id_);
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
-
+    iter.advance();
     dhcp().unbind(instName);
     delete inst;
   }
@@ -1715,15 +1715,15 @@ ACE_Byte CfgMgr::purgeDHCP(void)
 ACE_Byte CfgMgr::purgeDHCPAgent(void)
 {
   _CpGwDHCPAgentInstance_t *inst = NULL;
-  DHCPAgentInstMap_Iter_t iter = agent().begin();
+  DHCPAgentInstMap_Iter_t iter(agent().begin());
 
-  for(; iter != agent().end(); iter++)
+  for(DHCPAgentInstMap_t::ENTRY *entry = nullptr; iter.next(entry);)
   {
     /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    inst = (_CpGwDHCPAgentInstance_t *)((*iter).int_id_);
-    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    inst = (_CpGwDHCPAgentInstance_t *)((*entry).int_id_);
+    ACE_CString instName = (ACE_CString)((*entry).ext_id_);
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
-
+    iter.advance();
     agent().unbind(instName);
     delete inst;
   }
@@ -1734,15 +1734,15 @@ ACE_Byte CfgMgr::purgeDHCPAgent(void)
 ACE_Byte CfgMgr::purgeAPInst(void)
 {
   _CpGwAPInstance_t *inst = NULL;
-  APInstMap_Iter_t iter = ap().begin();
+  APInstMap_Iter_t iter(ap().begin());
 
-  for(; iter != ap().end(); iter++)
+  for(APInstMap_t::ENTRY *entry = nullptr; iter.next(entry);)
   {
     /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    inst = (_CpGwAPInstance_t *)((*iter).int_id_);
-    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    inst = (_CpGwAPInstance_t *)((*entry).int_id_);
+    ACE_CString instName = (ACE_CString)((*entry).ext_id_);
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
-
+    iter.advance();
     ap().unbind(instName);
     delete inst;
   }
@@ -1753,15 +1753,15 @@ ACE_Byte CfgMgr::purgeAPInst(void)
 ACE_Byte CfgMgr::purgeHTTP(void)
 {
   _CpGwHTTPInstance_t *inst = NULL;
-  HTTPInstMap_Iter_t iter = http().begin();
+  HTTPInstMap_Iter_t iter(http().begin());
 
-  for(; iter != http().end(); iter++)
+  for(HTTPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);)
   {
     /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    inst = (_CpGwHTTPInstance_t *)((*iter).int_id_);
-    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    inst = (_CpGwHTTPInstance_t *)((*entry).int_id_);
+    ACE_CString instName = (ACE_CString)((*entry).ext_id_);
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
-
+    iter.advance();
     http().unbind(instName);
     delete inst;
   }
@@ -1774,13 +1774,13 @@ ACE_Byte CfgMgr::purgeAAA(void)
   _CpGwAAAInstance_t *inst = NULL;
   AAAInstMap_Iter_t iter = aaa().begin();
 
-  for(; iter != aaa().end(); iter++)
+  for(AAAInstMap_t::ENTRY *entry = nullptr; iter.next(entry);)
   {
     /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    inst = (_CpGwAAAInstance_t *)((*iter).int_id_);
-    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    inst = (_CpGwAAAInstance_t *)((*entry).int_id_);
+    ACE_CString instName = (ACE_CString)((*entry).ext_id_);
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
-
+    iter.advance();
     aaa().unbind(instName);
     delete inst;
   }
@@ -1793,13 +1793,13 @@ ACE_Byte CfgMgr::purgeCPGW(void)
   _CpGwCPGWInstance_t *inst = NULL;
   CPGWInstMap_Iter_t iter = cpgw().begin();
 
-  for(; iter != cpgw().end(); iter++)
+  for(CPGWInstMap_t::ENTRY *entry = nullptr; iter.next(entry);)
   {
     /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    inst = (_CpGwCPGWInstance_t *)((*iter).int_id_);
-    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    inst = (_CpGwCPGWInstance_t *)((*entry).int_id_);
+    ACE_CString instName = (ACE_CString)((*entry).ext_id_);
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
-
+    iter.advance();
     cpgw().unbind(instName);
     delete inst;
   }

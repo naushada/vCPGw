@@ -41,6 +41,8 @@ private:
 
   ACE_LSOCK_Dgram  m_lSockDgram;
   ACE_HANDLE       m_handle;
+  ACE_Thread_Mutex m_mutex;
+
   ACE_Unbounded_Queue<ACE_Message_Block *> m_rspQ;
 
 };
