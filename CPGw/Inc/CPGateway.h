@@ -1,9 +1,9 @@
 #ifndef __CPGATEWAY_H__
 #define __CPGATEWAY_H__
 
+#include "UniIPC.h"
 #include "DhcpServerUser.h"
 #include "CPGatewayState.h"
-
 
 #include "ace/Event_Handler.h"
 #include "ace/SOCK_Dgram.h"
@@ -13,6 +13,22 @@
 
 namespace ARP {class CPGwArp;}
 namespace DNS {class CPGwDns;}
+
+class UniIPCIF : public UniIPC
+{
+public:
+  UniIPCIF(ACE_CString ip, ACE_UINT8 ent, ACE_UINT8 inst, ACE_CString nodeTag);
+  virtual ~UniIPCIF();
+  ACE_UINT32 handle_ipc(ACE_Byte *in, ACE_UINT32 inLen);
+  virtual ACE_HANDLE get_handle() const;
+
+  void start(void);
+  void stop(void);
+
+private:
+  CPGateway *m_cpgwIF;
+
+};
 
 class CPGateway : public ACE_Event_Handler
 {
@@ -42,6 +58,8 @@ class CPGateway : public ACE_Event_Handler
     ARP::CPGwArp *m_arpUser;
     /*Instance of DNS.*/
     DNS::CPGwDns *m_dnsUser;
+    /*Interface for IPC messages.*/
+    UniIPCIF *m_uniIPCIF;
 
   public:
     virtual ~CPGateway();

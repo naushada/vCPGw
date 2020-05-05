@@ -426,12 +426,24 @@ int main(int argc, char *argv[])
 {
 
   /*
-   * argv[0] = ethernetInterfaceName
    * argv[1] = IPC IP Address = 127.0.0.1
    * argv[2] = entityID/facility
    * argv[3] = instanceId
    * argv[4] = nodeName
    * */
+  /*Start UniIPC Interface to get the CPGateway configuration.*/
+  UniIPCIF *ipc = nullptr;
+
+  ACE_CString ip(argv[1]);
+  ACE_UINT8 ent = ACE_OS::atoi(argv[2]);
+  ACE_UINT8 inst = ACE_OS::atoi(argv[3]);
+  ACE_CString nodeTag(argv[4]);
+
+  ACE_NEW_RETURN(ipc, UniIPCIF(ip, ent, inst, nodeTag), -1);
+
+  ipc->start();
+
+#if 0
   CPGateway *cp = NULL;
   ACE_CString ipStr((const char *)argv[2]);
   ACE_CString nTag((const char *)argv[5]);
@@ -447,7 +459,44 @@ int main(int argc, char *argv[])
     delete cp;
     return(-1);
   }
+#endif
+  return(0);
+}
 
+/*UniIPC related member function/method.*/
+
+UniIPCIF::UniIPCIF(ACE_CString ip, ACE_UINT8 ent, ACE_UINT8 inst, ACE_CString nodeTag) :
+  UniIPC(ip, ent, inst, nodeTag)
+{
+  ACE_Reactor::instance()->register_handler(this, ACE_Event_Handler::READ_MASK);
+}
+
+UniIPCIF::~UniIPCIF()
+{
+}
+
+ACE_HANDLE UniIPCIF::get_handle() const
+{
+  ACE_TRACE("UniIPCIF::get_handle");
+  return(const_cast<UniIPCIF *>(this)->handle());
+}
+
+void UniIPCIF::start(void)
+{
+  ACE_Time_Value to(5);
+
+  while(1)
+  {
+    ACE_Reactor::instance()->handle_events(to);
+  }
+}
+
+void UniIPCIF::stop(void)
+{
+}
+
+ACE_UINT32 UniIPCIF::handle_ipc(ACE_Byte *in, ACE_UINT32 inLen)
+{
   return(0);
 }
 
