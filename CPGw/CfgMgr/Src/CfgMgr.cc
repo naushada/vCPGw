@@ -2011,11 +2011,13 @@ int CfgMgr::processIPCMessage(ACE_Message_Block &mb)
   CommonIF::_cmMessage_t *cMsg = (CommonIF::_cmMessage_t *)mb.rd_ptr();
   len = mb.length();
 
-  ACE_UINT32 msgType = *((ACE_UINT32 *)cMsg->m_message);
+  ACE_UINT32 msgType = cMsg->m_msgType;
 
+  in = (ACE_Byte *)mb.rd_ptr();
   switch(msgType)
   {
   case CommonIF::MSG_CPGW_CFGMGR_CONFIG_REQ:
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Config Request Received\n")));
     ACE_Message_Block *mbRsp = nullptr;
     ACE_NEW_NORETURN(mbRsp, ACE_Message_Block(CommonIF::SIZE_8MB));
     buildConfigResponse(in, len, *mbRsp);
@@ -2052,7 +2054,6 @@ int CfgMgr::buildIPCHeader(ACE_Byte *in, ACE_Message_Block &mb)
 
 int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block &mb)
 {
-  _CpGwConfigs_t rsp;
   int idx = 0;;
 
   if(!in)
@@ -2061,27 +2062,43 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     return(-1);
   }
 
-  buildIPCHeader(in, mb);
+  CommonIF::_cmMessage_t *rsp = (CommonIF::_cmMessage_t *)mb.wr_ptr();
+  _CpGwConfigs_t *configRsp = (_CpGwConfigs_t *)rsp->m_message;
+
+  CommonIF::_cmMessage_t *req = (CommonIF::_cmMessage_t *)in;
+
+  ACE_OS::memset((void *)rsp, 0, sizeof(CommonIF::_cmMessage_t));
+
+  rsp->m_dst.m_procId = req->m_src.m_procId;
+  rsp->m_dst.m_entId = req->m_src.m_entId;
+  rsp->m_dst.m_instId = req->m_src.m_instId;
+
+  rsp->m_src.m_procId = req->m_dst.m_procId;
+  rsp->m_src.m_entId = req->m_dst.m_entId;
+  rsp->m_src.m_instId = req->m_dst.m_instId;
+
+  rsp->m_msgType = CommonIF::MSG_CFGMGR_CPGW_CONFIG_RSP;
+
   /*block scoped declaration of identifier inst.*/
   {
     /*Preparing DHCPInstance Config.*/
     _CpGwDHCPInstance_t *inst = nullptr;
     DHCPInstMap_Iter_t iter = dhcp().begin();
 
-    memset((void *)&rsp, 0, sizeof(_CpGwConfigs_t));
+    memset((void *)&configRsp, 0, sizeof(_CpGwConfigs_t));
 
     idx = 0;
-    ACE_UINT8 *count = (ACE_UINT8 *)mb.wr_ptr();
-    mb.wr_ptr(1);
 
     for(DHCPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
         iter.advance(), idx++)
     {
       inst = (_CpGwDHCPInstance_t *)((*entry).int_id_);
-      mb.copy((const ACE_TCHAR *)inst, sizeof(_CpGwDHCPInstance_t));
+      //mb.copy((const ACE_TCHAR *)inst, sizeof(_CpGwDHCPInstance_t));
+      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instDHCP[idx], inst, sizeof(_CpGwDHCPInstance_t));
     }
 
-    *count = idx;
+    configRsp->m_instance.m_DHCPInstCount = idx;
+    rsp->m_messageLen = (idx * sizeof(_CpGwDHCPInstance_t));
   }
 
   {
@@ -2094,10 +2111,11 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
         iter.advance(), idx++)
     {
       inst = (_CpGwDHCPAgentInstance_t *)((*entry).int_id_);
-      memcpy((void *)&rsp.m_instance.m_instDHCPAgent[idx], inst, sizeof(_CpGwDHCPAgentInstance_t));
+      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instDHCPAgent[idx], inst, sizeof(_CpGwDHCPAgentInstance_t));
     }
 
-    rsp.m_instance.m_DHCPAgentInstCount = (ACE_UINT8)idx;
+    configRsp->m_instance.m_DHCPAgentInstCount = idx;
+    rsp->m_messageLen += (idx * sizeof(_CpGwDHCPAgentInstance_t));
 
   }
 
@@ -2111,10 +2129,11 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
         iter.advance(), idx++)
     {
       inst = (_CpGwHTTPInstance_t *)((*entry).int_id_);
-      memcpy((void *)&rsp.m_instance.m_instHTTP[idx], inst, sizeof(_CpGwHTTPInstance_t));
+      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instHTTP[idx], inst, sizeof(_CpGwHTTPInstance_t));
     }
 
-    rsp.m_instance.m_HTTPInstCount = (ACE_UINT8)idx;
+    configRsp->m_instance.m_HTTPInstCount = idx;
+    rsp->m_messageLen += (idx * sizeof(_CpGwHTTPInstance_t));
 
   }
 
@@ -2128,12 +2147,14 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
         iter.advance(), idx++)
     {
       inst = (_CpGwAAAInstance_t *)((*entry).int_id_);
-      memcpy((void *)&rsp.m_instance.m_instHTTP[idx], inst, sizeof(_CpGwAAAInstance_t));
+      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instHTTP[idx], inst, sizeof(_CpGwAAAInstance_t));
     }
 
-    rsp.m_instance.m_AAAInstCount = (ACE_UINT8)idx;
+    configRsp->m_instance.m_AAAInstCount = idx;
+    rsp->m_messageLen += (idx * sizeof(_CpGwAAAInstance_t));
   }
 
+  mb.wr_ptr(rsp->m_messageLen + (sizeof(CommonIF::_cmMessage_t)));
   return(0);
 }
 
@@ -2174,4 +2195,8 @@ int CfgMgr::svc(void)
   return(0);
 }
 
+void CfgMgr::schema(ACE_CString sc)
+{
+  m_schema = sc;
+}
 #endif /*__CFG_MGR_CC__*/

@@ -4,6 +4,7 @@
 #include "CfgMgr.h"
 #include "CfgMgrMain.h"
 #include "CfgCmdHandler.h"
+#include "CommonIF.h"
 
 #include "ace/Reactor.h"
 #include "ace/Message_Block.h"
@@ -31,21 +32,21 @@ int main(int argc, char *argv[])
 {
   /*argv[0] - Process Name,
    *argv[1] - IP Address - 127.0.0.1
-   *argv[2] - ent,
-   *argv[3] - inst,
-   *argv[4] - nodeTag,
-   *argv[5] - schema,
+   *argv[2] - inst,
+   *argv[3] - nodeTag,
+   *argv[4] - schema,
    **/
 
   if(argc > 4)
   {
     ACE_CString ip(argv[1]);
-    ACE_UINT8 ent = ACE_OS::atoi(argv[2]);
-    ACE_UINT8 inst = ACE_OS::atoi(argv[3]);
-    ACE_CString proc(argv[4]);
-    ACE_CString schema(argv[5]);
+    ACE_UINT8 ent = CommonIF::ENT_CFGMGR;
+    ACE_UINT8 inst = ACE_OS::atoi(argv[2]);
+    ACE_CString proc(argv[3]);
+    ACE_CString sc(argv[4]);
 
     CfgMgr cfgMgr(ACE_Thread_Manager::instance(), ip, ent, inst, proc);
+    cfgMgr.schema(sc);
     cfgMgr.start();
     cfgMgr.display();
 

@@ -45,6 +45,7 @@ UniIPC::UniIPC(ACE_Thread_Manager *thrMgr, ACE_CString ipAddr,
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l UniIPC\n")));
 
     selfProcId(CommonIF::get_hash32(reinterpret_cast<const ACE_UINT8 *>(node_tag.c_str())));
+    //selfProcId(2323);
     m_nodeTag = node_tag;
 
 
@@ -213,7 +214,7 @@ void UniIPC::selfProcId(ACE_UINT32 selfProcId)
  * */
 ACE_UINT32 UniIPC::send_ipc(ACE_Byte *rsp, ACE_UINT32 rspLen)
 {
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l sendign mesage via IPC\n")));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l sendign mesage via IPC len %u\n"), rspLen));
 
   int bytesToSend = 0;
   int len = 0;

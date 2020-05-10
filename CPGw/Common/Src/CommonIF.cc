@@ -21,8 +21,7 @@ CommonIF::_entNameIdTab_t m_entTable[] = {
 ACE_UINT32 CommonIF::get_hash32(const ACE_UINT8 *nodeTag)
 {
   ACE_TRACE(("CommonIF::get_hash32"));
-  std::hash<const ACE_UINT8 *> hash32;
-  return(hash32(nodeTag));
+  return(std::hash<const ACE_UINT8 *>()(nodeTag));
 }
 
 ACE_UINT16 CommonIF::get_ipc_port(ACE_UINT8 facility, ACE_UINT8 instance)

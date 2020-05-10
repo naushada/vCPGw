@@ -425,7 +425,7 @@ ACE_UINT8 CPGateway::stop()
   return(0);
 }
 
-int CPGateway::processConfigReq(ACE_Byte *in, ACE_UINT32 inLen)
+int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
 {
 
   if(start())
@@ -433,6 +433,8 @@ int CPGateway::processConfigReq(ACE_Byte *in, ACE_UINT32 inLen)
     ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l CPGateway instantiation failed\n")));
     return(-1);
   }
+
+  return(0);
 }
 
 int CPGateway::processIpcMessage(ACE_Message_Block *mb)
@@ -447,8 +449,9 @@ int CPGateway::processIpcMessage(ACE_Message_Block *mb)
 
   switch(msgType)
   {
-  case CommonIF::MSG_CFGMGR_CPGW_CONFIG_REQ:
-    processConfigReq(in, len);
+  case CommonIF::MSG_CFGMGR_CPGW_CONFIG_RSP:
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Config Response Received\n")));
+    processConfigRsp(in, len);
     mb->release();
     break;
   default:
@@ -476,25 +479,23 @@ int main(int argc, char *argv[])
   /*
    * argv[0] = Program/Binary Name
    * argv[1] = IPC IP Address = 127.0.0.1
-   * argv[2] = entityID/facility
-   * argv[3] = instanceId
-   * argv[4] = nodeName/NodeTag
-   * argv[5] = portName (interface portName, eth0 or ens1)
+   * argv[2] = instanceId
+   * argv[3] = nodeName/NodeTag
+   * argv[4] = portName (interface portName, eth0 or ens1)
    * */
   /*Start UniIPC Interface to get the CPGateway configuration.*/
   UniIPCIF *ipc = nullptr;
 
   ACE_CString ip(argv[1]);
-  ACE_UINT8 ent = ACE_OS::atoi(argv[2]);
-  ACE_UINT8 inst = ACE_OS::atoi(argv[3]);
-  ACE_CString nodeTag(argv[4]);
+  ACE_UINT8 ent = CommonIF::ENT_CPGW;
+  ACE_UINT8 inst = ACE_OS::atoi(argv[2]);
+  ACE_CString nodeTag(argv[3]);
 
   ACE_NEW_RETURN(ipc, UniIPCIF(ACE_Thread_Manager::instance(), ip, ent,
                                inst, nodeTag), -1);
+  ipc->buildAndSendConfigReq();
 
   CPGateway *cp = nullptr;
-  ACE_CString portName(argv[5]);
-
   ACE_NEW_NORETURN(cp, CPGateway());
 
   /*Remember back pointer.*/
@@ -516,6 +517,8 @@ UniIPCIF::UniIPCIF(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 ent, AC
   UniIPC(thrMgr, ip, ent, inst, nodeTag)
 {
   ACE_Reactor::instance()->register_handler(this, ACE_Event_Handler::READ_MASK);
+
+  /*Build and send Config Req to CFGMGR.*/
 }
 
 UniIPCIF::~UniIPCIF()
@@ -582,6 +585,27 @@ void UniIPCIF::CPGWIF(CPGateway *parent)
 CPGateway &UniIPCIF::CPGWIF(void)
 {
   return(*m_CPGWIF);
+}
+
+void UniIPCIF::buildAndSendConfigReq(void)
+{
+  ACE_Message_Block *mb = nullptr;
+  ACE_NEW_NORETURN(mb, ACE_Message_Block(CommonIF::SIZE_1KB));
+
+  CommonIF::_cmMessage_t *req = (CommonIF::_cmMessage_t *)mb->wr_ptr();
+  req->m_dst.m_procId = get_self_procId();
+  req->m_dst.m_entId = CommonIF::ENT_CFGMGR;
+  req->m_dst.m_instId = CommonIF::INST1;
+
+  req->m_src.m_procId = get_self_procId();
+  req->m_src.m_entId = CommonIF::ENT_CPGW;
+  req->m_src.m_instId = CommonIF::INST1;
+  req->m_msgType = CommonIF::MSG_CPGW_CFGMGR_CONFIG_REQ;
+  req->m_messageLen = 0;
+
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l messageType %u\n"), req->m_msgType));
+  mb->wr_ptr(sizeof(CommonIF::_cmMessage_t));
+  send_ipc((ACE_Byte *)mb->rd_ptr(), (ACE_UINT32)mb->length());
 }
 
 #endif /*__CPGATEWAY_CC__*/

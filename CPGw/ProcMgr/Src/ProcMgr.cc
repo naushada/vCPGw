@@ -126,6 +126,7 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
     /*parent Process.*/
     pPid = ACE_OS::getppid();
     buildSpawnRsp(in, cPid, pPid, mb);
+    send_ipc((ACE_Byte *)mb.rd_ptr(), (ACE_UINT32)mb.length());
     break;
   }
 

@@ -224,6 +224,8 @@ public:
   int processIPCMessage(ACE_Message_Block &mb);
   int buildIPCHeader(ACE_Byte *in, ACE_Message_Block &mb);
 
+  void schema(ACE_CString sc);
+
 private:
   AAAInstMap_t m_aaa;
   HTTPInstMap_t m_http;

@@ -29,6 +29,7 @@ public:
   ACE_UINT8 start(void);
   void stop(void);
   int processIpcMessage(ACE_Message_Block *mb);
+  void buildAndSendConfigReq(void);
 
   CPGateway &CPGWIF(void);
   void CPGWIF(CPGateway *cpGw);
@@ -115,7 +116,7 @@ class CPGateway : public ACE_Event_Handler
     void IPCIF(UniIPCIF *ipc);
     UniIPCIF &IPCIF(void);
 
-    int processConfigReq(ACE_Byte *in, ACE_UINT32 inLen);
+    int processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen);
     int processIpcMessage(ACE_Message_Block *mb);
 
 };
