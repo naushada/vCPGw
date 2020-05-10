@@ -283,6 +283,13 @@ ACE_HANDLE CPGateway::get_handle() const
   return(const_cast<CPGateway *>(this)->handle());
 }
 
+CPGateway::CPGateway(ACE_CString portName, ACE_CString ip)
+{
+  ACE_DEBUG((LM_DEBUG, "CPGateway::CPGateway\n"));
+  ethIntfName(portName);
+  ipAddr(ip);
+}
+
 /*Constructor*/
 CPGateway::CPGateway(ACE_CString intfName, ACE_CString ip,
                      ACE_UINT8 entity, ACE_UINT8 instance,
@@ -406,12 +413,8 @@ ACE_UINT8 CPGateway::start()
   ACE_CString ipAddrStr("127.0.0.1");
   ACE_CString nodetag("primary");
 
+  /*Feed this instance to Reactor's loop*/
   ACE_Reactor::instance()->register_handler(this, ACE_Event_Handler::READ_MASK);
-
-  while(1)
-  {
-    ACE_Reactor::instance()->handle_events(to);
-  }
 
   return(0);
 }
@@ -422,14 +425,61 @@ ACE_UINT8 CPGateway::stop()
   return(0);
 }
 
+int CPGateway::processConfigReq(ACE_Byte *in, ACE_UINT32 inLen)
+{
+
+  if(start())
+  {
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l CPGateway instantiation failed\n")));
+    return(-1);
+  }
+}
+
+int CPGateway::processIpcMessage(ACE_Message_Block *mb)
+{
+  ACE_Byte *in = (ACE_Byte *)mb->rd_ptr();
+  ACE_UINT32 len = (ACE_UINT32)mb->length();
+
+  CommonIF::_cmMessage_t *msg = (CommonIF::_cmMessage_t *)in;
+
+  ACE_UINT32 msgType = *((ACE_UINT32 *)&(msg->m_message));
+  ACE_UINT32 msgLen = msg->m_messageLen;
+
+  switch(msgType)
+  {
+  case CommonIF::MSG_CFGMGR_CPGW_CONFIG_REQ:
+    processConfigReq(in, len);
+    mb->release();
+    break;
+  default:
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Unhandled Message Type %u\n"),
+               msgType));
+    break;
+  }
+
+  return(0);
+}
+
+void CPGateway::IPCIF(UniIPCIF *parent)
+{
+  m_IPCIF = parent;
+}
+
+UniIPCIF &CPGateway::IPCIF(void)
+{
+  return(*m_IPCIF);
+}
+
 int main(int argc, char *argv[])
 {
 
   /*
+   * argv[0] = Program/Binary Name
    * argv[1] = IPC IP Address = 127.0.0.1
    * argv[2] = entityID/facility
    * argv[3] = instanceId
-   * argv[4] = nodeName
+   * argv[4] = nodeName/NodeTag
+   * argv[5] = portName (interface portName, eth0 or ens1)
    * */
   /*Start UniIPC Interface to get the CPGateway configuration.*/
   UniIPCIF *ipc = nullptr;
@@ -439,34 +489,31 @@ int main(int argc, char *argv[])
   ACE_UINT8 inst = ACE_OS::atoi(argv[3]);
   ACE_CString nodeTag(argv[4]);
 
-  ACE_NEW_RETURN(ipc, UniIPCIF(ip, ent, inst, nodeTag), -1);
+  ACE_NEW_RETURN(ipc, UniIPCIF(ACE_Thread_Manager::instance(), ip, ent,
+                               inst, nodeTag), -1);
 
+  CPGateway *cp = nullptr;
+  ACE_CString portName(argv[5]);
+
+  ACE_NEW_NORETURN(cp, CPGateway());
+
+  /*Remember back pointer.*/
+  ipc->CPGWIF(cp);
+  cp->IPCIF(ipc);
+
+  /*Resume the Daemon Thread*/
+  ipc->resume();
+
+  /*start the Reactor's main loop.*/
   ipc->start();
 
-#if 0
-  CPGateway *cp = NULL;
-  ACE_CString ipStr((const char *)argv[2]);
-  ACE_CString nTag((const char *)argv[5]);
-
-  ACE_NEW_NORETURN(cp, CPGateway(argv[1], ipStr,
-                                 ACE_OS::atoi(argv[3]),
-                                 ACE_OS::atoi(argv[4]),
-                                 nTag));
-
-  if(!cp->start())
-  {
-    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l CPGateway instantiation failed\n")));
-    delete cp;
-    return(-1);
-  }
-#endif
   return(0);
 }
 
 /*UniIPC related member function/method.*/
 
-UniIPCIF::UniIPCIF(ACE_CString ip, ACE_UINT8 ent, ACE_UINT8 inst, ACE_CString nodeTag) :
-  UniIPC(ip, ent, inst, nodeTag)
+UniIPCIF::UniIPCIF(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 ent, ACE_UINT8 inst, ACE_CString nodeTag) :
+  UniIPC(thrMgr, ip, ent, inst, nodeTag)
 {
   ACE_Reactor::instance()->register_handler(this, ACE_Event_Handler::READ_MASK);
 }
@@ -481,7 +528,13 @@ ACE_HANDLE UniIPCIF::get_handle() const
   return(const_cast<UniIPCIF *>(this)->handle());
 }
 
-void UniIPCIF::start(void)
+ACE_UINT32 UniIPCIF::handle_ipc(ACE_Message_Block *mb)
+{
+  putq(mb);
+  return(0);
+}
+
+ACE_UINT8 UniIPCIF::start(void)
 {
   ACE_Time_Value to(5);
 
@@ -489,15 +542,46 @@ void UniIPCIF::start(void)
   {
     ACE_Reactor::instance()->handle_events(to);
   }
-}
 
-void UniIPCIF::stop(void)
-{
-}
-
-ACE_UINT32 UniIPCIF::handle_ipc(ACE_Byte *in, ACE_UINT32 inLen)
-{
   return(0);
+}
+
+int UniIPCIF::svc(void)
+{
+  ACE_Message_Block *mb = nullptr;
+
+  while(1)
+  {
+    /*The control will be blocked if queue is empty.*/
+    if(-1 != getq(mb))
+    {
+      /*Process the Command.*/
+      if(mb->msg_type() == ACE_Message_Block::MB_HANGUP)
+      {
+        mb->release();
+        break;
+      }
+
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l dequeue equest\n")));
+
+      /*Process the Command Now.*/
+      CPGWIF().processIpcMessage(mb);
+      /*reclaim the heap memory now. allocated by the sender*/
+      mb->release();
+    }
+  }
+
+  return(0);
+}
+
+void UniIPCIF::CPGWIF(CPGateway *parent)
+{
+  m_CPGWIF = parent;
+}
+
+CPGateway &UniIPCIF::CPGWIF(void)
+{
+  return(*m_CPGWIF);
 }
 
 #endif /*__CPGATEWAY_CC__*/

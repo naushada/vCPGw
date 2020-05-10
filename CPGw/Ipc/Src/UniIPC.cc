@@ -36,13 +36,13 @@ UniIPC::UniIPC()
 
 }
 
-UniIPC::UniIPC(ACE_CString ipAddr, ACE_UINT8 fac,
-           ACE_UINT8 ins, ACE_CString node_tag)
+UniIPC::UniIPC(ACE_Thread_Manager *thrMgr, ACE_CString ipAddr,
+               ACE_UINT8 fac, ACE_UINT8 ins,
+               ACE_CString node_tag) : ACE_Task<ACE_MT_SYNCH>(thrMgr)
 {
   do
   {
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l UniIPC\n")));
-    ACE_TRACE("UniIPC::UniIPC");
 
     selfProcId(CommonIF::get_hash32(reinterpret_cast<const ACE_UINT8 *>(node_tag.c_str())));
     m_nodeTag = node_tag;
@@ -70,6 +70,8 @@ UniIPC::UniIPC(ACE_CString ipAddr, ACE_UINT8 fac,
     //ACE_Reactor::instance()->register_handler(this,
     //                                          ACE_Event_Handler::READ_MASK);
 
+    /*Spwaning the Thread now.*/
+    open();
   }while(0);
 
 }/*UniIPC*/
@@ -134,6 +136,11 @@ ACE_CString UniIPC::nodeTag(void)
   return(m_nodeTag);
 }
 
+int UniIPC::open(void *args)
+{
+  activate(THR_NEW_LWP | THR_SUSPENDED);
+  return(0);
+}
 
 /*
  * @brief  This is the hook method of ACE Event Handler and is called by ACE Framework to retrieve the
@@ -171,15 +178,10 @@ ACE_INT32 UniIPC::handle_input(ACE_HANDLE handle)
       break;
     }
 
+    /*Update the length now.*/
     mb->wr_ptr(recv_len);
-    /*! peer is remembered and shall be used while sending response to it.*/
-
-    /* +--------------+--------------+---------------+--------------+------------+-----------+-------------------+
-     * |dstProcId(4)  | dsttaskId(4) | srcProcId(4)  | srcTaskId(4) | version(4) | length(4) | payload of length |
-     * +--------------+--------------+---------------+--------------+------------+-----------+-------------------+
-     * */
-    handle_ipc((ACE_UINT8 *)mb->wr_ptr(), mb->length());
-    mb->release();
+    /*dispatch the hook method now.*/
+    handle_ipc(mb);
 
   }while(0);
 
@@ -204,48 +206,45 @@ void UniIPC::selfProcId(ACE_UINT32 selfProcId)
  * @param
  * @return
  * */
-ACE_UINT32 UniIPC::send_ipc(ACE_UINT32 dstProcId, ACE_UINT8 dstEntity,
-		                      ACE_UINT8 dstInst, ACE_Byte *req,
-						              ACE_UINT32 reqLen)
+ACE_UINT32 UniIPC::send_ipc(ACE_Byte *rsp, ACE_UINT32 rspLen)
 {
-  ACE_TRACE("UniIPC::send_ipc");
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l sendign mesage via IPC\n")));
 
-  ACE_UINT32 len = 0;
+  int bytesToSend = 0;
+  int len = 0;
+  int offset = 0;
+
+  bytesToSend = (rspLen - offset);
 	do
 	{
-	  ACE_Message_Block *mb;
+    CommonIF::_cmMessage_t *cMsg = (CommonIF::_cmMessage_t *)rsp;
+
     /*UDP socket for IPC.*/
     ACE_INET_Addr to;
 
-    /* +--------------+--------------+---------------+--------------+------------+-----------+-------------------+
-     * |dstProcId(4)  | dsttaskId(4) | srcProcId(4)  | srcTaskId(4) | version(4) | length(4) | payload of length |
-     * +--------------+--------------+---------------+--------------+------------+-----------+-------------------+
-     * */
-    ACE_DEBUG((LM_DEBUG, "dstProcId %u srcProcId %u", dstProcId, get_self_procId()));
-	  if(dstProcId == get_self_procId())
+    ACE_DEBUG((LM_DEBUG, "dstProcId %u srcProcId %u", cMsg->m_dst.m_procId, get_self_procId()));
+
+	  if(cMsg->m_dst.m_procId == get_self_procId())
 	  {
       /*data to be sent to different Node/Processor.*/
-      to.set_port_number(CommonIF::get_ipc_port(dstEntity, dstInst));
-      to.set_address(m_ipAddr.rep(), m_ipAddr.length());
-      ACE_NEW_NORETURN(mb, ACE_Message_Block(CommonIF::SIZE_64MB));
+      to.set_port_number(CommonIF::get_ipc_port(cMsg->m_dst.m_entId, cMsg->m_dst.m_instId));
+      to.set_address(m_ipAddr.c_str(), m_ipAddr.length());
 
-      *((ACE_UINT32 *)mb->wr_ptr()) = dstProcId;
-      mb->wr_ptr(sizeof(ACE_UINT32));
-      *((ACE_UINT32 *)mb->wr_ptr()) = CommonIF::get_task_id(dstEntity, dstInst);
-      mb->wr_ptr(sizeof(ACE_UINT32));
-      *((ACE_UINT32 *)mb->wr_ptr()) = get_self_procId();
-      mb->wr_ptr(sizeof(ACE_UINT32));
-      *((ACE_UINT32 *)mb->wr_ptr()) = get_self_taskId();
-      mb->wr_ptr(sizeof(ACE_UINT32));
-      *((ACE_UINT32 *)mb->wr_ptr()) = 0x00000000;
-      mb->wr_ptr(sizeof(ACE_UINT32));
-      *((ACE_UINT32 *)mb->wr_ptr()) = (reqLen + 20);
-      mb->wr_ptr(sizeof(ACE_UINT32));
+      do
+      {
+        len = m_sockDgram.send(&rsp[offset], bytesToSend, to);
+        if(len > 0)
+        {
+          offset += len;
+          bytesToSend -= len;
+        }
+        else
+        {
+          ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l %m\n")));
+          break;
+        }
 
-      mb->copy((const char *)req, reqLen);
-
-      len = m_sockDgram.send(mb->wr_ptr(), mb->length(), to);
-      break;
+      }while(bytesToSend);
 	  }
 
 	}while(0);
@@ -253,7 +252,7 @@ ACE_UINT32 UniIPC::send_ipc(ACE_UINT32 dstProcId, ACE_UINT8 dstEntity,
   return(len);
 }
 
-ACE_UINT32 UniIPC::handle_ipc(ACE_UINT8 *req, ACE_UINT32 reqLen)
+ACE_UINT32 UniIPC::handle_ipc(ACE_Message_Block *mb)
 {
   ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l not defined in sub-class\n")));
   return(0);

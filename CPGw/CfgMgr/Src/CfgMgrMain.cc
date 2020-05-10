@@ -6,28 +6,7 @@
 #include "CfgCmdHandler.h"
 
 #include "ace/Reactor.h"
-
-CfgMgrMain::CfgMgrMain(ACE_CString ipAddr, ACE_UINT8 ent, ACE_UINT8 inst, ACE_CString nodeTag) :
-  UniIPC(ipAddr, ent, inst, nodeTag)
-{
-  ACE_Reactor::instance()->register_handler(this,
-                                            ACE_Event_Handler::READ_MASK);
-}
-
-CfgMgrMain::~CfgMgrMain()
-{
-}
-
-ACE_HANDLE CfgMgrMain::get_handle(void) const
-{
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CfgMgrMain::get_handle\n")));
-  return(const_cast<CfgMgrMain *>(this)->handle());
-}
-
-ACE_UINT32 CfgMgrMain::handle_ipc(ACE_UINT8 *req, ACE_UINT32 reqLen)
-{
-  return(0);
-}
+#include "ace/Message_Block.h"
 
 void CfgMgrMain::start(void)
 {
@@ -60,22 +39,22 @@ int main(int argc, char *argv[])
 
   if(argc > 4)
   {
-    ACE_CString schema(argv[5]);
-    CfgMgr cfgMgr(schema);
-    cfgMgr.start();
-    cfgMgr.display();
-    cfgMgr.stop();
-
-    CfgCmdHandler cmdHandler(ACE_Thread_Manager::instance());
-    cmdHandler.open();
-
     ACE_CString ip(argv[1]);
     ACE_UINT8 ent = ACE_OS::atoi(argv[2]);
     ACE_UINT8 inst = ACE_OS::atoi(argv[3]);
     ACE_CString proc(argv[4]);
+    ACE_CString schema(argv[5]);
 
-    CfgMgrMain cfgMgrMain(ip, ent, inst, proc);
+    CfgMgr cfgMgr(ACE_Thread_Manager::instance(), ip, ent, inst, proc);
+    cfgMgr.start();
+    cfgMgr.display();
 
+    CfgCmdHandler cmdHandler(ACE_Thread_Manager::instance());
+    cmdHandler.open();
+
+    CfgMgrMain cfgMgrMain;
+
+    /*Start the Reactor's main loop now.*/
     cfgMgrMain.start();
   }
   return(0);

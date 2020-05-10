@@ -2,6 +2,16 @@
 #define __CFG_MGR_CC__
 
 #include "CfgMgr.h"
+#include "CfgMgrMain.h"
+#include "CommonIF.h"
+#include "UniIPC.h"
+
+#include "ace/Message_Block.h"
+
+CfgMgr::~CfgMgr()
+{
+  stop();
+}
 
 CfgMgr::CfgMgr(ACE_CString &schema)
 {
@@ -13,6 +23,13 @@ CfgMgr::CfgMgr(ACE_CString &schema)
   agent().unbind_all();
   cpgw().unbind_all();
   m_schema = schema;
+}
+
+CfgMgr::CfgMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId, ACE_UINT8 instId, ACE_CString nodeTag) : 
+  UniIPC(thrMgr, ip, entId, instId, nodeTag)
+{
+  ACE_Reactor::instance()->register_handler(this,
+                                            ACE_Event_Handler::READ_MASK);
 }
 
 AAAInstMap_t &CfgMgr::aaa(void)
@@ -43,10 +60,6 @@ DHCPAgentInstMap_t &CfgMgr::agent(void)
 CPGWInstMap_t &CfgMgr::cpgw(void)
 {
   return(m_cpgw);
-}
-
-CfgMgr::~CfgMgr()
-{
 }
 
 ACE_INT32 CfgMgr::processDHCPAgentCfg(void)
@@ -1819,14 +1832,15 @@ void CfgMgr::display(void)
 
 void CfgMgr::displayDHCP(void)
 {
-  _CpGwDHCPInstance_t *inst = NULL;
+  _CpGwDHCPInstance_t *inst = nullptr;
   DHCPInstMap_Iter_t iter = dhcp().begin();
 
-  for(; iter != dhcp().end(); iter++)
+  //for(; iter != dhcp().end(); iter++)
+  for(DHCPInstMap_t::ENTRY *entry = nullptr; iter.next(entry); iter.advance())
   {
     /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    inst = (_CpGwDHCPInstance_t *)((*iter).int_id_);
-    ACE_CString instName = (ACE_CString)((*iter).ext_id_);
+    inst = (_CpGwDHCPInstance_t *)((*entry).int_id_);
+    ACE_CString instName = (ACE_CString)((*entry).ext_id_);
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l instance Name is %s\n"), instName.c_str()));
 
     /*virtual networks.*/
@@ -1985,6 +1999,179 @@ void CfgMgr::displayCPGW(void)
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_ip is 0x%X\n"), inst->m_ip.m_ipn));
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_host_name is %s\n"), inst->m_host_name));
   }
+}
+
+int CfgMgr::processIPCMessage(ACE_Message_Block &mb)
+{
+  ACE_Byte *in = nullptr;
+  ACE_UINT32 len = 0;
+  int rspLen = -1;
+
+  /*Process The Request.*/
+  CommonIF::_cmMessage_t *cMsg = (CommonIF::_cmMessage_t *)mb.rd_ptr();
+  len = mb.length();
+
+  ACE_UINT32 msgType = *((ACE_UINT32 *)cMsg->m_message);
+
+  switch(msgType)
+  {
+  case CommonIF::MSG_CPGW_CFGMGR_CONFIG_REQ:
+    ACE_Message_Block *mbRsp = nullptr;
+    ACE_NEW_NORETURN(mbRsp, ACE_Message_Block(CommonIF::SIZE_8MB));
+    buildConfigResponse(in, len, *mbRsp);
+    send_ipc((ACE_Byte *)mbRsp->rd_ptr(), (ACE_UINT32)mbRsp->length());
+    mbRsp->release();
+    break;
+  }
+
+  return(0);
+}
+
+int CfgMgr::buildIPCHeader(ACE_Byte *in, ACE_Message_Block &mb)
+{
+  CommonIF::_cmMessage_t *req = (CommonIF::_cmMessage_t *)in;
+
+  /*fill destination details.*/
+  *((ACE_UINT32 *)mb.wr_ptr()) = req->m_src.m_procId;
+  mb.wr_ptr(4);
+  *((ACE_UINT8 *)mb.wr_ptr()) = req->m_src.m_entId;
+  mb.wr_ptr(1);
+  *((ACE_UINT8 *)mb.wr_ptr()) = req->m_src.m_instId;
+  mb.wr_ptr(1);
+
+  /*fill source details.*/
+  *((ACE_UINT32 *)mb.wr_ptr()) = req->m_dst.m_entId;
+  mb.wr_ptr(4);
+  *((ACE_UINT8 *)mb.wr_ptr()) = req->m_dst.m_instId;
+  mb.wr_ptr(1);
+  *((ACE_UINT8 *)mb.wr_ptr()) = req->m_dst.m_procId;
+  mb.wr_ptr(1);
+
+  return(0);
+}
+
+int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block &mb)
+{
+  _CpGwConfigs_t rsp;
+  int idx = 0;;
+
+  if(!in)
+  {
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l pointer to in is nullptr\n")));
+    return(-1);
+  }
+
+  buildIPCHeader(in, mb);
+  /*block scoped declaration of identifier inst.*/
+  {
+    /*Preparing DHCPInstance Config.*/
+    _CpGwDHCPInstance_t *inst = nullptr;
+    DHCPInstMap_Iter_t iter = dhcp().begin();
+
+    memset((void *)&rsp, 0, sizeof(_CpGwConfigs_t));
+
+    idx = 0;
+    ACE_UINT8 *count = (ACE_UINT8 *)mb.wr_ptr();
+    mb.wr_ptr(1);
+
+    for(DHCPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
+        iter.advance(), idx++)
+    {
+      inst = (_CpGwDHCPInstance_t *)((*entry).int_id_);
+      mb.copy((const ACE_TCHAR *)inst, sizeof(_CpGwDHCPInstance_t));
+    }
+
+    *count = idx;
+  }
+
+  {
+    /*Preparing for DHCPAgent */
+    _CpGwDHCPAgentInstance_t *inst = nullptr;
+    DHCPAgentInstMap_Iter_t iter = agent().begin();
+
+    idx = 0;
+    for(DHCPAgentInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
+        iter.advance(), idx++)
+    {
+      inst = (_CpGwDHCPAgentInstance_t *)((*entry).int_id_);
+      memcpy((void *)&rsp.m_instance.m_instDHCPAgent[idx], inst, sizeof(_CpGwDHCPAgentInstance_t));
+    }
+
+    rsp.m_instance.m_DHCPAgentInstCount = (ACE_UINT8)idx;
+
+  }
+
+  {
+    /*Preparing for HTTP Instance*/
+    _CpGwHTTPInstance_t *inst = nullptr;
+    HTTPInstMap_Iter_t iter = http().begin();
+
+    idx = 0;
+    for( HTTPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
+        iter.advance(), idx++)
+    {
+      inst = (_CpGwHTTPInstance_t *)((*entry).int_id_);
+      memcpy((void *)&rsp.m_instance.m_instHTTP[idx], inst, sizeof(_CpGwHTTPInstance_t));
+    }
+
+    rsp.m_instance.m_HTTPInstCount = (ACE_UINT8)idx;
+
+  }
+
+  {
+    /*Preparing for AAA Instance*/
+    _CpGwAAAInstance_t *inst = nullptr;
+    AAAInstMap_Iter_t iter = aaa().begin();
+    idx = 0;
+
+    for(AAAInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
+        iter.advance(), idx++)
+    {
+      inst = (_CpGwAAAInstance_t *)((*entry).int_id_);
+      memcpy((void *)&rsp.m_instance.m_instHTTP[idx], inst, sizeof(_CpGwAAAInstance_t));
+    }
+
+    rsp.m_instance.m_AAAInstCount = (ACE_UINT8)idx;
+  }
+
+  return(0);
+}
+
+ACE_HANDLE CfgMgr::get_handle(void) const
+{
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CfgMgr::get_handle\n")));
+  return(const_cast<CfgMgr *>(this)->handle());
+}
+
+ACE_UINT32 CfgMgr::handle_ipc(ACE_Message_Block *mb)
+{
+  putq(mb);
+  return(0);
+}
+
+int CfgMgr::svc(void)
+{
+  ACE_Message_Block *mb = nullptr;
+
+  for(;;)
+  {
+    if(-1 != getq(mb))
+    {
+      /*Process IPC Request Now.*/
+      if(mb->msg_type() == ACE_Message_Block::MB_HANGUP)
+      {
+        mb->release();
+        break;
+      }
+
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l dequeue equest\n")));
+      processIPCMessage(*mb);
+      /*reclaim the heap memory now. allocated by the sender*/
+      mb->release();
+    }
+  }
+
+  return(0);
 }
 
 #endif /*__CFG_MGR_CC__*/

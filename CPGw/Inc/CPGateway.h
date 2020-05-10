@@ -17,16 +17,24 @@ namespace DNS {class CPGwDns;}
 class UniIPCIF : public UniIPC
 {
 public:
-  UniIPCIF(ACE_CString ip, ACE_UINT8 ent, ACE_UINT8 inst, ACE_CString nodeTag);
+  UniIPCIF(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 ent,
+           ACE_UINT8 inst, ACE_CString nodeTag);
+
   virtual ~UniIPCIF();
-  ACE_UINT32 handle_ipc(ACE_Byte *in, ACE_UINT32 inLen);
+  ACE_UINT32 handle_ipc(ACE_Message_Block *mb);
   virtual ACE_HANDLE get_handle() const;
 
-  void start(void);
+  int svc(void);
+
+  ACE_UINT8 start(void);
   void stop(void);
+  int processIpcMessage(ACE_Message_Block *mb);
+
+  CPGateway &CPGWIF(void);
+  void CPGWIF(CPGateway *cpGw);
 
 private:
-  CPGateway *m_cpgwIF;
+  CPGateway *m_CPGWIF;
 
 };
 
@@ -48,7 +56,6 @@ class CPGateway : public ACE_Event_Handler
     /*Domain Name.*/
     ACE_CString m_domainName;
 
-
     /*State-Machine for CPGateway. Note This will point to pointer to sub-class*/
     CPGatewayState *m_state;
 
@@ -59,10 +66,14 @@ class CPGateway : public ACE_Event_Handler
     /*Instance of DNS.*/
     DNS::CPGwDns *m_dnsUser;
     /*Interface for IPC messages.*/
-    UniIPCIF *m_uniIPCIF;
+    UniIPCIF *m_IPCIF;
 
   public:
+
     virtual ~CPGateway();
+    CPGateway() = default;
+
+    CPGateway(ACE_CString intfName, ACE_CString ip);
     CPGateway(ACE_CString intfName);
     CPGateway(ACE_CString intfName, ACE_CString ipAddr,
               ACE_UINT8 entity, ACE_UINT8 instance,
@@ -100,6 +111,12 @@ class CPGateway : public ACE_Event_Handler
 
     ACE_CString &domainName(void);
     void domainName(ACE_CString dName);
+
+    void IPCIF(UniIPCIF *ipc);
+    UniIPCIF &IPCIF(void);
+
+    int processConfigReq(ACE_Byte *in, ACE_UINT32 inLen);
+    int processIpcMessage(ACE_Message_Block *mb);
 
 };
 

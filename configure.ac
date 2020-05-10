@@ -28,6 +28,7 @@ AC_CONFIG_FILES([
  CPGw/Protocol/Dns/Makefile
  CPGw/Parser/Json/Makefile
  CPGw/CfgMgr/Makefile
+ CPGw/ProcMgr/Makefile
  CPGw/Makefile
 ])
 

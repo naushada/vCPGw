@@ -5,11 +5,13 @@
 #include <unordered_map>
 #include <list>
 
-#include <ace/Reactor.h>
-#include <ace/Event_Handler.h>
+#include "ace/Reactor.h"
+#include "ace/Event_Handler.h"
 #include "ace/INET_Addr.h"
 #include "ace/SOCK_Dgram.h"
 #include "ace/SString.h"
+#include "ace/Message_Block.h"
+#include <ace/Task.h>
 
 using namespace std;
 
@@ -88,7 +90,7 @@ class UniTimer : public ACE_Event_Handler
 };
 
 
-class UniIPC : public ACE_Event_Handler
+class UniIPC : public ACE_Task<ACE_MT_SYNCH>
 {
   private:
     ACE_UINT32 m_magic;
@@ -108,10 +110,11 @@ class UniIPC : public ACE_Event_Handler
 
   public:
     UniIPC();
-    UniIPC(ACE_CString ipAddr, ACE_UINT8 facility,
-           ACE_UINT8 instance, ACE_CString nodeTag);
-
     virtual ~UniIPC();
+
+    UniIPC(ACE_Thread_Manager *thrMgr, ACE_CString ipAddr,
+           ACE_UINT8 facility, ACE_UINT8 instance,
+           ACE_CString nodeTag);
 
     ACE_UINT16 ipcPort(void);
     void ipcPort(ACE_UINT16 ipcPort);
@@ -138,20 +141,18 @@ class UniIPC : public ACE_Event_Handler
     void selfTaskId(ACE_UINT32 tId);
     ACE_UINT32 get_taskId(ACE_UINT8 entity, ACE_UINT8 instance);
 
-    ACE_UINT32 send_ipc(ACE_UINT32 procId, ACE_UINT8 entity,
-    		                ACE_UINT8 instance, ACE_Byte *req,
-						            ACE_UINT32 reqLen);
+    ACE_UINT32 send_ipc(ACE_Byte *req, ACE_UINT32 reqLen);
 
     /*! ACE Hook method */
+    int open(void *args=0);
     virtual ACE_INT32 handle_input(ACE_HANDLE handle);
     virtual ACE_HANDLE get_handle(void) const;
+    virtual int svc(void) = 0;
 
     /*! IPC Hook Method */
-    virtual ACE_UINT32 handle_ipc(ACE_UINT8 *req, ACE_UINT32 reqLen);
+    virtual ACE_UINT32 handle_ipc(ACE_Message_Block *mb);
 
 };
-
-
 
 
 

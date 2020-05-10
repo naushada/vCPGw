@@ -2,6 +2,7 @@
 #define __CFG_MGR_H__
 
 #include "Json.h"
+#include "UniIPC.h"
 
 #include "ace/Basic_Types.h"
 #include "ace/SString.h"
@@ -127,10 +128,32 @@ typedef struct _CpGwCPGWInstance
 
 }_CpGwCPGWInstance_t;
 
-
-typedef struct _CpGwPeers
+typedef struct _InstanceConfig
 {
-}_CpGwPeers_t;
+  ACE_UINT8 m_DHCPInstCount;
+  _CpGwDHCPInstance_t m_instDHCP[32];
+
+  ACE_UINT8 m_DHCPAgentInstCount;
+  _CpGwDHCPAgentInstance_t m_instDHCPAgent[32];
+
+  ACE_UINT8 m_HTTPInstCount;
+  _CpGwHTTPInstance_t m_instHTTP[32];
+
+  ACE_UINT8 m_AAAInstCount;
+  _CpGwAAAInstance_t m_instAAA[32];
+
+}_InstanceConfig_t;
+
+typedef struct _PeerConfig
+{
+}_PeerConfig_t;
+
+typedef struct _CpGwConfigs
+{
+  _InstanceConfig_t m_instance;
+  _PeerConfig_t m_peer;
+
+}_CpGwConfigs_t;
 
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwAAAInstance_t*, ACE_Null_Mutex>AAAInstMap_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwHTTPInstance_t*, ACE_Null_Mutex>HTTPInstMap_t;
@@ -147,11 +170,15 @@ typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwDHCPAgentInstance_t*, ACE_Null_Mu
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwCPGWInstance_t*, ACE_Null_Mutex>::iterator CPGWInstMap_Iter_t;
 
 
-class CfgMgr
+class CfgMgr : public UniIPC
 {
 public:
+
   CfgMgr(ACE_CString &schema);
   ~CfgMgr();
+
+  CfgMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip,
+         ACE_UINT8 entId, ACE_UINT8 instId, ACE_CString nodeTag);
 
   AAAInstMap_t &aaa(void);
   HTTPInstMap_t &http(void);
@@ -188,6 +215,15 @@ public:
   ACE_Byte start(void);
   ACE_Byte stop(void);
 
+  int svc(void);
+  ACE_UINT32 handle_ipc(ACE_Message_Block *mb);
+  ACE_HANDLE get_handle(void) const;
+
+  /*Build config and send to respective process.*/
+  int buildConfigResponse(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb);
+  int processIPCMessage(ACE_Message_Block &mb);
+  int buildIPCHeader(ACE_Byte *in, ACE_Message_Block &mb);
+
 private:
   AAAInstMap_t m_aaa;
   HTTPInstMap_t m_http;
@@ -198,7 +234,6 @@ private:
 
   JSON *m_cpGwCfg;
   ACE_CString m_schema;
-
 };
 
 #endif /*__CFG_MGR_H__*/

@@ -37,6 +37,12 @@ namespace CommonIF {
   ACE_UINT16 get_ipc_port(ACE_UINT32 taskId);
   ACE_UINT32 get_task_id(ACE_UINT8 entity, ACE_UINT8 instance);
 
+  typedef struct _entNameIdTab
+  {
+    ACE_UINT8 m_entId;
+    const ACE_TCHAR *m_entName;
+  }_entNameIdTab_t;
+
   typedef struct _cmHeader
   {
     ACE_UINT32 m_procId;
@@ -46,12 +52,38 @@ namespace CommonIF {
 
   typedef struct _cmMessage
   {
-    _cmHeader_t m_src;
     _cmHeader_t m_dst;
+    _cmHeader_t m_src;
+    ACE_UINT32 m_msgType;
     ACE_UINT32 m_messageLen;
     ACE_Byte m_message[1];
 
   }_cmMessage_t;
+
+  static const _entNameIdTab_t m_entTable[] = {
+    {ENT_CPGW,    "CPGateway"},
+    {ENT_AAA,     "AAA"},
+    {ENT_CFGMGR,  "CFGMGR"},
+    {ENT_SYSMGR,  "SYSMGR"},
+    {ENT_PROCMGR, "PROCMGR"},
+
+    /*This shall be last entry*/
+    {0, nullptr}
+  };
+
+  static const ACE_UINT32 MSG_CPGW_CFGMGR_BASE = 0x00010000;
+  static const ACE_UINT32 MSG_CPGW_CFGMGR_CONFIG_REQ = (MSG_CPGW_CFGMGR_BASE + 1);
+
+  static const ACE_UINT32 MSG_PROCMGR_SYSMGR_BASE = 0x00020000;
+  static const ACE_UINT32 MSG_PROCMGR_SYSMGR_PROCESS_SPAWN_RSP = (MSG_PROCMGR_SYSMGR_BASE + 1);
+  static const ACE_UINT32 MSG_PROCMGR_SYSMGR_PROCESS_DIED_IND    = (MSG_PROCMGR_SYSMGR_BASE + 2);
+
+  static const ACE_UINT32 MSG_SYSMGR_PROCMGR_BASE = 0x00030000;
+  static const ACE_UINT32 MSG_SYSMGR_PROCMGR_PROCESS_SPAWN_REQ = (MSG_SYSMGR_PROCMGR_BASE + 1);
+
+  static const ACE_UINT32 MSG_CFGMGR_CPGW_BASE = 0x00040000;
+  static const ACE_UINT32 MSG_CFGMGR_CPGW_CONFIG_REQ = (MSG_CFGMGR_CPGW_BASE + 1);
+
 };
 
 namespace TransportIF {

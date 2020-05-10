@@ -1,0 +1,21 @@
+{
+  "task-table": [
+  {
+    "task-name": "PROCMGR", "start-level": 0, parent-entity": "", "container": "UNI_PROCESS", "visible": "yes", "task-instance-min": 1, "task-instance-max": 1,"stack-size": "",
+	"max-resident-memory": "", "max-cpu-usages": "", "max-number-of-fds": ""
+  },
+  {
+    "task-name": "SYSMGR", "start-level": 1, parent-entity": "PROCMGR", "container": "UNI_PROCESS", "visible": "yes", "task-instance-min": 1, "task-instance-max": 1, "stack-size": "",
+	"max-resident-memory": "", "max-cpu-usages": "", "max-number-of-fds": ""
+  },
+  {
+    "task-name": "CFGMGR", "start-level": 2, parent-entity": "SYSMGR", "container": "UNI_PROCESS", "visible": "yes", "task-instance-min": 1, "task-instance-max": 2,"stack-size": "",
+	"max-resident-memory": "", "max-cpu-usages": "", "max-number-of-fds": ""
+  },
+  {
+    "task-name": "CPGateway", "start-level": 2, parent-entity": "SYSMGR", "container": "UNI_PROCESS", "visible": "yes", "task-instance-min": 1, "task-instance-max": 1, "stack-size": "",
+	"max-resident-memory": "", "max-cpu-usages": "", "max-number-of-fds": ""
+  }]
+}
+
+
