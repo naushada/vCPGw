@@ -38,9 +38,33 @@ ChildHandler::ChildHandler(ACE_Thread_Manager *thrMgr, ProcMgr *parent) :
   default:
     /*parent Process.*/
     pPid = ACE_OS::getppid();
-    //buildSpawnRsp(in, cPid, pPid, mb);
+    ACE_Message_Block mb;
+    buildSpawnRsp(cPid, pPid, mb);
+    procMgr().send_ipc((ACE_Byte *)mb.rd_ptr(), (ACE_UINT32)mb.length());
     break;
   }
+}
+
+int ChildHandler::buildSpawnRsp(pid_t cPid, pid_t pPid, ACE_Message_Block &mb)
+{
+  CommonIF::_cmMessage_t *rsp = (CommonIF::_cmMessage_t *)mb.wr_ptr();
+  _processSpawnRsp_t *spawnRsp = (_processSpawnRsp_t *)rsp->m_message;
+
+  rsp->m_dst.m_procId = procMgr().get_self_procId();
+  rsp->m_dst.m_entId = CommonIF::ENT_SYSMGR;
+  rsp->m_dst.m_instId = CommonIF::INST1;
+
+  rsp->m_src.m_procId = procMgr().get_self_procId();
+  rsp->m_src.m_entId = CommonIF::ENT_PROCMGR;
+  rsp->m_src.m_instId = CommonIF::INST1;
+
+  rsp->m_msgType = CommonIF::MSG_PROCMGR_SYSMGR_PROCESS_SPAWN_RSP;
+  rsp->m_messageLen = 2;
+  spawnRsp->m_cPid = cPid;
+  spawnRsp->m_pPid = pPid;
+
+  mb.wr_ptr(sizeof(CommonIF::_cmMessage_t) + sizeof(_processSpawnRsp_t));
+  return(0);
 }
 
 ChildHandler::~ChildHandler()

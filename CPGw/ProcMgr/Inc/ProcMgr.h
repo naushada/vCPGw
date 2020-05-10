@@ -57,6 +57,7 @@ public:
 
   ProcMgr &procMgr(void);
   void procMgr(ProcMgr *parent);
+  int buildSpawnRsp(pid_t cPid, pid_t pPid, ACE_Message_Block &mb);
 
 private:
   ProcMgr *m_procMgr;
