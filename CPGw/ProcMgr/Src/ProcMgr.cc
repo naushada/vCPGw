@@ -16,10 +16,15 @@ ProcMgr::ProcMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId, AC
 
   ACE_Reactor::instance()->register_handler(this,
                                             ACE_Event_Handler::READ_MASK);
+
+  ACE_NEW_NORETURN(m_childHandler, ChildHandler(thrMgr, this));
+
 }
 
 ProcMgr::~ProcMgr()
 {
+  delete m_childHandler;
+  m_childHandler = nullptr;
 }
 
 ACE_UINT32 ProcMgr::handle_ipc(ACE_Message_Block *mb)
@@ -30,8 +35,14 @@ ACE_UINT32 ProcMgr::handle_ipc(ACE_Message_Block *mb)
 
 ACE_HANDLE ProcMgr::get_handle(void) const
 {
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CfgMgr::get_handle\n")));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l ProcMgr::get_handle\n")));
   return(const_cast<ProcMgr *>(this)->handle());
+}
+
+ACE_UINT32 ProcMgr::process_signal(int signum)
+{
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l ProcMgr::process_signal\n")));
+  return(0);
 }
 
 int ProcMgr::svc(void)
@@ -105,6 +116,10 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
     //ACE_OS::itoa((int)pReq->m_instId, instIdStr, 10);
     //ACE_Byte *argv[] = {pReq->m_ip, entId, instIdStr, pReq->m_nodeTag, nullptr};
     ACE_OS::execlp((const char *)pReq->m_entName, (const char *)pReq->m_ip, entId, pReq->m_instId, (const char *)pReq->m_nodeTag);
+    ACE_OS::exit(1);
+
+  case -1:
+    /*Error case.*/
     break;
 
   default:
@@ -113,11 +128,47 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
     buildSpawnRsp(in, cPid, pPid, mb);
     break;
   }
+
+  return(0);
 }
 
 int ProcMgr::buildSpawnRsp(ACE_Byte *in, pid_t cPid, pid_t pPid, ACE_Message_Block &mb)
 {
+  if(!in)
+  {
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l pointer to in is nullptr\n")));
+    return(-1);
+  }
+
+  CommonIF::_cmMessage_t *req = (CommonIF::_cmMessage_t *)in;
+  _processSpawnReq *spawnReq = (_processSpawnReq *)req->m_message;
+
+  CommonIF::_cmMessage_t *rsp = (CommonIF::_cmMessage_t *)mb.wr_ptr();
+
+  /*Flip the Header now.*/
+  ACE_OS::memcpy((void *)&rsp->m_dst, (const ACE_TCHAR *)&req->m_src,
+                 sizeof(CommonIF::_cmHeader_t));
+  ACE_OS::memcpy((void *)&rsp->m_src, (const ACE_TCHAR *)&req->m_dst,
+                 sizeof(CommonIF::_cmHeader_t));
+
+  rsp->m_msgType = CommonIF::MSG_PROCMGR_SYSMGR_PROCESS_SPAWN_RSP;
+  rsp->m_messageLen = 2;
+  _processSpawnRsp_t *spawnRsp = (_processSpawnRsp_t *)rsp->m_message;
+  spawnRsp->m_cPid = cPid;
+  spawnRsp->m_pPid = pPid;
+
+  /*Update the length now.*/
+  mb.wr_ptr(sizeof(CommonIF::_cmMessage_t) + sizeof(_processSpawnRsp_t));
   return(0);
 }
 
+int ProcMgr::start(void)
+{
+  ACE_Time_Value to(1,0);
+
+  for(;;)
+  {
+    ACE_Reactor::instance()->handle_events(to);
+  }
+}
 #endif /*__PROCMGR_CC__*/

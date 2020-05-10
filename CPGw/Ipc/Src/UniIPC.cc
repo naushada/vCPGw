@@ -154,6 +154,11 @@ ACE_HANDLE UniIPC::get_handle(void) const
   return(const_cast<UniIPC *>(this)->handle());
 }
 
+ACE_INT32 UniIPC::handle_signal(int signum)
+{
+  process_signal(signum);
+}
+
 /*
  * @brief  This is the hook method for application to define this member function and is invoked by 
  *         ACE Framework.
@@ -255,6 +260,12 @@ ACE_UINT32 UniIPC::send_ipc(ACE_Byte *rsp, ACE_UINT32 rspLen)
 ACE_UINT32 UniIPC::handle_ipc(ACE_Message_Block *mb)
 {
   ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l not defined in sub-class\n")));
+  return(0);
+}
+
+ACE_UINT32 UniIPC::process_signal(int signum)
+{
+  ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l proces_signal to be  re-defined in sub-class\n")));
   return(0);
 }
 

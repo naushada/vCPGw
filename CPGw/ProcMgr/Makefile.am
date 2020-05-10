@@ -2,6 +2,7 @@
 bin_PROGRAMS=PROCMGR
 
 PROCMGR_SOURCES=Src/ProcMgr.cc \
+								Src/ProcMgrChildHandler.cc \
 								Src/ProcMgrMain.cc
 
 PROCMGR_CPPFLAGS=-I$(srcdir)/Inc \
