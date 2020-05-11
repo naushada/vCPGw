@@ -2009,11 +2009,12 @@ int CfgMgr::processIPCMessage(ACE_Message_Block &mb)
 
   /*Process The Request.*/
   CommonIF::_cmMessage_t *cMsg = (CommonIF::_cmMessage_t *)mb.rd_ptr();
-  len = mb.length();
 
   ACE_UINT32 msgType = cMsg->m_msgType;
 
   in = (ACE_Byte *)mb.rd_ptr();
+  len = mb.length();
+
   switch(msgType)
   {
   case CommonIF::MSG_CPGW_CFGMGR_CONFIG_REQ:
@@ -2068,12 +2069,13 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
   CommonIF::_cmMessage_t *req = (CommonIF::_cmMessage_t *)in;
 
   ACE_OS::memset((void *)rsp, 0, sizeof(CommonIF::_cmMessage_t));
+  ACE_OS::memset((void *)configRsp, 0, sizeof(_CpGwConfigs_t));
 
-  rsp->m_dst.m_procId = req->m_src.m_procId;
+  rsp->m_dst.m_procId = get_self_procId(); //req->m_src.m_procId;
   rsp->m_dst.m_entId = req->m_src.m_entId;
   rsp->m_dst.m_instId = req->m_src.m_instId;
 
-  rsp->m_src.m_procId = req->m_dst.m_procId;
+  rsp->m_src.m_procId = get_self_procId(); //req->m_dst.m_procId;
   rsp->m_src.m_entId = req->m_dst.m_entId;
   rsp->m_src.m_instId = req->m_dst.m_instId;
 
@@ -2085,14 +2087,11 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     _CpGwDHCPInstance_t *inst = nullptr;
     DHCPInstMap_Iter_t iter = dhcp().begin();
 
-    memset((void *)&configRsp, 0, sizeof(_CpGwConfigs_t));
-
-    idx = 0;
-
-    for(DHCPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
-        iter.advance(), idx++)
+    //for(DHCPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
+    //    iter.advance(), idx++)
+    for(idx = 0; iter != dhcp().end(); iter++, idx++)
     {
-      inst = (_CpGwDHCPInstance_t *)((*entry).int_id_);
+      inst = (_CpGwDHCPInstance_t *)((*iter).int_id_);
       //mb.copy((const ACE_TCHAR *)inst, sizeof(_CpGwDHCPInstance_t));
       ACE_OS::memcpy((void *)&configRsp->m_instance.m_instDHCP[idx], inst, sizeof(_CpGwDHCPInstance_t));
     }
@@ -2106,11 +2105,11 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     _CpGwDHCPAgentInstance_t *inst = nullptr;
     DHCPAgentInstMap_Iter_t iter = agent().begin();
 
-    idx = 0;
-    for(DHCPAgentInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
-        iter.advance(), idx++)
+    //for(DHCPAgentInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
+    //    iter.advance(), idx++)
+    for(idx = 0; iter != agent().end(); iter++, idx++)
     {
-      inst = (_CpGwDHCPAgentInstance_t *)((*entry).int_id_);
+      inst = (_CpGwDHCPAgentInstance_t *)((*iter).int_id_);
       ACE_OS::memcpy((void *)&configRsp->m_instance.m_instDHCPAgent[idx], inst, sizeof(_CpGwDHCPAgentInstance_t));
     }
 

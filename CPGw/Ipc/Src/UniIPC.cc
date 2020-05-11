@@ -228,7 +228,7 @@ ACE_UINT32 UniIPC::send_ipc(ACE_Byte *rsp, ACE_UINT32 rspLen)
     /*UDP socket for IPC.*/
     ACE_INET_Addr to;
 
-    ACE_DEBUG((LM_DEBUG, "dstProcId %u srcProcId %u", cMsg->m_dst.m_procId, get_self_procId()));
+    ACE_DEBUG((LM_DEBUG, "dstProcId %u srcProcId %u\n", cMsg->m_dst.m_procId, get_self_procId()));
 
 	  if(cMsg->m_dst.m_procId == get_self_procId())
 	  {

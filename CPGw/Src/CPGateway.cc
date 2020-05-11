@@ -32,6 +32,9 @@
 #include "Dns.h"
 #include "DhcpServer.h"
 
+#include "CfgMgr.h"
+
+
 void CPGateway::setState(CPGatewayState *st)
 {
   ACE_TRACE("CPGateway::setState\n");
@@ -428,12 +431,24 @@ ACE_UINT8 CPGateway::stop()
 int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
 {
 
+  CommonIF::_cmMessage_t *rsp = (CommonIF::_cmMessage_t *)in;
+  _CpGwConfigs_t *config = (_CpGwConfigs_t *)rsp->m_message;
+
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l DHCPInstCnt %u \n"), config->m_instance.m_DHCPInstCount));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_nw %s \n"), config->m_instance.m_instDHCP[0].m_nw.m_name));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_type %s \n"), config->m_instance.m_instDHCP[0].m_nw.m_type));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_port %s \n"), config->m_instance.m_instDHCP[0].m_nw.m_port));
+
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l DHCPAgentInstCnt %u \n"), config->m_instance.m_DHCPAgentInstCount));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l HTTPInstCnt %u \n"), config->m_instance.m_HTTPInstCount));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l AAAInstCnt %u \n"), config->m_instance.m_AAAInstCount));
+  /*
   if(start())
   {
     ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l CPGateway instantiation failed\n")));
     return(-1);
   }
-
+*/
   return(0);
 }
 
@@ -444,15 +459,14 @@ int CPGateway::processIpcMessage(ACE_Message_Block *mb)
 
   CommonIF::_cmMessage_t *msg = (CommonIF::_cmMessage_t *)in;
 
-  ACE_UINT32 msgType = *((ACE_UINT32 *)&(msg->m_message));
+  ACE_UINT32 msgType = msg->m_msgType;
   ACE_UINT32 msgLen = msg->m_messageLen;
 
   switch(msgType)
   {
   case CommonIF::MSG_CFGMGR_CPGW_CONFIG_RSP:
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Config Response Received\n")));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Config Response Received length %u\n"),len));
     processConfigRsp(in, len);
-    mb->release();
     break;
   default:
     ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Unhandled Message Type %u\n"),

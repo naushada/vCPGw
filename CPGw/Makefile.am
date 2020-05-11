@@ -16,6 +16,8 @@ CPGateway_CPPFLAGS=-I$(srcdir)/Inc \
                    -I$(srcdir)/Protocol/Inc \
                    -I$(srcdir)/Protocol/Arp/Inc \
                    -I$(srcdir)/Protocol/Dns/Inc \
+                   -I$(srcdir)/Parser/Json/Inc \
+                   -I$(srcdir)/CfgMgr/Inc \
                    -I/usr/local \
                    -I/usr/local/ACE-6.5.0/include
 
