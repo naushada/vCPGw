@@ -42,10 +42,9 @@ UniIPC::UniIPC(ACE_Thread_Manager *thrMgr, ACE_CString ipAddr,
 {
   do
   {
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l UniIPC\n")));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l UniIPC ")));
 
     selfProcId(CommonIF::get_hash32(reinterpret_cast<const ACE_UINT8 *>(node_tag.c_str())));
-    //selfProcId(2323);
     m_nodeTag = node_tag;
 
 
@@ -68,8 +67,6 @@ UniIPC::UniIPC(ACE_Thread_Manager *thrMgr, ACE_CString ipAddr,
     }
 
     handle(m_sockDgram.get_handle());
-    //ACE_Reactor::instance()->register_handler(this,
-    //                                          ACE_Event_Handler::READ_MASK);
 
     /*Spwaning the Thread now.*/
     open();
@@ -161,7 +158,7 @@ ACE_INT32 UniIPC::handle_signal(int signum)
 }
 
 /*
- * @brief  This is the hook method for application to define this member function and is invoked by 
+ * @brief  This is the hook method for application to define this member function and is invoked by
  *         ACE Framework.
  * @param  handle in which read/recv/recvfrom to be called.
  * @return 0 for success else for failure.
@@ -177,13 +174,14 @@ ACE_INT32 UniIPC::handle_input(ACE_HANDLE handle)
   ACE_INET_Addr peer;
   do
   {
-	  memset((void *)mb->wr_ptr(), 0, (CommonIF::SIZE_64MB * sizeof(char)));
-    if((recv_len = m_sockDgram.recv(mb->wr_ptr(), (CommonIF::SIZE_64MB * sizeof(char)), peer)) < 0)
+    ACE_OS::memset((void *)mb->wr_ptr(), 0, CommonIF::SIZE_64MB);
+    if((recv_len = m_sockDgram.recv(mb->wr_ptr(), CommonIF::SIZE_64MB, peer)) < 0)
     {
       ACE_ERROR((LM_ERROR, "Receive from peer 0x%X Failed\n", peer.get_port_number()));
       break;
     }
 
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l recv_le is %u\n"), recv_len));
     /*Update the length now.*/
     mb->wr_ptr(recv_len);
     /*dispatch the hook method now.*/
@@ -214,7 +212,7 @@ void UniIPC::selfProcId(ACE_UINT32 selfProcId)
  * */
 ACE_UINT32 UniIPC::send_ipc(ACE_Byte *rsp, ACE_UINT32 rspLen)
 {
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l sendign mesage via IPC len %u\n"), rspLen));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l sendign message via IPC len %u\n"), rspLen));
 
   int bytesToSend = 0;
   int len = 0;
@@ -232,7 +230,7 @@ ACE_UINT32 UniIPC::send_ipc(ACE_Byte *rsp, ACE_UINT32 rspLen)
 
 	  if(cMsg->m_dst.m_procId == get_self_procId())
 	  {
-      /*data to be sent to different Node/Processor.*/
+      /*data to be sent to same Processor.*/
       to.set_port_number(CommonIF::get_ipc_port(cMsg->m_dst.m_entId, cMsg->m_dst.m_instId));
       to.set_address(m_ipAddr.c_str(), m_ipAddr.length());
 
@@ -246,7 +244,7 @@ ACE_UINT32 UniIPC::send_ipc(ACE_Byte *rsp, ACE_UINT32 rspLen)
         }
         else
         {
-          ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l %m\n")));
+          ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l %m send Failed\n")));
           break;
         }
 

@@ -547,6 +547,7 @@ ACE_HANDLE UniIPCIF::get_handle() const
 
 ACE_UINT32 UniIPCIF::handle_ipc(ACE_Message_Block *mb)
 {
+  /*Post request to the Active Object.*/
   putq(mb);
   return(0);
 }
@@ -567,25 +568,22 @@ int UniIPCIF::svc(void)
 {
   ACE_Message_Block *mb = nullptr;
 
-  while(1)
+  /*The control will be blocked if queue is empty.*/
+  for(;-1 != getq(mb);)
   {
-    /*The control will be blocked if queue is empty.*/
-    if(-1 != getq(mb))
+    /*Process the Command.*/
+    if(mb->msg_type() == ACE_Message_Block::MB_HANGUP)
     {
-      /*Process the Command.*/
-      if(mb->msg_type() == ACE_Message_Block::MB_HANGUP)
-      {
-        mb->release();
-        break;
-      }
-
-      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l dequeue equest\n")));
-
-      /*Process the Command Now.*/
-      CPGWIF().processIpcMessage(mb);
-      /*reclaim the heap memory now. allocated by the sender*/
       mb->release();
+      break;
     }
+
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l dequeue equest\n")));
+
+    /*Process the Command Now.*/
+    CPGWIF().processIpcMessage(mb);
+    /*reclaim the heap memory now. allocated by the sender*/
+    mb->release();
   }
 
   return(0);

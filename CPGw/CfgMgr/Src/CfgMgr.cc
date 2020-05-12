@@ -2018,12 +2018,14 @@ int CfgMgr::processIPCMessage(ACE_Message_Block &mb)
   switch(msgType)
   {
   case CommonIF::MSG_CPGW_CFGMGR_CONFIG_REQ:
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Config Request Received\n")));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Config Request Received of len %u\n"), len));
     ACE_Message_Block *mbRsp = nullptr;
     ACE_NEW_NORETURN(mbRsp, ACE_Message_Block(CommonIF::SIZE_8MB));
+
     buildConfigResponse(in, len, *mbRsp);
     send_ipc((ACE_Byte *)mbRsp->rd_ptr(), (ACE_UINT32)mbRsp->length());
     mbRsp->release();
+
     break;
   }
 
@@ -2093,7 +2095,7 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     {
       inst = (_CpGwDHCPInstance_t *)((*iter).int_id_);
       //mb.copy((const ACE_TCHAR *)inst, sizeof(_CpGwDHCPInstance_t));
-      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instDHCP[idx], inst, sizeof(_CpGwDHCPInstance_t));
+      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instDHCP[idx], (const void *)inst, sizeof(_CpGwDHCPInstance_t));
     }
 
     configRsp->m_instance.m_DHCPInstCount = idx;
@@ -2110,7 +2112,7 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     for(idx = 0; iter != agent().end(); iter++, idx++)
     {
       inst = (_CpGwDHCPAgentInstance_t *)((*iter).int_id_);
-      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instDHCPAgent[idx], inst, sizeof(_CpGwDHCPAgentInstance_t));
+      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instDHCPAgent[idx], (const void *)inst, sizeof(_CpGwDHCPAgentInstance_t));
     }
 
     configRsp->m_instance.m_DHCPAgentInstCount = idx;
@@ -2124,11 +2126,12 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     HTTPInstMap_Iter_t iter = http().begin();
 
     idx = 0;
-    for( HTTPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
-        iter.advance(), idx++)
+    //for( HTTPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
+    //    iter.advance(), idx++)
+    for(idx = 0; iter != http().end(); iter++, idx++)
     {
-      inst = (_CpGwHTTPInstance_t *)((*entry).int_id_);
-      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instHTTP[idx], inst, sizeof(_CpGwHTTPInstance_t));
+      inst = (_CpGwHTTPInstance_t *)((*iter).int_id_);
+      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instHTTP[idx], (const void *)inst, sizeof(_CpGwHTTPInstance_t));
     }
 
     configRsp->m_instance.m_HTTPInstCount = idx;
@@ -2142,18 +2145,19 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     AAAInstMap_Iter_t iter = aaa().begin();
     idx = 0;
 
-    for(AAAInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
-        iter.advance(), idx++)
+    //for(AAAInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
+    //    iter.advance(), idx++)
+    for(idx = 0; iter != aaa().end(); iter++, idx++)
     {
-      inst = (_CpGwAAAInstance_t *)((*entry).int_id_);
-      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instHTTP[idx], inst, sizeof(_CpGwAAAInstance_t));
+      inst = (_CpGwAAAInstance_t *)((*iter).int_id_);
+      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instHTTP[idx], (const void *)inst, sizeof(_CpGwAAAInstance_t));
     }
 
     configRsp->m_instance.m_AAAInstCount = idx;
     rsp->m_messageLen += (idx * sizeof(_CpGwAAAInstance_t));
   }
 
-  mb.wr_ptr(rsp->m_messageLen + (sizeof(CommonIF::_cmMessage_t)));
+  mb.wr_ptr((rsp->m_messageLen + (sizeof(CommonIF::_cmMessage_t))));
   return(0);
 }
 
@@ -2165,6 +2169,7 @@ ACE_HANDLE CfgMgr::get_handle(void) const
 
 ACE_UINT32 CfgMgr::handle_ipc(ACE_Message_Block *mb)
 {
+  /*Posting to the active object now.*/
   putq(mb);
   return(0);
 }
