@@ -13,7 +13,7 @@ typedef union _ipAddr
 {
   ACE_Byte m_ips[4];
   ACE_UINT32 m_ipn;
-}_ipAddr_t;
+}__attribute__((packed))_ipAddr_t;
 
 typedef struct _CpVirtualNw
 {
@@ -22,7 +22,7 @@ typedef struct _CpVirtualNw
   _ipAddr m_ip;
   _ipAddr m_mask;
   ACE_Byte m_port[32];
-}_CpVirtualNw_t;
+}__attribute__((packed))_CpVirtualNw_t;
 
 typedef struct _CpGwAAAInstance
 {
@@ -36,7 +36,7 @@ typedef struct _CpGwAAAInstance
   _ipAddr_t m_peer_ip;
   ACE_UINT16 m_peer_port;
 
-}_CpGwAAAInstance_t;
+}__attribute__((packed))_CpGwAAAInstance_t;
 
 typedef struct _CpGwHTTPInstance
 {
@@ -45,7 +45,7 @@ typedef struct _CpGwHTTPInstance
   ACE_UINT16 m_port;
   _CpGwAAAInstance_t m_aaa;
 
-}_CpGwHTTPInstance_t;
+}__attribute__((packed))_CpGwHTTPInstance_t;
 
 typedef struct _CpDhcpProfile
 {
@@ -54,14 +54,14 @@ typedef struct _CpDhcpProfile
   ACE_Byte m_domain_name[255];
   ACE_UINT32 m_lease;
 
-}_CpDhcpProfile_t;
+}__attribute__((packed))_CpDhcpProfile_t;
 
 typedef struct _CpGwAPZone
 {
   ACE_Byte m_channel_no;
   ACE_Byte m_hw_mode[8];
   ACE_Byte m_auth_algo;
-}_CpGwAPZone_t;
+}__attribute__((packed))_CpGwAPZone_t;
 
 typedef struct _CpGwAPInstance
 {
@@ -72,7 +72,7 @@ typedef struct _CpGwAPInstance
   ACE_Byte m_latitude[255];
   ACE_Byte m_longitude[255];
   ACE_Byte m_elevation[255];
-}_CpGwAPInstance_t;
+}__attribute__((packed))_CpGwAPInstance_t;
 
 typedef struct _CpGwAPPeer
 {
@@ -86,7 +86,7 @@ typedef struct _CpGwAPPeer
   ACE_Byte m_wpa_pairwise[16];
   ACE_Byte m_rsn_pairwise[16];
   ACE_Byte m_driver[16];
-}_CpGwAPPeer_t;
+}__attribute__((packed))_CpGwAPPeer_t;
 
 
 typedef struct _CpGwDHCPInstance
@@ -104,7 +104,7 @@ typedef struct _CpGwDHCPInstance
   /*Variable number of exclude ips.*/
   _ipAddr_t m_exclude_ip[255];
 
-}_CpGwDHCPInstance_t;
+}__attribute__((packed))_CpGwDHCPInstance_t;
 
 typedef struct _CpGwDHCPAgentInstance
 {
@@ -116,7 +116,7 @@ typedef struct _CpGwDHCPAgentInstance
   /*this is the DHCP Server IP.*/
   _ipAddr_t m_server_ip;
 
-}_CpGwDHCPAgentInstance_t;
+}__attribute__((packed))_CpGwDHCPAgentInstance_t;
 
 typedef struct _CpGwCPGWInstance
 {
@@ -126,34 +126,34 @@ typedef struct _CpGwCPGWInstance
   _ipAddr_t m_ip;
   ACE_Byte m_host_name[255];
 
-}_CpGwCPGWInstance_t;
+}__attribute__((packed))_CpGwCPGWInstance_t;
 
 typedef struct _InstanceConfig
 {
   ACE_UINT8 m_DHCPInstCount;
-  _CpGwDHCPInstance_t m_instDHCP[32];
+  _CpGwDHCPInstance_t m_instDHCP[4];
 
   ACE_UINT8 m_DHCPAgentInstCount;
-  _CpGwDHCPAgentInstance_t m_instDHCPAgent[32];
+  _CpGwDHCPAgentInstance_t m_instDHCPAgent[4];
 
   ACE_UINT8 m_HTTPInstCount;
-  _CpGwHTTPInstance_t m_instHTTP[32];
+  _CpGwHTTPInstance_t m_instHTTP[4];
 
   ACE_UINT8 m_AAAInstCount;
-  _CpGwAAAInstance_t m_instAAA[32];
+  _CpGwAAAInstance_t m_instAAA[4];
 
-}_InstanceConfig_t;
+}__attribute__((packed))_InstanceConfig_t;
 
 typedef struct _PeerConfig
 {
-}_PeerConfig_t;
+}__attribute__((packed))_PeerConfig_t;
 
 typedef struct _CpGwConfigs
 {
   _InstanceConfig_t m_instance;
   _PeerConfig_t m_peer;
 
-}_CpGwConfigs_t;
+}__attribute__((packed))_CpGwConfigs_t;
 
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwAAAInstance_t*, ACE_Null_Mutex>AAAInstMap_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, _CpGwHTTPInstance_t*, ACE_Null_Mutex>HTTPInstMap_t;

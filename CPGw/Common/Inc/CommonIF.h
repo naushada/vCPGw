@@ -48,7 +48,7 @@ namespace CommonIF {
     ACE_UINT32 m_procId;
     ACE_UINT8 m_entId;
     ACE_UINT8 m_instId;
-  }_cmHeader_t;
+  }__attribute__((packed))_cmHeader_t;
 
   typedef struct _cmMessage
   {
@@ -58,7 +58,7 @@ namespace CommonIF {
     ACE_UINT32 m_messageLen;
     ACE_Byte m_message[1];
 
-  }_cmMessage_t;
+  }__attribute__((packed))_cmMessage_t;
 
   static const _entNameIdTab_t m_entTable[] = {
     {ENT_CPGW,    "CPGateway"},

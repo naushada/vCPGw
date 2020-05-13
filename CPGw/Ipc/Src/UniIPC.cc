@@ -42,7 +42,7 @@ UniIPC::UniIPC(ACE_Thread_Manager *thrMgr, ACE_CString ipAddr,
 {
   do
   {
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l UniIPC ")));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l UniIPC\n")));
 
     selfProcId(CommonIF::get_hash32(reinterpret_cast<const ACE_UINT8 *>(node_tag.c_str())));
     m_nodeTag = node_tag;
@@ -165,7 +165,7 @@ ACE_INT32 UniIPC::handle_signal(int signum)
  */
 ACE_INT32 UniIPC::handle_input(ACE_HANDLE handle)
 {
-  ACE_Message_Block *mb;
+  ACE_Message_Block *mb = nullptr;
   size_t recv_len = -1;
 
   ACE_NEW_RETURN(mb, ACE_Message_Block(CommonIF::SIZE_64MB), -1);
@@ -181,7 +181,7 @@ ACE_INT32 UniIPC::handle_input(ACE_HANDLE handle)
       break;
     }
 
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l recv_le is %u\n"), recv_len));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l recv_len is %u\n"), recv_len));
     /*Update the length now.*/
     mb->wr_ptr(recv_len);
     /*dispatch the hook method now.*/
@@ -253,7 +253,7 @@ ACE_UINT32 UniIPC::send_ipc(ACE_Byte *rsp, ACE_UINT32 rspLen)
 
 	}while(0);
 
-  return(len);
+  return(offset);
 }
 
 ACE_UINT32 UniIPC::handle_ipc(ACE_Message_Block *mb)

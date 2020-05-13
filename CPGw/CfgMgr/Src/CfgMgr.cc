@@ -2019,11 +2019,12 @@ int CfgMgr::processIPCMessage(ACE_Message_Block &mb)
   {
   case CommonIF::MSG_CPGW_CFGMGR_CONFIG_REQ:
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Config Request Received of len %u\n"), len));
+
     ACE_Message_Block *mbRsp = nullptr;
     ACE_NEW_NORETURN(mbRsp, ACE_Message_Block(CommonIF::SIZE_8MB));
 
     buildConfigResponse(in, len, *mbRsp);
-    send_ipc((ACE_Byte *)mbRsp->rd_ptr(), (ACE_UINT32)mbRsp->length());
+    len = send_ipc((ACE_Byte *)mbRsp->rd_ptr(), (ACE_UINT32)mbRsp->length());
     mbRsp->release();
 
     break;
@@ -2065,6 +2066,8 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     return(-1);
   }
 
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l sizeof struct %u\n"), sizeof(_CpGwConfigs_t)));
+
   CommonIF::_cmMessage_t *rsp = (CommonIF::_cmMessage_t *)mb.wr_ptr();
   _CpGwConfigs_t *configRsp = (_CpGwConfigs_t *)rsp->m_message;
 
@@ -2089,8 +2092,6 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     _CpGwDHCPInstance_t *inst = nullptr;
     DHCPInstMap_Iter_t iter = dhcp().begin();
 
-    //for(DHCPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
-    //    iter.advance(), idx++)
     for(idx = 0; iter != dhcp().end(); iter++, idx++)
     {
       inst = (_CpGwDHCPInstance_t *)((*iter).int_id_);
@@ -2107,8 +2108,6 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     _CpGwDHCPAgentInstance_t *inst = nullptr;
     DHCPAgentInstMap_Iter_t iter = agent().begin();
 
-    //for(DHCPAgentInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
-    //    iter.advance(), idx++)
     for(idx = 0; iter != agent().end(); iter++, idx++)
     {
       inst = (_CpGwDHCPAgentInstance_t *)((*iter).int_id_);
@@ -2125,9 +2124,6 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     _CpGwHTTPInstance_t *inst = nullptr;
     HTTPInstMap_Iter_t iter = http().begin();
 
-    idx = 0;
-    //for( HTTPInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
-    //    iter.advance(), idx++)
     for(idx = 0; iter != http().end(); iter++, idx++)
     {
       inst = (_CpGwHTTPInstance_t *)((*iter).int_id_);
@@ -2143,21 +2139,18 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
     /*Preparing for AAA Instance*/
     _CpGwAAAInstance_t *inst = nullptr;
     AAAInstMap_Iter_t iter = aaa().begin();
-    idx = 0;
 
-    //for(AAAInstMap_t::ENTRY *entry = nullptr; iter.next(entry);
-    //    iter.advance(), idx++)
     for(idx = 0; iter != aaa().end(); iter++, idx++)
     {
       inst = (_CpGwAAAInstance_t *)((*iter).int_id_);
-      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instHTTP[idx], (const void *)inst, sizeof(_CpGwAAAInstance_t));
+      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instAAA[idx], (const void *)inst, sizeof(_CpGwAAAInstance_t));
     }
 
     configRsp->m_instance.m_AAAInstCount = idx;
     rsp->m_messageLen += (idx * sizeof(_CpGwAAAInstance_t));
   }
 
-  mb.wr_ptr((rsp->m_messageLen + (sizeof(CommonIF::_cmMessage_t))));
+  mb.wr_ptr(sizeof(_CpGwConfigs_t));
   return(0);
 }
 
@@ -2178,22 +2171,19 @@ int CfgMgr::svc(void)
 {
   ACE_Message_Block *mb = nullptr;
 
-  for(;;)
+  for(;-1 != getq(mb);)
   {
-    if(-1 != getq(mb))
+    /*Process IPC Request Now.*/
+    if(mb->msg_type() == ACE_Message_Block::MB_HANGUP)
     {
-      /*Process IPC Request Now.*/
-      if(mb->msg_type() == ACE_Message_Block::MB_HANGUP)
-      {
-        mb->release();
-        break;
-      }
-
-      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l dequeue equest\n")));
-      processIPCMessage(*mb);
-      /*reclaim the heap memory now. allocated by the sender*/
       mb->release();
+      break;
     }
+
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l dequeue equest\n")));
+    processIPCMessage(*mb);
+    /*reclaim the heap memory now. allocated by the sender*/
+    mb->release();
   }
 
   return(0);
