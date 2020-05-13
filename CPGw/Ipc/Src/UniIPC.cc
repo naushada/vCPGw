@@ -44,7 +44,7 @@ UniIPC::UniIPC(ACE_Thread_Manager *thrMgr, ACE_CString ipAddr,
   {
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l UniIPC\n")));
 
-    selfProcId(CommonIF::get_hash32(reinterpret_cast<const ACE_UINT8 *>(node_tag.c_str())));
+    selfProcId(CommonIF::get_hash32(node_tag.c_str()));
     m_nodeTag = node_tag;
 
 

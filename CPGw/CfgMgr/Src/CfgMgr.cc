@@ -2056,6 +2056,14 @@ int CfgMgr::buildIPCHeader(ACE_Byte *in, ACE_Message_Block &mb)
   return(0);
 }
 
+/*
+ * @brief This method is prepares the Config Response based on schema which is
+ *        provided in JSON format.
+ * @param Pointer to ACE_Byte which is received in config Request.
+ * @param length of the input request.
+ * @param This is the out buffer in form of ACE_Message_Block which is invoed call by reference.
+ * @return 0 upon success , -1 else.
+ * */
 int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block &mb)
 {
   int idx = 0;;
@@ -2148,6 +2156,21 @@ int CfgMgr::buildConfigResponse(ACE_Byte *in , ACE_UINT32 len, ACE_Message_Block
 
     configRsp->m_instance.m_AAAInstCount = idx;
     rsp->m_messageLen += (idx * sizeof(_CpGwAAAInstance_t));
+  }
+
+  {
+    /*Preparing for CPGW Instance*/
+    _CpGwCPGWInstance_t *inst = nullptr;
+    CPGWInstMap_Iter_t iter = cpgw().begin();
+
+    for(idx = 0; iter != cpgw().end(); iter++, idx++)
+    {
+      inst = (_CpGwCPGWInstance_t *)((*iter).int_id_);
+      ACE_OS::memcpy((void *)&configRsp->m_instance.m_instCPGW[idx], (const void *)inst, sizeof(_CpGwCPGWInstance_t));
+    }
+
+    configRsp->m_instance.m_CPGWInstCount = idx;
+    rsp->m_messageLen += (idx * sizeof(_CpGwCPGWInstance_t));
   }
 
   mb.wr_ptr(sizeof(_CpGwConfigs_t));

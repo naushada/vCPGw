@@ -241,7 +241,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
   ACE_UINT32 offset = 0;
   ACE_Byte *rsp = NULL;
 
-  ACE_NEW_NORETURN(mb, ACE_Message_Block(2048));
+  ACE_NEW_NORETURN(mb, ACE_Message_Block(CommonIF::SIZE_2MB));
 
   rsp = (ACE_Byte *)mb->wr_ptr();
 

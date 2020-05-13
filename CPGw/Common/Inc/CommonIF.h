@@ -32,7 +32,7 @@ namespace CommonIF {
   static const ACE_UINT32 SIZE_1MB           = (1 << 20);
   static const ACE_UINT32 SIZE_1KB           = (1 << 10);
 
-  ACE_UINT32 get_hash32(const ACE_UINT8 *nodeTag);
+  ACE_UINT32 get_hash32(const char *nodeTag);
   ACE_UINT16 get_ipc_port(ACE_UINT8 entity, ACE_UINT8 instance);
   ACE_UINT16 get_ipc_port(ACE_UINT32 taskId);
   ACE_UINT32 get_task_id(ACE_UINT8 entity, ACE_UINT8 instance);

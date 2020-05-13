@@ -409,12 +409,19 @@ void CPGateway::domainName(ACE_CString dName)
   m_domainName = dName;
 }
 
+void CPGateway::inst(ACE_UINT8 ins)
+{
+  m_inst = ins;
+}
+
+ACE_UINT8 CPGateway::inst(void)
+{
+  return(m_inst);
+}
+
 ACE_UINT8 CPGateway::start()
 {
   ACE_TRACE("CPGateway::start\n");
-  ACE_Time_Value to(5);
-  ACE_CString ipAddrStr("127.0.0.1");
-  ACE_CString nodetag("primary");
 
   /*Feed this instance to Reactor's loop*/
   ACE_Reactor::instance()->register_handler(this, ACE_Event_Handler::READ_MASK);
@@ -431,24 +438,74 @@ ACE_UINT8 CPGateway::stop()
 int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
 {
 
+  ACE_UINT8 ins = inst();
+
+  if(ins > 0)
+    ins -= 1;
+
   CommonIF::_cmMessage_t *rsp = (CommonIF::_cmMessage_t *)in;
   _CpGwConfigs_t *config = (_CpGwConfigs_t *)rsp->m_message;
 
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l DHCPInstCnt %u \n"), config->m_instance.m_DHCPInstCount));
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_nw %s \n"), config->m_instance.m_instDHCP[0].m_nw.m_name));
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_type %s \n"), config->m_instance.m_instDHCP[0].m_nw.m_type));
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_port %s \n"), config->m_instance.m_instDHCP[0].m_nw.m_port));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_nw %s \n"), config->m_instance.m_instDHCP[ins].m_nw.m_name));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_type %s \n"), config->m_instance.m_instDHCP[ins].m_nw.m_type));
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l m_port %s \n"), config->m_instance.m_instDHCP[ins].m_nw.m_port));
 
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l DHCPAgentInstCnt %u \n"), config->m_instance.m_DHCPAgentInstCount));
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l HTTPInstCnt %u \n"), config->m_instance.m_HTTPInstCount));
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l AAAInstCnt %u \n"), config->m_instance.m_AAAInstCount));
-  /*
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CPGWInstCnt %u \n"), config->m_instance.m_CPGWInstCount));
+
+#if 0
+  ACE_TCHAR ipStr[255];
+  ACE_OS::memset((void *)ipStr, 0, sizeof(ipStr));
+  ACE_OS::snprintf((ACE_TCHAR *)ipStr, (sizeof(ipStr) - 1), "%d.%d.%d.%d",
+                   config->m_instance.m_instCPGW[ins].m_ip.m_ips[0],
+                   config->m_instance.m_instCPGW[ins].m_ip.m_ips[1],
+                   config->m_instance.m_instCPGW[ins].m_ip.m_ips[2],
+                   config->m_instance.m_instCPGW[ins].m_ip.m_ips[3]);
+
+  ACE_CString ip((const char *)ipStr);
+#endif
+  struct in_addr addr;
+  addr.s_addr = config->m_instance.m_instCPGW[ins].m_ip.m_ipn;
+  ACE_TCHAR *ipStr = inet_ntoa(addr);
+
+  ACE_CString ip((const char *)ipStr);
+  ACE_CString intf((const char *)config->m_instance.m_instCPGW[ins].m_nw.m_port);
+  ACE_CString hname((const char *)config->m_instance.m_instCPGW[ins].m_host_name);
+  ACE_CString dname((const char *)config->m_instance.m_instDHCP[ins].m_profile.m_domain_name);
+
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l ipStr %s\n"), ipStr));
+  ethIntfName(intf);
+  ipAddr(ip);
+  hostName(hname);
+  domainName(dname);
+
+  if(open() < 0)
+  {
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l opening of interface failed\n")));
+  }
+
+  ACE_NEW_NORETURN(m_dhcpUser, DhcpServerUser(this));
+
+  /*Mske CPGateway state machine Activated State.*/
+  setState(CPGatewayStateActivated::instance());
+
+  /*Instantiating ARP instance.*/
+  ACE_NEW_NORETURN(m_arpUser, ARP::CPGwArp(this, getMacAddress()));
+
+  /*Instantiating DNS instance.*/
+  ACE_NEW_NORETURN(m_dnsUser, DNS::CPGwDns(this, getMacAddress(),
+                                           hostName(),
+                                           domainName(),
+                                           config->m_instance.m_instCPGW[ins].m_ip.m_ipn));
   if(start())
   {
     ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l CPGateway instantiation failed\n")));
     return(-1);
   }
-*/
+
   return(0);
 }
 
@@ -502,15 +559,18 @@ int main(int argc, char *argv[])
 
   ACE_CString ip(argv[1]);
   ACE_UINT8 ent = CommonIF::ENT_CPGW;
-  ACE_UINT8 inst = ACE_OS::atoi(argv[2]);
+  ACE_UINT8 ins = ACE_OS::atoi(argv[2]);
   ACE_CString nodeTag(argv[3]);
 
   ACE_NEW_RETURN(ipc, UniIPCIF(ACE_Thread_Manager::instance(), ip, ent,
-                               inst, nodeTag), -1);
+                               ins, nodeTag), -1);
   ipc->buildAndSendConfigReq();
 
   CPGateway *cp = nullptr;
   ACE_NEW_NORETURN(cp, CPGateway());
+
+  /*There could be multiple copy of CPGateway instance.*/
+  cp->inst(ins);
 
   /*Remember back pointer.*/
   ipc->CPGWIF(cp);

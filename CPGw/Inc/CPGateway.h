@@ -42,6 +42,7 @@ private:
 class CPGateway : public ACE_Event_Handler
 {
   private:
+    ACE_UINT8 m_inst;
     /*Ethernet Interface Name.*/
     ACE_CString m_ethInterface;
     ACE_HANDLE m_handle;
@@ -99,6 +100,9 @@ class CPGateway : public ACE_Event_Handler
 
     void ipAddr(ACE_CString ip);
     ACE_CString &ipAddr(void);
+
+    void inst(ACE_UINT8 ins);
+    ACE_UINT8 inst(void);
 
     void ethIntfName(ACE_CString eth);
 

@@ -142,6 +142,12 @@ typedef struct _InstanceConfig
   ACE_UINT8 m_AAAInstCount;
   _CpGwAAAInstance_t m_instAAA[4];
 
+  ACE_UINT8 m_CPGWInstCount;
+  _CpGwCPGWInstance_t m_instCPGW[4];
+
+    ACE_UINT8 m_APInstCount;
+  _CpGwAPInstance_t m_instAP[8];
+
 }__attribute__((packed))_InstanceConfig_t;
 
 typedef struct _PeerConfig
