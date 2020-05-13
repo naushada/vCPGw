@@ -131,13 +131,13 @@ typedef struct _CpGwCPGWInstance
 typedef struct _InstanceConfig
 {
   ACE_UINT8 m_DHCPInstCount;
-  _CpGwDHCPInstance_t m_instDHCP[4];
+  _CpGwDHCPInstance_t m_instDHCP[8];
 
   ACE_UINT8 m_DHCPAgentInstCount;
-  _CpGwDHCPAgentInstance_t m_instDHCPAgent[4];
+  _CpGwDHCPAgentInstance_t m_instDHCPAgent[8];
 
   ACE_UINT8 m_HTTPInstCount;
-  _CpGwHTTPInstance_t m_instHTTP[4];
+  _CpGwHTTPInstance_t m_instHTTP[8];
 
   ACE_UINT8 m_AAAInstCount;
   _CpGwAAAInstance_t m_instAAA[4];

@@ -17,19 +17,19 @@
   },
 
   "cpgw1": {
-    "virtual-nw": "nw1",
+    "virtual-nw": "nw1-dhcp",
     "subnet-mask": "255.255.0.0",
-    "ip": "10.100.10.2",
+    "ip": "10.20.10.10",
     "host-name": "adam"
   },
 
   "radius1-instance": {
     "virtual-nw": "nw1",
-    "ip": "aa.bb.cc.dd",
+    "ip": "10.20.10.10",
     "protocol": "udp",
     "auth-port": 8128,
     "acc-port": 8182,
-    "peer-ip": "a.a.a.a",
+    "peer-ip": "10.20.10.100",
     "peer-port": 1234,
     "admin-user": "admin",
     "admin-pwd": "admin"
@@ -37,9 +37,9 @@
 
   "http1": {
     "virtual-nw": "nw1",
-    "ip": "10.10.100.10",
+    "ip": "10.20.10.10",
     "port": 8080,
-    "aaa-server": "radius1"
+    "aaa-server": "radius1-instance"
   },
 
   "ap1-instance": {
@@ -79,7 +79,7 @@
   "dhcp-profile": {
     "mtu" : 1500,
     "dns-ip" : "8.8.8.8",
-    "dns-name" : "example.com",
+    "dns-name" : "balaagh.net",
     "lease-time": 24
   },
 
@@ -91,14 +91,14 @@
   },
 
   "dhcp1": {
-    "virtual-nw": "nw1",
+    "virtual-nw": "nw1-dhcp",
     "profile-name": "dhcp-profile",
     "subnet-mask" : "255.255.0.0",
-    "ip" : "10.10.2.1",
+    "ip" : "10.20.10.10",
     "host-name" : "adam",
-    "start-ip": "10.10.100.2",
-    "end-ip": "10.10.100.16",
-    "exclude-ip": ["10.10.100.3", "10.10.100.5", "10.10.100.9", "10.10.100.11"]
+    "start-ip": "10.20.0.2",
+    "end-ip": "10.20.200.100",
+    "exclude-ip": ["10.20.10.10", "10.20.100.5", "10.20.100.9", "10.20.100.11"]
   },
 
   "dhcp2": {
@@ -113,14 +113,14 @@
   },
 
   "virtual-networks" : [
-    {"name" : "nw1", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}},
+    {"name" : "nw1-dhcp", "interface": {"type": "local", "address": "10.20.10.10", "net-mask": "255.255.0.0", "port": "enp0s3"}},
     {"name" : "nw2", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}},
     {"name" : "nw3", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}},
     {"name" : "nw4", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}}
   ],
 
   "ports" : [
-    {"name": "ens1", "type": "physical"},
+    {"name": "enp0s3", "type": "physical"},
     {"name": "ens2", "type": "physical"},
     {"name": "ens3", "type": "physical"},
     {"name": "ens4", "type": "physical"}
