@@ -14,6 +14,57 @@
 namespace ARP {class CPGwArp;}
 namespace DNS {class CPGwDns;}
 
+class DHCPConf
+{
+private:
+  //static DHCPConf *m_instance;
+  ACE_UINT8 m_mtu;
+  ACE_UINT32 m_dnsIP;
+  ACE_UINT32 m_leaseTime;
+  ACE_CString m_dnsName;
+  ACE_UINT32 m_subnetMask;
+  ACE_UINT32 m_serverIP;
+  ACE_CString m_serverName;
+  ACE_UINT32 m_startIP;
+  ACE_UINT32 m_endIP;
+  ACE_UINT32 m_excludeIP[255];
+
+
+public:
+
+  DHCPConf() = default;
+  ~DHCPConf();
+  //static DHCPConf *instance();
+
+  ACE_UINT8 mtu(void);
+  void mtu(ACE_UINT8 m);
+
+  ACE_UINT32 dnsIP(void);
+  void dnsIP(ACE_UINT32 ip);
+
+  ACE_UINT32 leaseTime(void);
+  void leaseTime(ACE_UINT32 l);
+
+  void dnsName(ACE_CString d);
+  ACE_CString &dnsName(void);
+
+  ACE_UINT32 subnetMask(void);
+  void subnetMask(ACE_UINT32 s);
+
+  void serverIP(ACE_UINT32 ip);
+  ACE_UINT32 serverIP(void);
+
+  void serverName(ACE_CString s);
+  ACE_CString &serverName(void);
+
+  void startIP(ACE_UINT32 ip);
+  ACE_UINT32 startIP(void);
+
+  void endIP(ACE_UINT32 ip);
+  ACE_UINT32 endIP(void);
+
+};
+
 class UniIPCIF : public UniIPC
 {
 public:
@@ -70,6 +121,8 @@ class CPGateway : public ACE_Event_Handler
     /*Interface for IPC messages.*/
     UniIPCIF *m_IPCIF;
 
+    DHCPConf *m_DHCPConfInst;
+
   public:
 
     virtual ~CPGateway();
@@ -123,6 +176,8 @@ class CPGateway : public ACE_Event_Handler
     int processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen);
     int processIpcMessage(ACE_Message_Block *mb);
 
+    DHCPConf &DHCPConfInst(void);
+    void DHCPConfInst(DHCPConf *inst);
 };
 
 #endif /*__CPGATEWAY_H__*/

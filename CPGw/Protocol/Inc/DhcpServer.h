@@ -102,11 +102,14 @@ namespace DHCP
     ElemDef m_optionMap;
     /*Back Pointrt to parent.*/
     DhcpServerUser *m_dhcpServerUser;
-    ACE_UINT32 m_lease;
     /*DHCP Client's Host Name.*/
     ACE_CString m_sname;
     /*IP Address of DHCP Client.*/
     ACE_UINT32 m_ipAddr;
+    ACE_UINT32 m_subnetMask;
+    ACE_UINT32 m_dnsIP;
+    ACE_UINT8 m_mtu;
+    ACE_UINT32 m_lease;
 
     /*DHCP's Server macAddress.*/
     ACE_CString m_macAddress;
@@ -117,7 +120,9 @@ namespace DHCP
   public:
     Server();
     Server(DhcpServerUser *user, ACE_CString mac, ACE_CString ip,
-           ACE_CString hostName, ACE_CString domainName);
+           ACE_CString hostName, ACE_CString domainName, ACE_UINT8 mtu,
+           ACE_UINT32 lease, ACE_UINT32 dnsIP, ACE_UINT32 subnetMask);
+
     virtual ~Server();
 
     void setState(DhcpServerState *st);
@@ -155,6 +160,13 @@ namespace DHCP
     void purgeTid(TIMER_ID *tId);
     TIMER_ID &purgeTid(void);
     TIMER_ID *purgeInst(void);
+
+    ACE_UINT32 subnetMask(void);
+    void subnetMask(ACE_UINT32 mask);
+    ACE_UINT32 dnsIP(void);
+    void dnsIP(ACE_UINT32 ip);
+    ACE_UINT8 mtu(void);
+    void mtu(ACE_UINT8 m);
   };
 }
 

@@ -360,6 +360,9 @@ CPGateway::~CPGateway()
 {
   ACE_TRACE("CPGateway::~CPGateway\n");
   delete m_dhcpUser;
+  delete m_DHCPConfInst;
+  m_DHCPConfInst = nullptr;
+  m_dhcpUser = nullptr;
 }
 
 void CPGateway::ipAddr(ACE_CString ip)
@@ -438,6 +441,8 @@ ACE_UINT8 CPGateway::stop()
 int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
 {
 
+  struct in_addr addr;
+
   ACE_UINT8 ins = inst();
 
   if(ins > 0)
@@ -456,18 +461,6 @@ int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l AAAInstCnt %u \n"), config->m_instance.m_AAAInstCount));
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l CPGWInstCnt %u \n"), config->m_instance.m_CPGWInstCount));
 
-#if 0
-  ACE_TCHAR ipStr[255];
-  ACE_OS::memset((void *)ipStr, 0, sizeof(ipStr));
-  ACE_OS::snprintf((ACE_TCHAR *)ipStr, (sizeof(ipStr) - 1), "%d.%d.%d.%d",
-                   config->m_instance.m_instCPGW[ins].m_ip.m_ips[0],
-                   config->m_instance.m_instCPGW[ins].m_ip.m_ips[1],
-                   config->m_instance.m_instCPGW[ins].m_ip.m_ips[2],
-                   config->m_instance.m_instCPGW[ins].m_ip.m_ips[3]);
-
-  ACE_CString ip((const char *)ipStr);
-#endif
-  struct in_addr addr;
   addr.s_addr = config->m_instance.m_instCPGW[ins].m_ip.m_ipn;
   ACE_TCHAR *ipStr = inet_ntoa(addr);
 
@@ -481,6 +474,19 @@ int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
   ipAddr(ip);
   hostName(hname);
   domainName(dname);
+
+  /*Populating DHCPConf now.*/
+  ACE_NEW_NORETURN(m_DHCPConfInst, DHCPConf());
+
+  DHCPConfInst().mtu(config->m_instance.m_instDHCP[ins].m_profile.m_mtu);
+  DHCPConfInst().dnsIP(config->m_instance.m_instDHCP[ins].m_profile.m_ip.m_ipn);
+  DHCPConfInst().leaseTime(config->m_instance.m_instDHCP[ins].m_profile.m_lease);
+  DHCPConfInst().dnsName(dname);
+  DHCPConfInst().subnetMask(config->m_instance.m_instDHCP[ins].m_mask.m_ipn);
+  DHCPConfInst().serverIP(config->m_instance.m_instDHCP[ins].m_ip.m_ipn);
+  DHCPConfInst().serverName(ACE_CString((const char *)config->m_instance.m_instDHCP[ins].m_host_name));
+  DHCPConfInst().startIP(config->m_instance.m_instDHCP[ins].m_start_ip.m_ipn);
+  DHCPConfInst().endIP(config->m_instance.m_instDHCP[ins].m_end_ip.m_ipn);
 
   if(open() < 0)
   {
@@ -542,6 +548,16 @@ void CPGateway::IPCIF(UniIPCIF *parent)
 UniIPCIF &CPGateway::IPCIF(void)
 {
   return(*m_IPCIF);
+}
+
+DHCPConf &CPGateway::DHCPConfInst(void)
+{
+  return(*m_DHCPConfInst);
+}
+
+void CPGateway::DHCPConfInst(DHCPConf *inst)
+{
+  m_DHCPConfInst = inst;
 }
 
 int main(int argc, char *argv[])
@@ -680,4 +696,111 @@ void UniIPCIF::buildAndSendConfigReq(void)
   send_ipc((ACE_Byte *)mb->rd_ptr(), (ACE_UINT32)mb->length());
 }
 
+/*DHCPConf Section...*/
+#if 0
+DHCPConf *DHCPConf::m_instance = nullptr;
+
+DHCPConf *DHCPConf::instance()
+{
+  if(nullptr == m_instance)
+    ACE_NEW_NORETURN(m_instance, DHCPConf());
+
+  return(m_instance);
+}
+#endif
+
+ACE_UINT8 DHCPConf::mtu(void)
+{
+  return(m_mtu);
+}
+
+void DHCPConf::mtu(ACE_UINT8 m)
+{
+  m_mtu = m;
+}
+
+void DHCPConf::dnsIP(ACE_UINT32 ip)
+{
+  m_dnsIP = ip;
+}
+
+ACE_UINT32 DHCPConf::dnsIP(void)
+{
+  return(m_dnsIP);
+}
+
+void DHCPConf::leaseTime(ACE_UINT32 l)
+{
+  m_leaseTime = l;
+}
+
+ACE_UINT32 DHCPConf::leaseTime(void)
+{
+  return(m_leaseTime);
+}
+
+void DHCPConf::dnsName(ACE_CString d)
+{
+  m_dnsName = d;
+}
+
+ACE_CString &DHCPConf::dnsName(void)
+{
+  return(m_dnsName);
+}
+
+void DHCPConf::subnetMask(ACE_UINT32 s)
+{
+  m_subnetMask = s;
+}
+
+ACE_UINT32 DHCPConf::subnetMask(void)
+{
+  return(m_subnetMask);
+}
+
+void DHCPConf::serverIP(ACE_UINT32 ip)
+{
+  m_serverIP = ip;
+}
+
+ACE_UINT32 DHCPConf::serverIP(void)
+{
+  return(m_serverIP);
+}
+
+void DHCPConf::serverName(ACE_CString s)
+{
+  m_serverName = s;
+}
+
+ACE_CString &DHCPConf::serverName(void)
+{
+  return(m_serverName);
+}
+
+ACE_UINT32 DHCPConf::startIP(void)
+{
+  return(m_startIP);
+}
+
+void DHCPConf::startIP(ACE_UINT32 ip)
+{
+  m_startIP = ip;
+}
+
+void DHCPConf::endIP(ACE_UINT32 ip)
+{
+  m_endIP = ip;
+}
+
+ACE_UINT32 DHCPConf::endIP(void)
+{
+  return(m_endIP);
+}
+
+DHCPConf::~DHCPConf()
+{
+  //m_instance = nullptr;
+}
 #endif /*__CPGATEWAY_CC__*/

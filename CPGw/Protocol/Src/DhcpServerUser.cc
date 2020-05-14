@@ -154,11 +154,20 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
    }
    else
    {
+     struct in_addr addr;
+     addr.s_addr = cpGw().DHCPConfInst().serverIP();
+     ACE_TCHAR *ipStr = inet_ntoa(addr);
+     ACE_CString ip(ipStr);
+
      ACE_NEW_NORETURN(sess, DHCP::Server(this,
                                          cpGw().getMacAddress(),
-                                         cpGw().ipAddr(),
-                                         cpGw().hostName(),
-                                         cpGw().domainName()));
+                                         ip,
+                                         cpGw().DHCPConfInst().serverName(),
+                                         cpGw().DHCPConfInst().dnsName(),
+                                         cpGw().DHCPConfInst().mtu(),
+                                         cpGw().DHCPConfInst().leaseTime(),
+                                         cpGw().DHCPConfInst().dnsIP(),
+                                         cpGw().DHCPConfInst().subnetMask()));
 
      addSubscriber(sess, haddr);
      sess->getState().rx(*sess, in, inLen);

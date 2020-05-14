@@ -363,7 +363,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
       case RFC2131::OPTION_SUBNET_MASK:
         rsp[offset++] = RFC2131::OPTION_SUBNET_MASK;
         rsp[offset++] = 4;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0xFFFFFF00);
+        *((ACE_UINT32 *)&rsp[offset]) = htonl(parent.subnetMask());
         offset += 4;
         break;
 
@@ -384,7 +384,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
       case RFC2131::OPTION_NAME_SERVER:
         rsp[offset++] = RFC2131::OPTION_NAME_SERVER;
         rsp[offset++] = 4;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x08080808);
+        *((ACE_UINT32 *)&rsp[offset]) = htonl(parent.dnsIP());
         offset += 4;
         break;
 
@@ -410,7 +410,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
         rsp[offset++] = RFC2131::OPTION_MTU;
         rsp[offset++] = 2;
           /*Host Machine Name to be updated.*/;
-        *((ACE_UINT16 *)&rsp[offset]) = htonl(1500);
+        *((ACE_UINT16 *)&rsp[offset]) = htonl(parent.mtu());
         offset += 2;
         break;
 
@@ -491,7 +491,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
   rsp[offset++] = RFC2131::OPTION_MTU;
   rsp[offset++] = 2;
-  *((ACE_UINT16 *)&rsp[offset]) = htons(1500);
+  *((ACE_UINT16 *)&rsp[offset]) = htons(parent.mtu());
   offset += 2;
 
   rsp[offset++] = RFC2131::OPTION_SERVER_IDENTIFIER;
