@@ -2001,6 +2001,11 @@ void CfgMgr::displayCPGW(void)
   }
 }
 
+/*
+ * @brief This method does the actual message/request processing.
+ * @param Reference to ACE_Message_Block.
+ * @return Upon success 0 else -1.
+ * */
 int CfgMgr::processIPCMessage(ACE_Message_Block &mb)
 {
   ACE_Byte *in = nullptr;
@@ -2183,6 +2188,13 @@ ACE_HANDLE CfgMgr::get_handle(void) const
   return(const_cast<CfgMgr *>(this)->handle());
 }
 
+/*
+ * @brief this is the hook method and is invoked by IPC framework. IPC framework allocates
+ *        memory and passes the request to process. The request is pass on to Active Object and
+ *        control is returned to Reactor for next request.
+ * @param Pointer to ACE_Message_Block which has it wr_ptr populated with request byte buffer.
+ * @return Upon success 0 else -1. When -1 is returned the reactor closes the handle.
+ **/
 ACE_UINT32 CfgMgr::handle_ipc(ACE_Message_Block *mb)
 {
   /*Posting to the active object now.*/
@@ -2190,6 +2202,12 @@ ACE_UINT32 CfgMgr::handle_ipc(ACE_Message_Block *mb)
   return(0);
 }
 
+/*
+ * @brief This method is the hook method of Active Object. Which is blocked on message Queue for its request.
+ *        When it receives request from the Queue then it processes it and finally releases the memory.
+ * @param none
+ * @return upon success returns 0.
+ * */
 int CfgMgr::svc(void)
 {
   ACE_Message_Block *mb = nullptr;
@@ -2216,4 +2234,6 @@ void CfgMgr::schema(ACE_CString sc)
 {
   m_schema = sc;
 }
+
+
 #endif /*__CFG_MGR_CC__*/

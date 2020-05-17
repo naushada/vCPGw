@@ -25,6 +25,108 @@ DhcpServerUser::DhcpServerUser(CPGateway *parent)
   m_cpGw = parent;
   m_instMap.unbind_all();
   m_sessMap.unbind_all();
+
+  populateIPPool(ntohl(cpGw().DHCPConfInst().subnetMask()),
+                 ntohl(cpGw().DHCPConfInst().startIP()),
+                 ntohl(cpGw().DHCPConfInst().endIP()));
+
+  /*Point to the first element of the list.*/
+  m_selectedIP = m_ipPoolList.begin();
+}
+
+ACE_UINT32 DhcpServerUser::getIPFromPool(void)
+{
+  ACE_UINT32 ip = 0;
+  if(m_selectedIP != m_ipPoolList.end())
+  {
+    ip = *m_selectedIP;
+    ++m_selectedIP;
+  }
+
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The selected IP is 0x%X\n"), ip));
+  return(ip);
+}
+
+void DhcpServerUser::populateIPPool(ACE_UINT32 mask, ACE_UINT32 sIP, ACE_UINT32 eIP)
+{
+  ACE_UINT32 sOffset = (~mask) & sIP;
+  ACE_UINT32 eOffset = (~mask) & eIP;
+  ACE_UINT8 octet4 = (sOffset >>  0) & 0b11111111;
+  ACE_UINT8 octet3 = (sOffset >>  8) & 0b11111111;
+  ACE_UINT8 octet2 = (sOffset >> 16) & 0b11111111;
+  ACE_UINT8 octet1 = (sOffset >> 24) & 0b11111111;
+
+  ACE_UINT8 cnt1;
+  ACE_UINT8 cnt2;
+  ACE_UINT8 cnt3;
+  ACE_UINT8 cnt4;
+
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l mask 0x%X sIP 0x%X eIP 0x%X\n"), mask, sIP, eIP));
+
+  if(!octet1 && !octet2 && !octet3)
+  {
+    for(cnt1 = octet4; cnt1 <= (eOffset & 0b11111111); cnt1++)
+    {
+      m_ipPoolList.push_back(sIP);
+      sIP++;
+    }
+  }
+  else if(!octet1 && !octet2)
+  {
+    ACE_UINT32 tmpSIP = sIP;
+    for(cnt2 = octet3; cnt2 <= ((eOffset >> 8) & 0b11111111); cnt2++)
+    {
+      tmpSIP = sIP & 0xFFFF0000;
+
+      tmpSIP += ((cnt2 & 0b11111111) << 8);
+      for(cnt1 = octet4; cnt1 <= (eOffset & 0b11111111); cnt1++)
+      {
+        tmpSIP = tmpSIP + cnt1;
+        m_ipPoolList.push_back(tmpSIP);
+        ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l ipAddr 0x%X\n"), tmpSIP));
+      }
+    }
+  }
+  else if(!octet1)
+  {
+    ACE_UINT32 tmpSIP = sIP;
+    for(cnt3 = octet2; cnt3 <= ((eOffset >> 16) & 0b11111111); cnt3++)
+    {
+      tmpSIP = sIP & 0xFF000000;
+
+      tmpSIP += ((cnt3 & 0b11111111) << 16);
+      for(cnt2 = octet3; cnt2 <= ((eOffset >> 8) & 0b11111111); cnt2++)
+      {
+        tmpSIP += ((cnt2 & 0b11111111) << 8);
+        for(cnt1 = octet4; cnt1 <= eOffset & 0b11111111; cnt1++)
+        {
+          tmpSIP += cnt1;
+          m_ipPoolList.push_back(tmpSIP);
+        }
+      }
+    }
+  }
+  else
+  {
+    ACE_UINT32 tmpSIP = sIP;
+    for(cnt4 = octet1; cnt4 <= ((eOffset >> 24) & 0b11111111); cnt4++)
+    {
+      tmpSIP = ((cnt4 & 0b11111111) << 24);
+      for(cnt3 = octet2; cnt3 <= ((eOffset >> 16) & 0b11111111); cnt3++)
+      {
+        tmpSIP += ((cnt3 & 0b11111111) << 16);
+        for(cnt2 = octet3; cnt2 <= ((eOffset >> 8) & 0b11111111); cnt2++)
+        {
+          tmpSIP += ((cnt2 & 0b11111111) << 8);
+          for(cnt1 = octet4; cnt1 <= (eOffset & 0b11111111); cnt1++)
+          {
+            tmpSIP += (cnt1 & 0b11111111);
+            m_ipPoolList.push_back(tmpSIP);
+          }
+        }
+      }
+    }
+  }
 }
 
 DhcpServerUser::~DhcpServerUser()
@@ -150,6 +252,7 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
    {
      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l subscriber is found\n")));
      sess = getSubscriber(haddr);
+     /*Feed request to state machine.*/
      sess->getState().rx(*sess, in, inLen);
    }
    else
@@ -167,7 +270,8 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
                                          cpGw().DHCPConfInst().mtu(),
                                          cpGw().DHCPConfInst().leaseTime(),
                                          cpGw().DHCPConfInst().dnsIP(),
-                                         cpGw().DHCPConfInst().subnetMask()));
+                                         cpGw().DHCPConfInst().subnetMask(),
+                                         getIPFromPool()));
 
      addSubscriber(sess, haddr);
      sess->getState().rx(*sess, in, inLen);

@@ -1,6 +1,8 @@
 #ifndef __DHCP_SERVER_USER_H__
 #define __DHCP_SERVER_USER_H__
 
+#include <list>
+
 #include "DhcpServer.h"
 
 #include "ace/SString.h"
@@ -23,6 +25,9 @@ typedef ACE_Hash_Map_Manager<ACE_UINT32, ACE_CString, ACE_Null_Mutex>::iterator 
 typedef ACE_Hash_Map_Manager<ACE_CString, ACE_CString , ACE_Null_Mutex>ResolverMap_t;
 typedef ACE_Hash_Map_Manager<ACE_UINT32, ACE_CString, ACE_Null_Mutex>::iterator ResolverMap_iter;
 
+typedef std::list<ACE_UINT32>IPPoolList_t;
+typedef std::list<ACE_UINT32>::iterator IPPoolList_Iter_t;
+
 class DhcpServerUser : public ACE_Event_Handler
 {
 private:
@@ -34,6 +39,10 @@ private:
   ResolverMap_t m_name2IPMap;
   /*back pointer*/
   CPGateway *m_cpGw;
+
+  /*Populating IP from sIP and eIP*/
+  IPPoolList_t m_ipPoolList;
+  IPPoolList_Iter_t m_selectedIP;
 
 public:
 
@@ -70,6 +79,8 @@ public:
 
   void stop_timer(long timerId);
   void reset_timer(long tId, ACE_UINT32 timeOutInSec);
+  void populateIPPool(ACE_UINT32 mask, ACE_UINT32 sIP, ACE_UINT32 eIP);
+  ACE_UINT32 getIPFromPool(void);
 };
 
 

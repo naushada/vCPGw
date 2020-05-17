@@ -108,7 +108,7 @@ namespace DHCP
     ACE_UINT32 m_ipAddr;
     ACE_UINT32 m_subnetMask;
     ACE_UINT32 m_dnsIP;
-    ACE_UINT8 m_mtu;
+    ACE_UINT16 m_mtu;
     ACE_UINT32 m_lease;
 
     /*DHCP's Server macAddress.*/
@@ -120,8 +120,9 @@ namespace DHCP
   public:
     Server();
     Server(DhcpServerUser *user, ACE_CString mac, ACE_CString ip,
-           ACE_CString hostName, ACE_CString domainName, ACE_UINT8 mtu,
-           ACE_UINT32 lease, ACE_UINT32 dnsIP, ACE_UINT32 subnetMask);
+           ACE_CString hostName, ACE_CString domainName, ACE_UINT16 mtu,
+           ACE_UINT32 lease, ACE_UINT32 dnsIP, ACE_UINT32 subnetMask,
+           ACE_UINT32 clientIP);
 
     virtual ~Server();
 
@@ -165,8 +166,8 @@ namespace DHCP
     void subnetMask(ACE_UINT32 mask);
     ACE_UINT32 dnsIP(void);
     void dnsIP(ACE_UINT32 ip);
-    ACE_UINT8 mtu(void);
-    void mtu(ACE_UINT8 m);
+    ACE_UINT16 mtu(void);
+    void mtu(ACE_UINT16 m);
   };
 }
 

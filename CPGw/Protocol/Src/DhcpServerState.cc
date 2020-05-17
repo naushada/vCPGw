@@ -306,7 +306,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
   /*This will be filled by DHCP Client.*/
   dhcp->ciaddr = 0x00;
   /*Assigining IP Address to DHCP Client.*/
-  dhcp->yiaddr = 0x00;
+  dhcp->yiaddr = htonl(parent.ipAddr());
   dhcp->giaddr = 0x00;
 
   ACE_OS::memcpy((void *)dhcp->chaddr,
@@ -363,14 +363,14 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
       case RFC2131::OPTION_SUBNET_MASK:
         rsp[offset++] = RFC2131::OPTION_SUBNET_MASK;
         rsp[offset++] = 4;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(parent.subnetMask());
+        *((ACE_UINT32 *)&rsp[offset]) = parent.subnetMask();
         offset += 4;
         break;
 
       case RFC2131::OPTION_ROUTER:
         rsp[offset++] = RFC2131::OPTION_ROUTER;
         rsp[offset++] = 4;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(0x01020304);
+        *((ACE_UINT32 *)&rsp[offset]) = ip->src_ip;
         offset += 4;
         break;
 
@@ -378,6 +378,13 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
         rsp[offset++] = RFC2131::OPTION_TIME_SERVER;
         rsp[offset++] = 4;
         *((ACE_UINT32 *)&rsp[offset]) = htonl(0x01020304);
+        offset += 4;
+        break;
+
+      case RFC2131::OPTION_DNS:
+        rsp[offset++] = RFC2131::OPTION_DNS;
+        rsp[offset++] = 4;
+        *((ACE_UINT32 *)&rsp[offset]) = htonl(parent.dnsIP());
         offset += 4;
         break;
 
@@ -410,7 +417,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
         rsp[offset++] = RFC2131::OPTION_MTU;
         rsp[offset++] = 2;
           /*Host Machine Name to be updated.*/;
-        *((ACE_UINT16 *)&rsp[offset]) = htonl(parent.mtu());
+        *((ACE_UINT16 *)&rsp[offset]) = htons(parent.mtu());
         offset += 2;
         break;
 
@@ -474,7 +481,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
         rsp[offset++] = RFC2131::OPTION_SERVER_IDENTIFIER;
         rsp[offset++] = 4;
           /*Host Machine Name to be updated.*/;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(parent.ipAddr());
+        *((ACE_UINT32 *)&rsp[offset]) = ip->src_ip;
         offset += 4;
         break;
 
@@ -496,7 +503,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
   rsp[offset++] = RFC2131::OPTION_SERVER_IDENTIFIER;
   rsp[offset++] = 4;
-  *((ACE_UINT32 *)&rsp[offset]) = htonl(0x00);
+  *((ACE_UINT32 *)&rsp[offset]) = ip->src_ip;
   offset += 4;
 
   rsp[offset++] = RFC2131::OPTION_END;

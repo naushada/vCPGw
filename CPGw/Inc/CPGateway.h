@@ -29,7 +29,6 @@ private:
   ACE_UINT32 m_endIP;
   ACE_UINT32 m_excludeIP[255];
 
-
 public:
 
   DHCPConf() = default;

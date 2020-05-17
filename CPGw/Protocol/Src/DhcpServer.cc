@@ -12,16 +12,20 @@
 
 DHCP::Server::Server(DhcpServerUser *parent, ACE_CString mac,
                      ACE_CString ip, ACE_CString hName,
-                     ACE_CString dName, ACE_UINT8 mtu,
+                     ACE_CString dName, ACE_UINT16 mtu,
                      ACE_UINT32 lease, ACE_UINT32 dnsIP,
-                     ACE_UINT32 subnetMask)
+                     ACE_UINT32 subnetMask, ACE_UINT32 clientIP)
 {
   setDhcpServerUser(parent);
   setMacAddress(mac);
   hostName(hName);
   domainName(dName);
+  ipAddr(clientIP);
+  this->subnetMask(subnetMask);
+  this->dnsIP(dnsIP);
   this->lease(lease);
-  ipAddr(0);
+  this->mtu(mtu);
+  /*DHCP Serve IP in dotted format.*/
   setMyIP(ip);
   m_mb = NULL;
   m_description.set("DhcpServer");
@@ -247,12 +251,12 @@ void DHCP::Server::dnsIP(ACE_UINT32 ip)
   m_dnsIP = ip;
 }
 
-ACE_UINT8 DHCP::Server::mtu(void)
+ACE_UINT16 DHCP::Server::mtu(void)
 {
   return(m_mtu);
 }
 
-void DHCP::Server::mtu(ACE_UINT8 m)
+void DHCP::Server::mtu(ACE_UINT16 m)
 {
   m_mtu = m;
 }
