@@ -42,7 +42,7 @@ ACE_UINT32 ARP::CPGwArp::processRequest(CPGateway &parent, ACE_Byte *in, ACE_UIN
     }
 
     if((TransportIF::ARP_PROTO_IPv4 ==  ntohs(arpReq->proto)) &&
-       (TransportIF::ARPOP_REQUEST == arpReq->opcode) &&
+       (TransportIF::ARPOP_REQUEST == ntohs(arpReq->opcode)) &&
        (TransportIF::ETH_ALEN == arpReq->hlen))
     {
       mb = buildResponse(parent, in, inLen);

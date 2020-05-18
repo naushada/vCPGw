@@ -94,19 +94,19 @@ namespace TransportIF {
   static const ACE_Byte DHCP_COOKIE_LEN = 4;
 
   /*ARP Request.*/
-  static const ACE_UINT8 ARPOP_REQUEST = 1;
+  static const ACE_UINT16 ARPOP_REQUEST = 1;
   /*ARP Reply.*/
-  static const ACE_UINT8 ARPOP_REPLY = 2;
+  static const ACE_UINT16 ARPOP_REPLY = 2;
   /*RARP Request.*/
-  static const ACE_UINT8 ARPOP_RREQUEST = 3;
+  static const ACE_UINT16 ARPOP_RREQUEST = 3;
   /*RARP Reply.*/
-  static const ACE_UINT8 ARPOP_RREPLY = 4;
+  static const ACE_UINT16 ARPOP_RREPLY = 4;
   /*InARP Request.*/
-  static const ACE_UINT8 ARPOP_InREQUEST = 8;
+  static const ACE_UINT16 ARPOP_InREQUEST = 8;
   /*InARP Reply.*/
-  static const ACE_UINT8 ARPOP_InREPLY = 9;
+  static const ACE_UINT16 ARPOP_InREPLY = 9;
   /*(ATM) ARP NAK*/
-  static const ACE_UINT8 ARPOP_NAK = 10;
+  static const ACE_UINT16 ARPOP_NAK = 10;
   /*Ethernet 10Mbps.*/
   static const ACE_UINT8 ARPHRD_ETHER = 1;
 

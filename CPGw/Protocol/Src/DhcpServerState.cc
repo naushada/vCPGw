@@ -384,14 +384,14 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
       case RFC2131::OPTION_DNS:
         rsp[offset++] = RFC2131::OPTION_DNS;
         rsp[offset++] = 4;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(parent.dnsIP());
+        *((ACE_UINT32 *)&rsp[offset]) = parent.dnsIP();
         offset += 4;
         break;
 
       case RFC2131::OPTION_NAME_SERVER:
         rsp[offset++] = RFC2131::OPTION_NAME_SERVER;
         rsp[offset++] = 4;
-        *((ACE_UINT32 *)&rsp[offset]) = htonl(parent.dnsIP());
+        *((ACE_UINT32 *)&rsp[offset]) = parent.dnsIP();
         offset += 4;
         break;
 

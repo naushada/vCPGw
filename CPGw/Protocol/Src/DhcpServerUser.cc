@@ -285,27 +285,16 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
      ACE_Byte len = 0;
      len = elm->getValue(val);
      ACE_CString hName((const char *)val, len);
-     ACE_CString ip;
 
-     if(!sess->ipAddr())
-     {
-       /*IP address is not allocated yet.*/
-       addResolver(hName, ip);
-       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP Address is not Allocated YET for host %s\n"),
-                  hName.c_str()));
-     }
-     else
-     {
-       /*IP ia allocated now.*/
-       ACE_Byte val[255];
-       ACE_Byte len = 0;
-       len = elm->getValue(val);
-       ACE_CString hName((const char *)val, len);
-       sess->ipAddr(ip);
-       updateResolver(hName, ip);
-       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP Address %s for host %s\n"),
-                  ip.c_str(), hName.c_str()));
-     }
+     struct in_addr addr;
+     addr.s_addr = htonl(sess->ipAddr());
+     ACE_TCHAR *ip = nullptr;
+
+     ip = inet_ntoa(addr);
+     ACE_CString ipStr(ip, ACE_OS::strlen(ip));
+     updateResolver(hName, ip);
+     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP Address %s for host %s\n"),
+                ipStr.c_str(), hName.c_str()));
    }
 
    return(0);
@@ -417,7 +406,7 @@ void DhcpServerUser::addSession(ACE_UINT32 ipAddr, ACE_CString macAddr)
   if(m_sessMap.find(ipAddr) == -1)
   {
     /*Not Found in thme map.*/
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP %u not found in the m_sessMap\n"), ipAddr));
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP 0x%X not found in the m_sessMap\n"), ipAddr));
     m_sessMap.bind(ipAddr, macAddr);
   }
 }
@@ -440,7 +429,7 @@ void DhcpServerUser::addResolver(ACE_CString hName, ACE_CString ip)
   {
     /*Not Found. Add into it.*/
     m_name2IPMap.bind(hName, ip);
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP %u hName %s not found in the m_name2IPMap\n"),
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l IP %s hName %s not found in the m_name2IPMap\n"),
                ip.c_str(), hName.c_str()));
   }
 }
@@ -468,6 +457,10 @@ void DhcpServerUser::updateResolver(ACE_CString hName, ACE_CString ip)
       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l old IP %s old hName %s new IP %s new hName failed to update in m_name2IPMap\n"), 
                ipStr.c_str(), hName.c_str(), ip.c_str(), hName.c_str()));
     }
+  }
+  else
+  {
+    addResolver(hName, ip);
   }
 }
 
