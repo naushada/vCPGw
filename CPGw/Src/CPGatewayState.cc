@@ -53,7 +53,7 @@ ACE_UINT32 CPGatewayState::processRequest(CPGateway &parent,
       else if(TransportIF::DNS_SERVER_PORT == ntohs(udpHdr->dest_port))
       {
         /*DNS Packet.*/
-        //parent.getDnsUser().processRequest(parent, in, inLen);
+        parent.getDnsUser().processRequest(parent, in, inLen);
       }
     }
     else if(TransportIF::IP_TCP == ipHdr->proto)
@@ -66,9 +66,11 @@ ACE_UINT32 CPGatewayState::processRequest(CPGateway &parent,
     /*ARP Packet for MAC resolve.*/
     if(!parent.getArpUser().processRequest(parent, in, inLen))
     {
+#if 0
       /*Remember peerIP and peerMAC now.*/
       parent.getDhcpServerUser().addSession(parent.getArpUser().peerIp(),
                                             parent.getArpUser().peerMac());
+#endif
       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l peerIp and peerMac are Updated in DhcpServer\n")));
     }
 

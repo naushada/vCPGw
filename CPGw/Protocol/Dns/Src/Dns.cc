@@ -158,8 +158,6 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
   ACE_OS::memcpy((void *)rspEthHdr->dest, reqEthHdr->src, TransportIF::ETH_ALEN);
   ACE_OS::memcpy((void *)rspEthHdr->src, reqEthHdr->dest, TransportIF::ETH_ALEN);
   rspEthHdr->proto = reqEthHdr->proto;
-  /*Update the length now.*/
-  mb.wr_ptr(sizeof(TransportIF::ETH));
 
   /*Prepare IP Header.*/
   ACE_OS::memcpy((void *)rspIPHdr, reqIPHdr, sizeof(TransportIF::IP));
@@ -170,8 +168,6 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
   rspIPHdr->chksum = 0;
   /*This will be updated later.*/
   rspIPHdr->tot_len = 0;
-  /*Update the length now.*/
-  mb.wr_ptr(sizeof(TransportIF::IP));
 
   /*Prepare UDP Header.*/
   rspUdpHdr->src_port = reqUdpHdr->dest_port;
@@ -179,8 +175,6 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
   /*This will be calculated later.*/
   rspUdpHdr->len = 0;
   rspUdpHdr->chksum = 0;
-  /*Update the length*/
-  mb.wr_ptr(sizeof(TransportIF::UDP));
 
   /*Prepare DNS Header.*/
   rspDnsHdr->xid = reqDnsHdr->xid;
@@ -198,8 +192,13 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
   rspDnsHdr->ancount = 2;
   rspDnsHdr->nscount = 1;
   rspDnsHdr->arcount = 0;
+
   /*Update the length.*/
-  mb.wr_ptr(sizeof(TransportIF::DNS));
+  mb.wr_ptr(sizeof(TransportIF::ETH) +
+            sizeof(TransportIF::IP) +
+            sizeof(TransportIF::UDP) +
+            sizeof(TransportIF::DNS));
+
   ACE_UINT8 qdcount = 0;
 
   /*Build Query Section.*/
@@ -210,25 +209,35 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
 
   /*AN Section Now.*/
   /*AN(1)*/
-  std::vector<ACE_CString *> dName;
-  getHostNameFromQuery(dName);
+  std::vector<ACE_CString> dName;
+  getDomainNameFromQuery(dName);
   buildRRSection(domainName(), ipAddr(), mb);
 
   /*AN(2)*/
-  std::vector<ACE_CString *> hName;
+  std::vector<ACE_CString > hName;
   getHostNameFromQuery(hName);
-  ACE_CString *hh = hName[0];
+  ACE_CString hh(hName[0].c_str(), hName[0].length());
 
-  if(*hh == hostName())
+  if(hh == hostName())
   {
     buildRRSection(hostName(), ipAddr(), mb);
   }
   else
   {
+    ACE_UINT32 hIP = 0;
     /*Find in Hash Map to get the IP.*/
-    ACE_Byte *IP = parent.getDhcpServerUser().getResolverIP(*hh);
-    ACE_UINT32 hIP = atoi((const char *)IP);
-    buildRRSection(*hh, hIP, mb);
+    ACE_Byte *IP = parent.getDhcpServerUser().getResolverIP(hh);
+    if(!IP)
+    {
+      /*The Hostname is not control by CPGateway.*/
+      hIP = ipAddr();
+    }
+    else
+    {
+      hIP = atoi((const char *)IP);
+    }
+
+    buildRRSection(hh, hIP, mb);
   }
 
   /*NS section Now.*/
@@ -241,7 +250,7 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
   /*Calculate Check sum Now.*/
 
   rspIPHdr->chksum = chksumIP(rspIPHdr, (4 * rspIPHdr->len));
-  rspUdpHdr->chksum = chksumUDP(rspIPHdr);
+  //rspUdpHdr->chksum = chksumUDP(rspIPHdr);
   return(0);
 }
 
@@ -311,7 +320,7 @@ ACE_UINT32 DNS::CPGwDns::buildRRSection(ACE_CString &name, ACE_UINT32 ip,
     if('.' == name.c_str()[idx])
     {
       *(mb.wr_ptr()) = len;
-      mb.wr_ptr(len);
+      mb.wr_ptr(1);
       ACE_OS::memcpy((void *)mb.wr_ptr(), label, len);
       mb.wr_ptr(len);
       len = 0;
@@ -347,7 +356,7 @@ ACE_UINT32 DNS::CPGwDns::buildRRSection(ACE_CString &name, ACE_UINT32 ip,
   return(0);
 }
 
-void DNS::CPGwDns::getDomainNameFromQuery(std::vector<ACE_CString *> domainName)
+void DNS::CPGwDns::getDomainNameFromQuery(std::vector<ACE_CString> &domainName)
 {
   std::vector<DNS::QData *>::iterator iter;
   DNS::QData *elm = NULL;
@@ -368,19 +377,21 @@ void DNS::CPGwDns::getDomainNameFromQuery(std::vector<ACE_CString *> domainName)
                            qData[1]->value());
 
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The domain Name is %s\n"), dName));
-
+#if 0
     ACE_CString *dd = NULL;
     ACE_NEW_NORETURN(dd, ACE_CString((const ACE_TCHAR *)dName, len));
+#endif
+    ACE_CString dd((const ACE_TCHAR *)dName, len);
     domainName.push_back(dd);
   }
 }
 
-void DNS::CPGwDns::getHostNameFromQuery(std::vector<ACE_CString *> hostName)
+void DNS::CPGwDns::getHostNameFromQuery(std::vector<ACE_CString> &hostName)
 {
   DNS::QData *elm = NULL;
   DNS::QHdr *label = NULL;
 
-  ACE_TCHAR hName[1024];
+  ACE_TCHAR hName[255];
   int hostLen = 0;
   ACE_OS::memset((void *)hName, 0, sizeof(hName));
   int idx;
@@ -396,43 +407,46 @@ void DNS::CPGwDns::getHostNameFromQuery(std::vector<ACE_CString *> hostName)
       hostLen += ACE_OS::snprintf(&hName[hostLen], (sizeof(hName) - hostLen),
                                   "%s.", label->value());
     }
+
     /*get rid of last dot. */
     hName[hostLen-1] = 0;
 
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The hostName is %s\n"), hName));
-
-    ACE_CString *dd = NULL;
+#if 0
+    ACE_CString *dd = nullptr;
     ACE_NEW_NORETURN(dd, ACE_CString(hName, hostLen));
-
+#endif
+    ACE_CString dd(hName, hostLen);
     hostName.push_back(dd);
   }
 }
 
 void DNS::CPGwDns::processDnsQury(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen)
 {
-  std::vector<ACE_CString *> dName, hName;
+  std::vector<ACE_CString> dName;
+  std::vector<ACE_CString> hName;
   ACE_Byte *IP = NULL;
 
   getDomainNameFromQuery(dName);
   getHostNameFromQuery(hName);
 
   /*Process First Quesry in qdsection.*/
-  ACE_CString *dd = dName[0];
-  ACE_CString *hh = hName[0];
+  ACE_CString &dd = dName[0];
+  ACE_CString &hh = hName[0];
 
   ACE_Message_Block *mb = NULL;
 
-  ACE_NEW_NORETURN(mb, ACE_Message_Block(2048));
+  ACE_NEW_NORETURN(mb, ACE_Message_Block(CommonIF::SIZE_1KB));
 
 
-  if(*hh == hostName() && *dd == domainName())
+  if(hh == hostName() && dd == domainName())
   {
     /*DNS Query is for CPGateway.*/
   }
-  else if(*hh != hostName() && *dd == domainName())
+  else if(hh != hostName() && dd == domainName())
   {
     /*Find in Hash Map to get the IP.*/
-    IP = parent.getDhcpServerUser().getResolverIP(*hh);
+    IP = parent.getDhcpServerUser().getResolverIP(hh);
 
   }
 
@@ -460,12 +474,12 @@ void DNS::CPGwDns::processQdcount(CPGateway &parent, ACE_Byte *in, ACE_UINT32 in
   {
     len = qData[offset++];
 
-    DNS::QData *data = NULL;
+    DNS::QData *data = nullptr;
     ACE_NEW_NORETURN(data, DNS::QData());
 
     while(len)
     {
-      DNS::QHdr *qHdr = NULL;
+      DNS::QHdr *qHdr = nullptr;
       ACE_NEW_NORETURN(qHdr, DNS::QHdr());
 
       qHdr->len(len);
@@ -488,10 +502,12 @@ void DNS::CPGwDns::processQdcount(CPGateway &parent, ACE_Byte *in, ACE_UINT32 in
     qdcount--;
   }
 
-  ACE_Message_Block *mb = NULL;
-  ACE_NEW_NORETURN(mb, ACE_Message_Block(2048));
+  ACE_Message_Block *mb = nullptr;
+  ACE_NEW_NORETURN(mb, ACE_Message_Block(CommonIF::SIZE_1KB));
+
   buildDnsResponse(parent, in, inLen, *mb);
   parent.sendResponse(macAddr(), (ACE_Byte *)mb->wr_ptr(), mb->length());
+
   /*re-claim the memory now.*/
   mb->release();
 }
@@ -521,22 +537,22 @@ ACE_UINT32 DNS::CPGwDns::processRequest(CPGateway &parent, ACE_Byte *in, ACE_UIN
     if(ntohs(dnsHdr->qdcount))
     {
       /*This is DNS Query, Process it.*/
-      processQdcount(parent, in, inLen, dnsHdr->qdcount);
+      processQdcount(parent, in, inLen, ntohs(dnsHdr->qdcount));
     }
 
     if(ntohs(dnsHdr->ancount))
     {
-      processAncount(parent, in, inLen, dnsHdr->ancount);
+      processAncount(parent, in, inLen, ntohs(dnsHdr->ancount));
     }
 
     if(ntohs(dnsHdr->nscount))
     {
-      processNscount(parent, in, inLen, dnsHdr->nscount);
+      processNscount(parent, in, inLen, ntohs(dnsHdr->nscount));
     }
 
     if(ntohs(dnsHdr->arcount))
     {
-      processArcount(parent, in, inLen, dnsHdr->arcount);
+      processArcount(parent, in, inLen, ntohs(dnsHdr->arcount));
     }
   }
 
