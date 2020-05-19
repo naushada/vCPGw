@@ -149,11 +149,11 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
   TransportIF::IP *rspIPHdr = (TransportIF::IP *)&out[sizeof(TransportIF::ETH)];
 
   TransportIF::UDP *rspUdpHdr = (TransportIF::UDP *)&out[sizeof(TransportIF::ETH) +
-                                                                sizeof(TransportIF::IP)];
+                                                         sizeof(TransportIF::IP)];
 
   TransportIF::DNS *rspDnsHdr = (TransportIF::DNS *)&out[sizeof(TransportIF::ETH) +
-                                                                sizeof(TransportIF::IP) +
-                                                                sizeof(TransportIF::UDP)];
+                                                         sizeof(TransportIF::IP) +
+                                                         sizeof(TransportIF::UDP)];
 
   /*Prepare Ethernet MAC Header.*/
   ACE_OS::memcpy((void *)rspEthHdr->dest, reqEthHdr->src, TransportIF::ETH_ALEN);
@@ -380,10 +380,7 @@ void DNS::CPGwDns::getDomainNameFromQuery(std::vector<ACE_CString> &domainName)
                            qData[1].value());
 
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The domain Name is %s\n"), dName));
-#if 0
-    ACE_CString *dd = NULL;
-    ACE_NEW_NORETURN(dd, ACE_CString((const ACE_TCHAR *)dName, len));
-#endif
+
     ACE_CString dd((const ACE_TCHAR *)dName, len);
     domainName.push_back(dd);
   }
@@ -415,10 +412,6 @@ void DNS::CPGwDns::getHostNameFromQuery(std::vector<ACE_CString> &hostName)
     hName[hostLen-1] = 0;
 
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The hostName is %s\n"), hName));
-#if 0
-    ACE_CString *dd = nullptr;
-    ACE_NEW_NORETURN(dd, ACE_CString(hName, hostLen));
-#endif
     ACE_CString dd(hName, hostLen);
     hostName.push_back(dd);
   }
@@ -478,12 +471,10 @@ void DNS::CPGwDns::processQdcount(CPGateway &parent, ACE_Byte *in, ACE_UINT32 in
     len = qData[offset++];
 
     DNS::QData data;
-    //ACE_NEW_NORETURN(data, DNS::QData());
 
     while(len)
     {
       DNS::QHdr qHdr;
-      //ACE_NEW_NORETURN(qHdr, DNS::QHdr());
 
       qHdr.len(len);
       qHdr.value((ACE_Byte *)&qData[offset]);
@@ -510,8 +501,9 @@ void DNS::CPGwDns::processQdcount(CPGateway &parent, ACE_Byte *in, ACE_UINT32 in
 
   buildDnsResponse(parent, in, inLen, *mb);
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l the length is %u\n"), mb->length()));
-  parent.sendResponse(macAddr(), (ACE_Byte *)mb->wr_ptr(), mb->length());
+  parent.sendResponse(macAddr(), (ACE_Byte *)mb->rd_ptr(), mb->length());
 
+  /*clean the vector now.*/
   purgeQData();
   /*re-claim the memory now.*/
   mb->release();
