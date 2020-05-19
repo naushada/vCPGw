@@ -142,17 +142,18 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
   TransportIF::DNS *reqDnsHdr = (TransportIF::DNS *)&in[sizeof(TransportIF::ETH) +
                                                         sizeof(TransportIF::IP) +
                                                         sizeof(TransportIF::UDP)];
+  ACE_Byte *out = (ACE_Byte *)mb.wr_ptr();
 
-  TransportIF::ETH *rspEthHdr = (TransportIF::ETH *)mb.wr_ptr();
+  TransportIF::ETH *rspEthHdr = (TransportIF::ETH *)out;
 
-  TransportIF::IP *rspIPHdr = (TransportIF::IP *)&mb.wr_ptr()[sizeof(TransportIF::ETH)];
+  TransportIF::IP *rspIPHdr = (TransportIF::IP *)&out[sizeof(TransportIF::ETH)];
 
-  TransportIF::UDP *rspUdpHdr = (TransportIF::UDP *)&mb.wr_ptr()[sizeof(TransportIF::ETH) +
-                                                                 sizeof(TransportIF::IP)];
+  TransportIF::UDP *rspUdpHdr = (TransportIF::UDP *)&out[sizeof(TransportIF::ETH) +
+                                                                sizeof(TransportIF::IP)];
 
-  TransportIF::DNS *rspDnsHdr = (TransportIF::DNS *)&mb.wr_ptr()[sizeof(TransportIF::ETH) +
-                                                                 sizeof(TransportIF::IP) +
-                                                                 sizeof(TransportIF::UDP)];
+  TransportIF::DNS *rspDnsHdr = (TransportIF::DNS *)&out[sizeof(TransportIF::ETH) +
+                                                                sizeof(TransportIF::IP) +
+                                                                sizeof(TransportIF::UDP)];
 
   /*Prepare Ethernet MAC Header.*/
   ACE_OS::memcpy((void *)rspEthHdr->dest, reqEthHdr->src, TransportIF::ETH_ALEN);
@@ -199,10 +200,12 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
             sizeof(TransportIF::UDP) +
             sizeof(TransportIF::DNS));
 
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Response Length is %u\n"), mb.length()));
   ACE_UINT8 qdcount = 0;
 
   /*Build Query Section.*/
   buildQDSection(qdcount, mb);
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Response Length QDsection is %u\n"), mb.length()));
 
   /*Number of queries now.*/
   rspDnsHdr->qdcount = qdcount;
@@ -273,32 +276,32 @@ ACE_UINT32 DNS::CPGwDns::buildANSection(ACE_CString &anStr, ACE_UINT32 ip, ACE_M
 ACE_UINT32 DNS::CPGwDns::buildQDSection(ACE_UINT8 &qdcount, ACE_Message_Block &mb)
 {
   /*Outer Iterator.*/
-  std::vector<DNS::QData *>::iterator iter;
+  std::vector<DNS::QData>::iterator iter;
   /*Inner Iterator.*/
-  std::vector<DNS::QHdr *>::iterator inIter;
+  std::vector<DNS::QHdr>::iterator inIter;
 
-  DNS::QData *elm = NULL;
-  DNS::QHdr *qHdr = NULL;
+  DNS::QData elm;
+  DNS::QHdr qHdr;
 
   for(iter = m_qDataList.begin(); iter !=m_qDataList.end(); iter++)
   {
     elm = *iter;
-    for(inIter = elm->m_qHdrList.begin(); inIter != elm->m_qHdrList.end(); inIter++)
+    for(inIter = elm.m_qHdrList.begin(); inIter != elm.m_qHdrList.end(); inIter++)
     {
       qHdr = *inIter;
-      *(mb.wr_ptr()) = qHdr->len();
+      *(mb.wr_ptr()) = qHdr.len();
       mb.wr_ptr(1);
-      ACE_OS::memcpy((void *)mb.wr_ptr(), qHdr->value(), qHdr->len());
-      mb.wr_ptr(qHdr->len());
+      ACE_OS::memcpy((void *)mb.wr_ptr(), qHdr.value(), qHdr.len());
+      mb.wr_ptr(qHdr.len());
     }
 
     /*Terminate the QNAME with 0 length.*/
     *(mb.wr_ptr()) = 0;
     mb.wr_ptr(1);
 
-    *((ACE_UINT16 *)mb.wr_ptr()) = htons(elm->qtype());
+    *((ACE_UINT16 *)mb.wr_ptr()) = htons(elm.qtype());
     mb.wr_ptr(2);
-    *((ACE_UINT16 *)mb.wr_ptr()) = htons(elm->qclass());
+    *((ACE_UINT16 *)mb.wr_ptr()) = htons(elm.qclass());
     mb.wr_ptr(2);
 
     /*Number of query section*/
@@ -358,23 +361,23 @@ ACE_UINT32 DNS::CPGwDns::buildRRSection(ACE_CString &name, ACE_UINT32 ip,
 
 void DNS::CPGwDns::getDomainNameFromQuery(std::vector<ACE_CString> &domainName)
 {
-  std::vector<DNS::QData *>::iterator iter;
-  DNS::QData *elm = NULL;
+  std::vector<DNS::QData>::iterator iter;
+  DNS::QData elm;
 
   for(iter = m_qDataList.begin(); iter !=m_qDataList.end(); iter++)
   {
-    DNS::QHdr *qData[2];
+    DNS::QHdr qData[2];
     elm = *iter;
-    qData[0] = elm->m_qHdrList[elm->m_qHdrList.size() -2];
-    qData[1] = elm->m_qHdrList[elm->m_qHdrList.size() -1];
+    qData[0] = elm.m_qHdrList[elm.m_qHdrList.size() -2];
+    qData[1] = elm.m_qHdrList[elm.m_qHdrList.size() -1];
 
     ACE_TCHAR dName[255];
     int len = 0;
 
     /*format shall be abc.com/abc.net ect.*/
     len = ACE_OS::snprintf(dName, (sizeof(dName) -1), "%s.%s",
-                           qData[0]->value(),
-                           qData[1]->value());
+                           qData[0].value(),
+                           qData[1].value());
 
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The domain Name is %s\n"), dName));
 #if 0
@@ -388,24 +391,24 @@ void DNS::CPGwDns::getDomainNameFromQuery(std::vector<ACE_CString> &domainName)
 
 void DNS::CPGwDns::getHostNameFromQuery(std::vector<ACE_CString> &hostName)
 {
-  DNS::QData *elm = NULL;
-  DNS::QHdr *label = NULL;
+  DNS::QData elm;
+  DNS::QHdr label;
 
   ACE_TCHAR hName[255];
   int hostLen = 0;
   ACE_OS::memset((void *)hName, 0, sizeof(hName));
   int idx;
-  std::vector<DNS::QData *>::iterator iter;
+  std::vector<DNS::QData>::iterator iter;
 
   for(iter = m_qDataList.begin(); iter !=m_qDataList.end(); iter++)
   {
     elm = *iter;
     /*-2 is because last two elements will be domain name of example.net*/
-    for(idx = 0; idx < (int)(elm->m_qHdrList.size() - 2); idx++)
+    for(idx = 0; idx < (int)(elm.m_qHdrList.size() - 2); idx++)
     {
-      label = elm->m_qHdrList[idx];
+      label = elm.m_qHdrList[idx];
       hostLen += ACE_OS::snprintf(&hName[hostLen], (sizeof(hName) - hostLen),
-                                  "%s.", label->value());
+                                  "%s.", label.value());
     }
 
     /*get rid of last dot. */
@@ -474,28 +477,28 @@ void DNS::CPGwDns::processQdcount(CPGateway &parent, ACE_Byte *in, ACE_UINT32 in
   {
     len = qData[offset++];
 
-    DNS::QData *data = nullptr;
-    ACE_NEW_NORETURN(data, DNS::QData());
+    DNS::QData data;
+    //ACE_NEW_NORETURN(data, DNS::QData());
 
     while(len)
     {
-      DNS::QHdr *qHdr = nullptr;
-      ACE_NEW_NORETURN(qHdr, DNS::QHdr());
+      DNS::QHdr qHdr;
+      //ACE_NEW_NORETURN(qHdr, DNS::QHdr());
 
-      qHdr->len(len);
-      qHdr->value((ACE_Byte *)&qData[offset]);
+      qHdr.len(len);
+      qHdr.value((ACE_Byte *)&qData[offset]);
 
       /*remember it into list (which is STACK) for later use.*/
-      data->m_qHdrList.push_back(qHdr);
+      data.m_qHdrList.push_back(qHdr);
       offset += len;
 
       /*Now update the length.*/
       len = qData[offset++];
     }
 
-    data->qtype(ntohs(*((ACE_UINT16 *)&qData[offset])));
+    data.qtype(ntohs(*((ACE_UINT16 *)&qData[offset])));
     offset += 2;
-    data->qclass(ntohs(*((ACE_UINT16 *)&qData[offset])));
+    data.qclass(ntohs(*((ACE_UINT16 *)&qData[offset])));
     offset += 2;
     m_qDataList.push_back(data);
     /*Process next query data.*/
@@ -503,11 +506,13 @@ void DNS::CPGwDns::processQdcount(CPGateway &parent, ACE_Byte *in, ACE_UINT32 in
   }
 
   ACE_Message_Block *mb = nullptr;
-  ACE_NEW_NORETURN(mb, ACE_Message_Block(CommonIF::SIZE_1KB));
+  ACE_NEW_NORETURN(mb, ACE_Message_Block(CommonIF::SIZE_2MB));
 
   buildDnsResponse(parent, in, inLen, *mb);
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l the length is %u\n"), mb->length()));
   parent.sendResponse(macAddr(), (ACE_Byte *)mb->wr_ptr(), mb->length());
 
+  purgeQData();
   /*re-claim the memory now.*/
   mb->release();
 }
@@ -567,4 +572,27 @@ ACE_Message_Block *DNS::CPGwDns::buildResponse(CPGateway &parent, ACE_Byte *in, 
 
   return(mb);
 }
+
+void DNS::CPGwDns::purgeQData(void)
+{
+  /*Outer Iterator.*/
+  std::vector<DNS::QData>::iterator iter;
+  /*Inner Iterator.*/
+  std::vector<DNS::QHdr>::iterator inIter;
+
+  DNS::QData elm;
+
+  for(iter = m_qDataList.begin(); iter !=m_qDataList.end();)
+  {
+    elm = *iter;
+    for(inIter = elm.m_qHdrList.begin(); inIter != elm.m_qHdrList.end();)
+    {
+      inIter = elm.m_qHdrList.erase(inIter);
+    }
+
+    iter = m_qDataList.erase(iter);
+  }
+}
+
+
 #endif /*__DNS_CC__*/

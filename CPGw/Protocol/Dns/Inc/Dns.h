@@ -84,7 +84,7 @@ namespace DNS
 
   typedef struct QData
   {
-    std::vector<QHdr *> m_qHdrList;
+    std::vector<QHdr> m_qHdrList;
     /*Query Type.*/
     ACE_UINT16 m_qtype;
     /*Query Class.*/
@@ -129,7 +129,7 @@ namespace DNS
     ACE_CString m_domainName;
     ACE_CString m_macAddress;
     ACE_UINT32 m_ipAddr;
-    std::vector<QData *> m_qDataList;
+    std::vector<QData> m_qDataList;
 
     CPGateway *m_parent;
   public:
@@ -164,6 +164,8 @@ namespace DNS
     ACE_UINT32 buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen, ACE_Message_Block &mb);
     ACE_UINT16 chksumUDP(TransportIF::IP *ip);
     ACE_UINT16 chksumIP(void *in, ACE_UINT32 inLen);
+    void purgeQHdr(void);
+    void purgeQData(void);
 
   };
 }
