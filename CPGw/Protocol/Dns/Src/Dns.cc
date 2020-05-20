@@ -183,7 +183,7 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
   rspDnsHdr->rd = reqDnsHdr->rd;
   rspDnsHdr->tc = 0;
   rspDnsHdr->aa = 1;
-  rspDnsHdr->opcode = 1;
+  rspDnsHdr->opcode = 0;
   rspDnsHdr->qr = 1;
   rspDnsHdr->rcode = DNS::RCODE_NO_ERROR;
   rspDnsHdr->z = 0;
@@ -214,38 +214,63 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
   /*AN Section Now.*/
   /*AN(1)*/
   std::vector<ACE_CString> dName;
-  getDomainNameFromQuery(dName);
-  buildRRSection(dName[0], htonl(ipAddr()), mb);
-
-  /*AN(2)*/
   std::vector<ACE_CString > hName;
-  getHostNameFromQuery(hName);
-  ACE_CString hh(hName[0].c_str());
 
-  if(hh == hostName())
+  getDomainNameFromQuery(dName);
+
+  /*Is this domain name is controlled by vCPGateway?*/
+  if(domainName() != dName[0])
   {
+    /*Domain is not ours.*/
+    getHostNameFromQuery(hName);
+
+    ACE_TCHAR fqdn[255];
+    ACE_OS::snprintf(fqdn, sizeof(fqdn), "%s.%s",hName[0].c_str(), dName[0].c_str());
+    ACE_CString fqdnStr(fqdn);
+    buildRRSection(fqdnStr, htonl(ipAddr()), mb);
     buildRRSection(hostName(), htonl(ipAddr()), mb);
   }
   else
   {
-    ACE_UINT32 hIP = 0;
-    /*Find in Hash Map to get the IP.*/
-    ACE_Byte *IP = parent.getDhcpServerUser().getResolverIP(hh);
-    if(!IP)
+    getHostNameFromQuery(hName);
+    ACE_CString hh(hName[0].c_str());
+
+    if(hh == hostName())
     {
-      /*The Hostname is not control by CPGateway.*/
-      hIP = ipAddr();
+      buildRRSection(domainName(), htonl(ipAddr()), mb);
+      buildRRSection(hostName(), htonl(ipAddr()), mb);
     }
     else
     {
-      hIP = atoi((const char *)IP);
-    }
+      ACE_UINT32 hIP = 0;
+      /*Find in Hash Map to get the IP.*/
+      ACE_Byte *IP = parent.getDhcpServerUser().getResolverIP(hh);
+      if(!IP)
+      {
+        /*The Hostname is not control by CPGateway.*/
+        hIP = ipAddr();
+        /*Domain is ours. but host is different one.*/
+        ACE_TCHAR fqdn[255];
+        ACE_OS::snprintf(fqdn, sizeof(fqdn), "%s.%s",hName[0].c_str(), dName[0].c_str());
+        ACE_CString fqdnStr(fqdn);
+        buildRRSection(fqdnStr, htonl(ipAddr()), mb);
+        buildRRSection(hostName(), htonl(ipAddr()), mb);
+      }
+      else
+      {
+        buildRRSection(dName[0], htonl(hIP), mb);
+        hIP = atoi((const char *)IP);
+        buildRRSection(hh, htonl(hIP), mb);
+      }
 
-    buildRRSection(hh, htonl(hIP), mb);
+    }
   }
 
+  ACE_TCHAR ns_fqdn[255];
+  ACE_OS::snprintf(ns_fqdn, sizeof(ns_fqdn), "%s.%s",hostName().c_str(), domainName().c_str());
+  ACE_CString nsFqdnStr(ns_fqdn);
   /*NS section Now.*/
-  buildRRSection(domainName(), htonl(ipAddr()), mb);
+  buildNSSection(nsFqdnStr, mb);
 
   /*Update IP Payload length Now.*/
   rspIPHdr->tot_len = htons(mb.length() - sizeof(TransportIF::ETH));
@@ -308,6 +333,57 @@ ACE_UINT32 DNS::CPGwDns::buildQDSection(ACE_UINT8 &qdcount, ACE_Message_Block &m
     /*Number of query section*/
     qdcount++;
   }
+
+  return(0);
+}
+
+ACE_UINT32 DNS::CPGwDns::buildNSSection(ACE_CString &name, ACE_Message_Block &mb)
+{
+  int idx;
+  ACE_Byte label[128];
+  ACE_UINT8 len = 0;
+
+  for(idx = 0; idx < name.length(); idx++)
+  {
+    if('.' == name.c_str()[idx])
+    {
+      *(mb.wr_ptr()) = len;
+      mb.wr_ptr(1);
+      ACE_OS::memcpy((void *)mb.wr_ptr(), label, len);
+      mb.wr_ptr(len);
+      len = 0;
+    }
+    else
+    {
+      label[len++] = name.c_str()[idx];
+    }
+  }
+
+  if(len)
+  {
+    *(mb.wr_ptr()) = len;
+    mb.wr_ptr(1);
+    ACE_OS::memcpy((void *)mb.wr_ptr(), label, len);
+    mb.wr_ptr(len);
+  }
+
+  /*Terminate the QNAME with 0 as length.*/
+  *(mb.wr_ptr()) = 0;
+  mb.wr_ptr(1);
+
+  *((ACE_UINT16 *)mb.wr_ptr()) = htons(DNS::RRCODE_NA);
+  mb.wr_ptr(2);
+
+  *((ACE_UINT16 *)mb.wr_ptr()) = htons(DNS::RRCLASS_IN);
+  mb.wr_ptr(2);
+
+  /*TTL - 120 seconds*/
+  *((ACE_UINT32 *)mb.wr_ptr()) = htonl(0);
+  mb.wr_ptr(4);
+
+  /*RD Data Length.*/
+  *((ACE_UINT16 *)mb.wr_ptr()) = htons(0);
+  mb.wr_ptr(2);
 
   return(0);
 }

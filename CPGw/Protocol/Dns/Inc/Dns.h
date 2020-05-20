@@ -158,6 +158,7 @@ namespace DNS
     void processDnsQury(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen);
     void getDomainNameFromQuery(std::vector<ACE_CString> &domainName);
     void getHostNameFromQuery(std::vector<ACE_CString> &hostName);
+    ACE_UINT32 buildNSSection(ACE_CString &name, ACE_Message_Block &mb);
     ACE_UINT32 buildRRSection(ACE_CString &name, ACE_UINT32 ip, ACE_Message_Block &mb);
     ACE_UINT32 buildQDSection(ACE_UINT8 &qdcount, ACE_Message_Block &mb);
     ACE_UINT32 buildANSection(ACE_CString &qname, ACE_UINT32 ip, ACE_Message_Block &mb);
