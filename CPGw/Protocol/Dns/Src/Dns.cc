@@ -15,6 +15,7 @@ DNS::CPGwDns::CPGwDns(CPGateway *parent, ACE_CString mac,
   macAddr(mac);
   hostName(hName);
   domainName(dName);
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l domainName is %s\n"), dName.c_str()));
   ipAddr(ip);
 }
 
@@ -190,8 +191,8 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
 
   /*This will be updated later.*/
   rspDnsHdr->qdcount = 0;
-  rspDnsHdr->ancount = 2;
-  rspDnsHdr->nscount = 1;
+  rspDnsHdr->ancount = htons(2);
+  rspDnsHdr->nscount = htons(1);
   rspDnsHdr->arcount = 0;
 
   /*Update the length.*/
@@ -208,22 +209,22 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Response Length QDsection is %u\n"), mb.length()));
 
   /*Number of queries now.*/
-  rspDnsHdr->qdcount = qdcount;
+  rspDnsHdr->qdcount = htons(qdcount);
 
   /*AN Section Now.*/
   /*AN(1)*/
   std::vector<ACE_CString> dName;
   getDomainNameFromQuery(dName);
-  buildRRSection(domainName(), ipAddr(), mb);
+  buildRRSection(dName[0], htonl(ipAddr()), mb);
 
   /*AN(2)*/
   std::vector<ACE_CString > hName;
   getHostNameFromQuery(hName);
-  ACE_CString hh(hName[0].c_str(), hName[0].length());
+  ACE_CString hh(hName[0].c_str());
 
   if(hh == hostName())
   {
-    buildRRSection(hostName(), ipAddr(), mb);
+    buildRRSection(hostName(), htonl(ipAddr()), mb);
   }
   else
   {
@@ -240,11 +241,11 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
       hIP = atoi((const char *)IP);
     }
 
-    buildRRSection(hh, hIP, mb);
+    buildRRSection(hh, htonl(hIP), mb);
   }
 
   /*NS section Now.*/
-  buildRRSection(domainName(), ipAddr(), mb);
+  buildRRSection(domainName(), htonl(ipAddr()), mb);
 
   /*Update IP Payload length Now.*/
   rspIPHdr->tot_len = htons(mb.length() - sizeof(TransportIF::ETH));
@@ -332,6 +333,14 @@ ACE_UINT32 DNS::CPGwDns::buildRRSection(ACE_CString &name, ACE_UINT32 ip,
     {
       label[len++] = name.c_str()[idx];
     }
+  }
+
+  if(len)
+  {
+    *(mb.wr_ptr()) = len;
+    mb.wr_ptr(1);
+    ACE_OS::memcpy((void *)mb.wr_ptr(), label, len);
+    mb.wr_ptr(len);
   }
 
   /*Terminate the QNAME with 0 as length.*/
