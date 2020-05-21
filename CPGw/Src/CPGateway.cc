@@ -363,6 +363,9 @@ CPGateway::~CPGateway()
   delete m_DHCPConfInst;
   m_DHCPConfInst = nullptr;
   m_dhcpUser = nullptr;
+
+  delete m_DHCPConfInst;
+  m_DHCPConfInst = nullptr;
 }
 
 void CPGateway::ipAddr(ACE_CString ip)
@@ -694,20 +697,11 @@ void UniIPCIF::buildAndSendConfigReq(void)
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l messageType %u\n"), req->m_msgType));
   mb->wr_ptr(sizeof(CommonIF::_cmMessage_t));
   send_ipc((ACE_Byte *)mb->rd_ptr(), (ACE_UINT32)mb->length());
+  /*re-claim the memory.*/
+  mb->release();
 }
 
 /*DHCPConf Section...*/
-#if 0
-DHCPConf *DHCPConf::m_instance = nullptr;
-
-DHCPConf *DHCPConf::instance()
-{
-  if(nullptr == m_instance)
-    ACE_NEW_NORETURN(m_instance, DHCPConf());
-
-  return(m_instance);
-}
-#endif
 
 ACE_UINT8 DHCPConf::mtu(void)
 {
@@ -803,4 +797,6 @@ DHCPConf::~DHCPConf()
 {
   //m_instance = nullptr;
 }
+
+
 #endif /*__CPGATEWAY_CC__*/

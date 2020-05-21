@@ -143,6 +143,15 @@ DhcpServerUser::~DhcpServerUser()
     delete inst;
   }
 
+  IPPoolList_Iter_t it = m_ipPoolList.begin();
+  for(; it != m_ipPoolList.end();)
+  {
+    it = m_ipPoolList.erase(it);
+  }
+
+  m_ipPoolList.clear();
+  delete m_ipPoolList;
+
   /*re-claim the heap memory now. of singelton instance.*/
   delete DhcpServerStateDiscover::get_instance();
   delete DhcpServerStateInit::get_instance();
