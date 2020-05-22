@@ -97,6 +97,9 @@ class CPGateway : public ACE_Event_Handler
     ACE_CString m_ethInterface;
     ACE_HANDLE m_handle;
     ACE_Message_Block *m_mb;
+    /*subnetMask mask for interface.*/
+    ACE_CString m_subnetMask;
+    /*ip Address for interface.*/
     ACE_CString m_ipAddress;
     /*self macAddress*/
     ACE_CString m_macAddress;
@@ -153,10 +156,14 @@ class CPGateway : public ACE_Event_Handler
     void ipAddr(ACE_CString ip);
     ACE_CString &ipAddr(void);
 
+    void subnetMask(ACE_CString mask);
+    ACE_CString &subnetMask(void);
+
     void inst(ACE_UINT8 ins);
     ACE_UINT8 inst(void);
 
     void ethIntfName(ACE_CString eth);
+    ACE_CString &ethIntfName(void);
 
     ARP::CPGwArp &getArpUser(void);
     DNS::CPGwDns &getDnsUser(void);
@@ -177,6 +184,8 @@ class CPGateway : public ACE_Event_Handler
 
     DHCPConf &DHCPConfInst(void);
     void DHCPConfInst(DHCPConf *inst);
+
+    ACE_INT32 configureIPAddress(void);
 };
 
 #endif /*__CPGATEWAY_H__*/

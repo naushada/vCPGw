@@ -19,13 +19,13 @@
   "cpgw1": {
     "virtual-nw": "nw1-dhcp",
     "subnet-mask": "255.255.0.0",
-    "ip": "10.20.10.10",
+    "ip": "10.20.10.1",
     "host-name": "adam"
   },
 
   "radius1-instance": {
     "virtual-nw": "nw1",
-    "ip": "10.20.10.10",
+    "ip": "10.20.10.1",
     "protocol": "udp",
     "auth-port": 8128,
     "acc-port": 8182,
@@ -37,7 +37,7 @@
 
   "http1": {
     "virtual-nw": "nw1",
-    "ip": "10.20.10.10",
+    "ip": "10.20.10.1",
     "port": 8080,
     "aaa-server": "radius1-instance"
   },
@@ -94,11 +94,11 @@
     "virtual-nw": "nw1-dhcp",
     "profile-name": "dhcp-profile",
     "subnet-mask" : "255.255.0.0",
-    "ip" : "10.20.10.10",
+    "ip" : "10.20.10.1",
     "host-name" : "adam",
     "start-ip": "10.20.0.2",
     "end-ip": "10.20.200.100",
-    "exclude-ip": ["10.20.10.10", "10.20.100.5", "10.20.100.9", "10.20.100.11"]
+    "exclude-ip": ["10.20.10.1", "10.20.100.5", "10.20.100.9", "10.20.100.11"]
   },
 
   "dhcp2": {
@@ -113,7 +113,7 @@
   },
 
   "virtual-networks" : [
-    {"name" : "nw1-dhcp", "interface": {"type": "local", "address": "10.20.10.10", "net-mask": "255.255.0.0", "port": "enp0s3"}},
+    {"name" : "nw1-dhcp", "interface": {"type": "local", "address": "10.20.10.1", "net-mask": "255.255.0.0", "port": "enp0s3"}},
     {"name" : "nw2", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}},
     {"name" : "nw3", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}},
     {"name" : "nw4", "interface": {"type": "local", "address": "ip.addr", "net-mask": "255.255.255.0", "port": "ens1"}}

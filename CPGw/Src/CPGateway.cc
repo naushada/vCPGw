@@ -378,6 +378,11 @@ void CPGateway::ethIntfName(ACE_CString eth)
   m_ethInterface = eth;
 }
 
+ACE_CString &CPGateway::ethIntfName(void)
+{
+  return(m_ethInterface);
+}
+
 ACE_CString &CPGateway::getMacAddress(void)
 {
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l MAC- %X:"), m_macAddress.c_str()[0] & 0xFF));
@@ -394,12 +399,22 @@ ACE_CString &CPGateway::ipAddr(void)
   return(m_ipAddress);
 }
 
+void CPGateway::subnetMask(ACE_CString mask)
+{
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The mask is %s\n"), mask.c_str()));
+  m_subnetMask = mask;
+}
+
+ACE_CString &CPGateway::subnetMask(void)
+{
+  return(m_subnetMask);
+}
+
 ACE_CString &CPGateway::hostName(void)
 {
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The Host Name is %s\n"), m_hostName.c_str()));
   return(m_hostName);
 }
-
 void CPGateway::hostName(ACE_CString hName)
 {
   m_hostName = hName;
@@ -466,8 +481,13 @@ int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
 
   addr.s_addr = config->m_instance.m_instCPGW[ins].m_ip.m_ipn;
   ACE_TCHAR *ipStr = inet_ntoa(addr);
-
   ACE_CString ip((const char *)ipStr);
+
+  addr.s_addr = config->m_instance.m_instCPGW[ins].m_mask.m_ipn;
+  ACE_TCHAR *maskStr = inet_ntoa(addr);
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l subnetMask %s\n"), maskStr));
+  ACE_CString mask((const char *)maskStr);
+
   ACE_CString intf((const char *)config->m_instance.m_instCPGW[ins].m_nw.m_port);
   ACE_CString hname((const char *)config->m_instance.m_instCPGW[ins].m_host_name);
   ACE_CString dname((const char *)config->m_instance.m_instDHCP[ins].m_profile.m_domain_name);
@@ -475,6 +495,7 @@ int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l ipStr %s\n"), ipStr));
   ethIntfName(intf);
   ipAddr(ip);
+  subnetMask(mask);
   hostName(hname);
   domainName(dname);
 
@@ -490,6 +511,11 @@ int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
   DHCPConfInst().serverName(ACE_CString((const char *)config->m_instance.m_instDHCP[ins].m_host_name));
   DHCPConfInst().startIP(config->m_instance.m_instDHCP[ins].m_start_ip.m_ipn);
   DHCPConfInst().endIP(config->m_instance.m_instDHCP[ins].m_end_ip.m_ipn);
+
+  if(configureIPAddress() < 0)
+  {
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Configuring of IPAddress Failed\n")));
+  }
 
   if(open() < 0)
   {
@@ -561,6 +587,50 @@ DHCPConf &CPGateway::DHCPConfInst(void)
 void CPGateway::DHCPConfInst(DHCPConf *inst)
 {
   m_DHCPConfInst = inst;
+}
+
+ACE_INT32 CPGateway::configureIPAddress(void)
+{
+  ACE_INT32 ret = -1;
+
+  ACE_HANDLE handle;
+  struct ifreq ifr;
+
+  handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+  if(handle < 0)
+  {
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Failed to create handle\n")));
+    return(ret);
+  }
+
+  ACE_OS::memset((void *)&ifr, 0, sizeof(ifr));
+  ACE_OS::strncpy(ifr.ifr_name, ethIntfName().c_str(), ethIntfName().length());
+
+  ifr.ifr_addr.sa_family = AF_INET;
+  ifr.ifr_dstaddr.sa_family = AF_INET;
+  ifr.ifr_netmask.sa_family = AF_INET;
+
+  ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr = inet_addr(ipAddr().c_str());
+
+  if((ret = ioctl(handle, SIOCSIFADDR, (void *)&ifr)) < 0)
+  {
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Failed to configure IP addr %s\n"), ipAddr().c_str()));
+    ACE_OS::close(handle);
+    return(ret);
+  }
+
+  ((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr.s_addr = inet_addr(subnetMask().c_str());
+
+  if((ret = ioctl(handle, SIOCSIFNETMASK, (void *)&ifr)) < 0)
+  {
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Failed to configure netMask %s\n"), subnetMask().c_str()));
+    ACE_OS::close(handle);
+    return(ret);
+  }
+
+  ret = CommonIF::SUCCESS;
+  return(ret);
 }
 
 int main(int argc, char *argv[])

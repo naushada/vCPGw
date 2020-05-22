@@ -261,6 +261,7 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
         buildRRSection(dName[0], htonl(hIP), mb);
         hIP = atoi((const char *)IP);
         buildRRSection(hh, htonl(hIP), mb);
+        delete IP;
       }
 
     }
