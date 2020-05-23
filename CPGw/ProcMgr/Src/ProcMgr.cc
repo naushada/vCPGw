@@ -206,6 +206,7 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
   ACE_UINT32 taskId = 0;
   ACE_UINT8 instId = 0;
   ACE_UINT8 entId = 0;
+  int ret = 0;
 
   _processSpawnReq *pReq = (_processSpawnReq *)req->m_message;
 
@@ -221,10 +222,15 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
     //ACE_OS::itoa((int)pReq->m_instId, instIdStr, 10);
     //ACE_Byte *argv[] = {pReq->m_ip, entId, instIdStr, pReq->m_nodeTag, nullptr};
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Child Process\n")));
-    ACE_OS::execlp((const char *)pReq->m_entName, (const char *)pReq->m_ip,
-                   instId, (const char *)pReq->m_nodeTag);
-    /*overriding of address space is failed with new process.*/
-    ACE_OS::exit(1);
+
+    ret = ACE_OS::execlp((const ACE_TCHAR *)pReq->m_entName, (const ACE_TCHAR *)pReq->m_entName, (const char *)pReq->m_ip,
+                         instId, (const char *)pReq->m_nodeTag, NULL);
+    if(ret < 0)
+    {
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l execlp failed for %s %m\n"), pReq->m_entName));
+      /*overriding of address space is failed with new process.*/
+      ACE_OS::exit(1);
+    }
 
   case -1:
     /*Error case.*/
