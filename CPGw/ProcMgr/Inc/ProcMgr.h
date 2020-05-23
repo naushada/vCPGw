@@ -2,6 +2,7 @@
 #define __PROCMGR_H__
 
 #include "UniIPC.h"
+#include "CommonIF.h"
 
 #include "ace/Basic_Types.h"
 #include "ace/Message_Block.h"
@@ -21,7 +22,7 @@ typedef struct _processSpawnReq
   ACE_Byte m_nodeTag[256];
   ACE_Byte m_ip[32];
 
-}_processSpawnReq_t;
+}__attribute__((packed))_processSpawnReq_t;
 
 typedef struct _processSpawnRsp
 {
@@ -29,7 +30,13 @@ typedef struct _processSpawnRsp
   pid_t m_pPid;
   ACE_UINT32 m_taskId;
 
-}_processSpawnRsp_t;
+}__attribute__((packed))_processSpawnRsp_t;
+
+typedef struct _processDiedInd
+{
+  pid_t m_cPid;
+
+}__attribute__((packed))_processDiedInd_t;
 
 typedef ACE_Hash_Map_Manager<ACE_CString, ACE_UINT8, ACE_Null_Mutex>EntNameToEntIdMap_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, ACE_UINT8, ACE_Null_Mutex>::iterator EntNameToEntIdMap_Iter_t;
@@ -83,9 +90,10 @@ public:
   int processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb);
   int buildSpawnRsp(ACE_Byte *in, pid_t cPid, pid_t pPid, ACE_Message_Block &mb);
   void buildAndSendSysMgrSpawnReq(ACE_Message_Block &mb);
+  void buildAndSendSysMgrChildDiedInd(pid_t cPid, ACE_UINT32 reason);
+
 private:
-  EntNameToEntIdMap_t m_entNameToIdMap;
-  ChildHandler *m_childHandler;
+
 };
 
 
