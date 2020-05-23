@@ -481,6 +481,7 @@ int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
 
   addr.s_addr = config->m_instance.m_instCPGW[ins].m_ip.m_ipn;
   ACE_TCHAR *ipStr = inet_ntoa(addr);
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l ipStr %s\n"), ipStr));
   ACE_CString ip((const char *)ipStr);
 
   addr.s_addr = config->m_instance.m_instCPGW[ins].m_mask.m_ipn;
@@ -492,7 +493,6 @@ int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
   ACE_CString hname((const char *)config->m_instance.m_instCPGW[ins].m_host_name);
   ACE_CString dname((const char *)config->m_instance.m_instDHCP[ins].m_profile.m_domain_name);
 
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l ipStr %s\n"), ipStr));
   ethIntfName(intf);
   ipAddr(ip);
   subnetMask(mask);

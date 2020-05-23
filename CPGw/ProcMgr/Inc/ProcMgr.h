@@ -15,8 +15,8 @@
 
 typedef struct _processSpawnReq
 {
-  ACE_Byte m_entName[256];
-  ACE_UINT8 m_instId;
+  ACE_UINT32 m_taskId;
+  ACE_Byte m_entName[255];
   ACE_UINT8 m_restartCnt;
   ACE_Byte m_nodeTag[256];
   ACE_Byte m_ip[32];
@@ -25,8 +25,9 @@ typedef struct _processSpawnReq
 
 typedef struct _processSpawnRsp
 {
-  ACE_UINT8 m_cPid;
-  ACE_UINT8 m_pPid;
+  pid_t m_cPid;
+  pid_t m_pPid;
+  ACE_UINT32 m_taskId;
 
 }_processSpawnRsp_t;
 
@@ -81,6 +82,7 @@ public:
   int processIPCMessage(ACE_Message_Block &mb);
   int processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb);
   int buildSpawnRsp(ACE_Byte *in, pid_t cPid, pid_t pPid, ACE_Message_Block &mb);
+  void buildAndSendSysMgrSpawnReq(ACE_Message_Block &mb);
 private:
   EntNameToEntIdMap_t m_entNameToIdMap;
   ChildHandler *m_childHandler;

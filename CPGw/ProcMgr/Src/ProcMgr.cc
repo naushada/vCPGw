@@ -7,24 +7,98 @@
 ProcMgr::ProcMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId, ACE_UINT8 instId, ACE_CString nodeTag) :
   UniIPC(thrMgr, ip, entId, instId, nodeTag)
 {
-  int idx = 0;
-  for(;CommonIF::m_entTable[idx].m_entName; idx++)
-  {
-    m_entNameToIdMap.bind(ACE_CString(CommonIF::m_entTable[idx].m_entName),
-                          CommonIF::m_entTable[idx].m_entId);
-  }
-
   ACE_Reactor::instance()->register_handler(this,
-                                            ACE_Event_Handler::READ_MASK);
+                                            ACE_Event_Handler::READ_MASK |
+                                            ACE_Event_Handler::SIGNAL_MASK);
 
-  ACE_NEW_NORETURN(m_childHandler, ChildHandler(thrMgr, this));
+  /*Build and send processSpawnReq to itself to spawn SYSMGR.*/
 
+  ACE_Message_Block *mbReq = nullptr;
+  ACE_NEW_NORETURN(mbReq, ACE_Message_Block(CommonIF::SIZE_1KB));
+
+  buildAndSendSysMgrSpawnReq(*mbReq);
+  /*Reclaim the memory Now.*/
+  mbReq->release();
 }
 
 ProcMgr::~ProcMgr()
 {
-  delete m_childHandler;
-  m_childHandler = nullptr;
+}
+
+void ProcMgr::buildAndSendSysMgrSpawnReq(ACE_Message_Block &mb)
+{
+  CommonIF::_cmMessage_t *cMsg = (CommonIF::_cmMessage_t *)mb.wr_ptr();
+  _processSpawnReq_t *spawnReq = (_processSpawnReq_t *)cMsg->m_message;
+
+  cMsg->m_dst.m_procId = get_self_procId();
+  cMsg->m_dst.m_entId = CommonIF::ENT_SYSMGR;
+  cMsg->m_dst.m_instId = CommonIF::INST1;
+
+  cMsg->m_src = cMsg->m_dst;
+
+  /*Populating Payload of Request.*/
+  spawnReq->m_taskId = get_self_taskId();
+
+  const ACE_TCHAR *entName = "SYSMGR";
+  ACE_OS::memset((void *)spawnReq->m_entName, 0, sizeof(spawnReq->m_entName));
+  ACE_OS::strncpy((ACE_TCHAR *)spawnReq->m_entName, entName, ACE_OS::strlen(entName) + 1);
+
+  spawnReq->m_restartCnt = 0;
+  ACE_OS::strncpy((ACE_TCHAR *)spawnReq->m_nodeTag, nodeTag().c_str(), nodeTag().length());
+
+  const ACE_TCHAR *ip = "127.0.0.1";
+  ACE_OS::memset((void *)spawnReq->m_ip, 0, sizeof(spawnReq->m_ip));
+  ACE_OS::strncpy((ACE_TCHAR *)spawnReq->m_ip, ip, ACE_OS::strlen(ip) + 1);
+
+  /*Update the request length now.*/
+  mb.wr_ptr(sizeof(CommonIF::_cmMessage_t) + sizeof(_processSpawnReq_t));
+
+  send_ipc((ACE_Byte *)mb.rd_ptr(), (ACE_UINT32)mb.length());
+}
+
+ACE_UINT32 ProcMgr::process_signal(int signum)
+{
+  pid_t childPid;
+  int childStatus;
+
+  for(;;)
+  {
+    childStatus = 0;
+
+    childPid = ACE_OS::waitpid(-1, &childStatus, WNOHANG);
+
+    if(childPid <= 0)
+    {
+      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l childPid is less than zero\n")));
+      break;
+    }
+
+    if(WIFEXITED(childStatus))
+    {
+      /*Child is terminated.*/
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l SIGCHLD exited with childPid %u\n"), childPid));
+      /*build and send notify to SYSMGR*/
+    }
+    else if(WIFSIGNALED(childStatus))
+    {
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l SIGCHLD Terminated childPid %u\n"), childPid));
+
+    }
+    else if(WIFSTOPPED(childStatus))
+    {
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l SIGCHLD Stopped childPid %u\n"), childPid));
+    }
+    else if(WIFCONTINUED(childStatus))
+    {
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l SIGCHLD Continued childPid %u\n"), childPid));
+    }
+    else
+    {
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l SIGCHLD Unknown childPid %u\n"), childPid));
+    }
+  }
+
+  return(0);
 }
 
 ACE_UINT32 ProcMgr::handle_ipc(ACE_Message_Block *mb)
@@ -37,12 +111,6 @@ ACE_HANDLE ProcMgr::get_handle(void) const
 {
   ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l ProcMgr::get_handle\n")));
   return(const_cast<ProcMgr *>(this)->handle());
-}
-
-ACE_UINT32 ProcMgr::process_signal(int signum)
-{
-  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l ProcMgr::process_signal\n")));
-  return(0);
 }
 
 int ProcMgr::svc(void)
@@ -81,6 +149,8 @@ int ProcMgr::processIPCMessage(ACE_Message_Block &mb)
   switch(msgType)
   {
   case CommonIF::MSG_SYSMGR_PROCMGR_PROCESS_SPAWN_REQ:
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l SPAWN REQ is received\n")));
+
     ACE_Message_Block *mbRsp = nullptr;
     ACE_NEW_NORETURN(mbRsp, ACE_Message_Block(CommonIF::SIZE_1KB));
     processSpawnReq(in, len, *mbRsp);
@@ -97,16 +167,15 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
   CommonIF::_cmMessage_t *req = (CommonIF::_cmMessage_t *)in;
   pid_t cPid;
   pid_t pPid;
+  ACE_UINT32 taskId = 0;
+  ACE_UINT8 instId = 0;
+  ACE_UINT8 entId = 0;
 
   _processSpawnReq *pReq = (_processSpawnReq *)req->m_message;
-  ACE_UINT8 entId = 0;
-  ACE_CString key((const ACE_TCHAR *)pReq->m_entName);
 
-  if(m_entNameToIdMap.find(key, entId) == -1)
-  {
-    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l key %s is not found in the map\n"), key.c_str()));
-    return(0);
-  }
+  taskId = pReq->m_taskId;
+  entId = CommonIF::get_inst_id(taskId);
+  instId = CommonIF::get_ent_id(taskId);
 
   switch((cPid = ACE_OS::fork()))
   {
@@ -115,7 +184,9 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
     //ACE_TCHAR instIdStr[8];
     //ACE_OS::itoa((int)pReq->m_instId, instIdStr, 10);
     //ACE_Byte *argv[] = {pReq->m_ip, entId, instIdStr, pReq->m_nodeTag, nullptr};
-    ACE_OS::execlp((const char *)pReq->m_entName, (const char *)pReq->m_ip, entId, pReq->m_instId, (const char *)pReq->m_nodeTag);
+    ACE_OS::execlp((const char *)pReq->m_entName, (const char *)pReq->m_ip,
+                   instId, (const char *)pReq->m_nodeTag);
+    /*overriding of address space is failed with new process.*/
     ACE_OS::exit(1);
 
   case -1:
@@ -149,6 +220,7 @@ int ProcMgr::buildSpawnRsp(ACE_Byte *in, pid_t cPid, pid_t pPid, ACE_Message_Blo
   /*Flip the Header now.*/
   ACE_OS::memcpy((void *)&rsp->m_dst, (const ACE_TCHAR *)&req->m_src,
                  sizeof(CommonIF::_cmHeader_t));
+
   ACE_OS::memcpy((void *)&rsp->m_src, (const ACE_TCHAR *)&req->m_dst,
                  sizeof(CommonIF::_cmHeader_t));
 
@@ -157,6 +229,7 @@ int ProcMgr::buildSpawnRsp(ACE_Byte *in, pid_t cPid, pid_t pPid, ACE_Message_Blo
   _processSpawnRsp_t *spawnRsp = (_processSpawnRsp_t *)rsp->m_message;
   spawnRsp->m_cPid = cPid;
   spawnRsp->m_pPid = pPid;
+  spawnRsp->m_taskId = spawnReq->m_taskId;
 
   /*Update the length now.*/
   mb.wr_ptr(sizeof(CommonIF::_cmMessage_t) + sizeof(_processSpawnRsp_t));

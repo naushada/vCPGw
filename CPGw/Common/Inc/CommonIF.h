@@ -36,6 +36,8 @@ namespace CommonIF {
   ACE_UINT16 get_ipc_port(ACE_UINT8 entity, ACE_UINT8 instance);
   ACE_UINT16 get_ipc_port(ACE_UINT32 taskId);
   ACE_UINT32 get_task_id(ACE_UINT8 entity, ACE_UINT8 instance);
+  ACE_UINT8 get_inst_id(ACE_UINT32 tId);
+  ACE_UINT8 get_ent_id(ACE_UINT32 tId);
 
   typedef struct _entNameIdTab
   {
