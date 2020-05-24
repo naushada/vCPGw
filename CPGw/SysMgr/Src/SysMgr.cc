@@ -10,6 +10,8 @@ SysMgr::SysMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId, ACE_
   ACE_Reactor::instance()->register_handler(this,
                                             ACE_Event_Handler::READ_MASK |
                                             ACE_Event_Handler::SIGNAL_MASK);
+  m_taskIter = nullptr;
+
   jsonObj(JSON::instance());
   jsonObj().start();
   populateProcessTable();
@@ -116,6 +118,34 @@ int SysMgr::svc(void)
   return(0);
 }
 
+int SysMgr::processSpawnRsp(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb)
+{
+  taskTableMap_t::ENTRY *entry = nullptr;
+
+  if(nullptr == m_taskIter)
+  {
+    m_taskIter = m_taskMap.begin();
+  }
+
+  if(m_taskIter.next(entry))
+  {
+    SysMgr::_taskTable_t inst;
+    ACE_Message_Block *mb = nullptr;
+    ACE_NEW_RETURN(mb, ACE_Message_Block(CommonIF::SIZE_1KB), -1);
+
+    /*Build and send Spawn Request.*/
+    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
+    inst = (SysMgr::_taskTable_t )((*entry).int_id_);
+    ACE_CString ent(inst.taskName());
+    buildAndSendSpawnReq(ent, inst.minInstance(), *mb);
+
+    /*Reclaim the Heap Memory Now.*/
+    mb->release();
+    /*Move to next iterator now.*/
+    m_taskIter.advance();
+  }
+}
+
 int SysMgr::processIPCMessage(ACE_Message_Block &mb)
 {
   ACE_Byte *in = nullptr;
@@ -137,7 +167,7 @@ int SysMgr::processIPCMessage(ACE_Message_Block &mb)
     ACE_Message_Block *mbRsp = nullptr;
     ACE_NEW_NORETURN(mbRsp, ACE_Message_Block(CommonIF::SIZE_1KB));
 
-    processSpawnRsp(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mbRsp);
+    processSpawnRsp(in, len, *mbRsp);
     /*Reclaim the Heap Memory Now.*/
     mbRsp->release();
     break;
@@ -147,6 +177,23 @@ int SysMgr::processIPCMessage(ACE_Message_Block &mb)
   }
 
   return(0);
+}
+
+ACE_UINT8 SysMgr::get_entId(ACE_CString &entName)
+{
+  int idx;
+  ACE_UINT8 entId = 0;
+  for(idx = 0; m_entTable[idx].m_entName; idx++)
+  {
+    if(!ACE_OS::strncmp(entName.c_str(),
+                        m_entTable[idx].m_entName, ACE_OS::strlen(entName)))
+    {
+      entId = m_entTable[idx].m_entId;
+      break;
+    }
+  }
+
+  return(entId);
 }
 
 void SysMgr::buildAndSendSpawnReq(ACE_CString &entName, ACE_UINT8 instId, ACE_Message_Block &mb)
@@ -165,7 +212,7 @@ void SysMgr::buildAndSendSpawnReq(ACE_CString &entName, ACE_UINT8 instId, ACE_Me
   cMsg->m_messageLen = sizeof(_processSpawnReq_t);
   cMsg->m_msgType = CommonIF::MSG_SYSMGR_PROCMGR_PROCESS_SPAWN_REQ;
   /*Populating Payload of Request.*/
-  spawnReq->m_taskId = CommonIF::get_task_id(, instId);
+  spawnReq->m_taskId = CommonIF::get_task_id(get_entId(entName), instId);
 
   ACE_OS::memset((void *)spawnReq->m_entName, 0, sizeof(spawnReq->m_entName));
   ACE_OS::strncpy((ACE_TCHAR *)spawnReq->m_entName, entName, ACE_OS::strlen(entName) + 1);

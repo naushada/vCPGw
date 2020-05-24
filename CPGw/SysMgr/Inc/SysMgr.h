@@ -111,8 +111,9 @@ public:
   int processIPCMessage(ACE_Message_Block &mb);
   int processSpawnRsp(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb);
   int processChildDiedInd(ACE_Message_Block &mb);
-  void buildAndSendSpawnReq(ACE_Message_Block &mb);
+  void buildAndSendSpawnReq(ACE_CString &entName, ACE_UINT8 instId, ACE_Message_Block &mb);
 
+  ACE_UINT8 get_entId(ACE_CString &entName);
   void populateProcessTable(void);
   JSON &jsonObj(void);
   void jsonObj(JSON *obj);
