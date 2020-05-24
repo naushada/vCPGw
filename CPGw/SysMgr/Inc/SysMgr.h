@@ -1,8 +1,9 @@
 #ifndef __SYSMGR_H__
 #define __SYSMGR_H__
 
-typedef ACE_Hash_Map_Manager<ACE_TCHAR *, SysMgr::_taskTable_t, ACE_Null_Mutex>taskTableMap_t;
-typedef ACE_Hash_Map_Manager<ACE_TCHAR *, SysMgr::_taskTable_t, ACE_Null_Mutex>::iterator taskTableMapIter_t;
+/*Task Id is the Key.*/
+typedef ACE_Hash_Map_Manager<ACE_CString, SysMgr::_taskTable_t, ACE_Null_Mutex>taskTableMap_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, SysMgr::_taskTable_t, ACE_Null_Mutex>::iterator taskTableMapIter_t;
 
 class SysMgr : public UniIPC
 {
@@ -112,6 +113,7 @@ public:
   int processChildDiedInd(ACE_Message_Block &mb);
   void buildAndSendSpawnReq(ACE_Message_Block &mb);
 
+  void populateProcessTable(void);
   JSON &jsonObj(void);
   void jsonObj(JSON *obj);
 
