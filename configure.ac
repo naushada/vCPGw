@@ -29,6 +29,7 @@ AC_CONFIG_FILES([
  CPGw/Parser/Json/Makefile
  CPGw/CfgMgr/Makefile
  CPGw/ProcMgr/Makefile
+ CPGw/SysMgr/Makefile
  CPGw/Makefile
 ])
 

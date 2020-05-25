@@ -69,7 +69,7 @@ void ProcMgr::buildAndSendSysMgrSpawnReq(ACE_Message_Block &mb)
   cMsg->m_messageLen = sizeof(_processSpawnReq_t);
   cMsg->m_msgType = CommonIF::MSG_SYSMGR_PROCMGR_PROCESS_SPAWN_REQ;
   /*Populating Payload of Request.*/
-  spawnReq->m_taskId = get_self_taskId();
+  spawnReq->m_taskId = CommonIF::get_task_id(CommonIF::ENT_SYSMGR, CommonIF::INST1);
 
   const ACE_TCHAR *entName = "SYSMGR";
   ACE_OS::memset((void *)spawnReq->m_entName, 0, sizeof(spawnReq->m_entName));
@@ -211,20 +211,23 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
   _processSpawnReq *pReq = (_processSpawnReq *)req->m_message;
 
   taskId = pReq->m_taskId;
-  entId = CommonIF::get_inst_id(taskId);
-  instId = CommonIF::get_ent_id(taskId);
+  instId = CommonIF::get_inst_id(taskId);
+  entId = CommonIF::get_ent_id(taskId);
 
-  switch((cPid = ACE_OS::fork()))
+  switch((cPid = fork()))
   {
   case 0:
     /*child process.*/
     //ACE_TCHAR instIdStr[8];
     //ACE_OS::itoa((int)pReq->m_instId, instIdStr, 10);
     //ACE_Byte *argv[] = {pReq->m_ip, entId, instIdStr, pReq->m_nodeTag, nullptr};
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Child Process\n")));
+    ACE_TCHAR instStr[16];
+    ACE_OS::itoa((int)instId, instStr, 10);
 
-    ret = ACE_OS::execlp((const ACE_TCHAR *)pReq->m_entName, (const ACE_TCHAR *)pReq->m_entName, (const char *)pReq->m_ip,
-                         instId, (const char *)pReq->m_nodeTag, NULL);
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Child Process entName %s instStr %s\n"), pReq->m_entName, instStr));
+
+    ret = execlp((const ACE_TCHAR *)pReq->m_entName, (const ACE_TCHAR *)pReq->m_entName, (const ACE_TCHAR *)pReq->m_ip,
+                 (const ACE_TCHAR *)instStr, (const ACE_TCHAR *)pReq->m_nodeTag, (ACE_TCHAR *)0);
     if(ret < 0)
     {
       ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l execlp failed for %s %m\n"), pReq->m_entName));

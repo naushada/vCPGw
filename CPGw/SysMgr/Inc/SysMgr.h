@@ -1,14 +1,23 @@
 #ifndef __SYSMGR_H__
 #define __SYSMGR_H__
 
-/*Task Id is the Key.*/
-typedef ACE_Hash_Map_Manager<ACE_CString, SysMgr::_taskTable_t, ACE_Null_Mutex>taskTableMap_t;
-typedef ACE_Hash_Map_Manager<ACE_CString, SysMgr::_taskTable_t, ACE_Null_Mutex>::iterator taskTableMapIter_t;
+#include "UniIPC.h"
+#include "CommonIF.h"
+#include "Json.h"
 
-class SysMgr : public UniIPC
+#include "ace/Basic_Types.h"
+#include "ace/Message_Block.h"
+#include "ace/SString.h"
+#include "ace/Hash_Map_Manager.h"
+#include "ace/Null_Mutex.h"
+#include "ace/Task.h"
+#include "ace/Log_Msg.h"
+#include "ace/Reactor.h"
+#include "ace/Process.h"
+#include "ace/Event_Handler.h"
+
+namespace CPTaskTable
 {
-public:
-
   typedef struct _taskTable
   {
     ACE_TCHAR m_taskName[64];
@@ -43,12 +52,12 @@ public:
     void taskName(ACE_TCHAR *tName)
     {
       /*+1 for null(\0) character*/
-      ACE_OS::strncpy(m_taskName, tName, ACE_OS::strlen(tName) + 1);
+      ACE_OS::strncpy(m_taskName, tName, (sizeof(m_taskName) - 1));
     }
 
     ACE_UINT8 startLevel(void)
     {
-      return(startLevel);
+      return(m_startLevel);
     }
 
     void startLevel(ACE_UINT8 sLevel)
@@ -63,7 +72,7 @@ public:
 
     void parentTask(ACE_TCHAR *pTask)
     {
-      ACE_OS::strncpy(m_parentTask, pTask, ACE_OS::strlen(pTask) + 1);
+      ACE_OS::strncpy(m_parentTask, pTask, (sizeof(m_parentTask) - 1));
     }
 
     ACE_UINT8 minInstance(void)
@@ -97,7 +106,15 @@ public:
     }
 
   }_taskTable_t;
+};
 
+/*Task Id is the Key.*/
+typedef ACE_Hash_Map_Manager<ACE_CString, CPTaskTable::_taskTable_t, ACE_Null_Mutex> taskTableMap_t;
+typedef ACE_Hash_Map_Manager<ACE_CString, CPTaskTable::_taskTable_t, ACE_Null_Mutex>::iterator taskTableMapIter_t;
+
+class SysMgr : public UniIPC
+{
+public:
   SysMgr() = default;
   SysMgr(ACE_Thread_Manager *thr, ACE_CString ip, ACE_UINT8 entId, ACE_UINT8 instId, ACE_CString nodeTag);
   virtual ~SysMgr();
@@ -120,12 +137,13 @@ public:
 
 private:
   JSON *m_jsonObj;
+
   taskTableMap_t m_taskMap;
-  taskTableMapIter_t m_taskIter;
+  taskTableMapIter_t *m_taskIter;
+
+  ACE_CString m_schema;
 
 };
-
-
 
 
 

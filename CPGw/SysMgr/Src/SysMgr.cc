@@ -4,16 +4,19 @@
 #include "SysMgr.h"
 #include "ProcMgr.h"
 
-SysMgr::SysMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId, ACE_UINT8 instId, ACE_CString nodeTag) :
+SysMgr::SysMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId,
+               ACE_UINT8 instId, ACE_CString nodeTag) :
   UniIPC(thrMgr, ip, entId, instId, nodeTag)
 {
   ACE_Reactor::instance()->register_handler(this,
                                             ACE_Event_Handler::READ_MASK |
                                             ACE_Event_Handler::SIGNAL_MASK);
   m_taskIter = nullptr;
+  ACE_CString ss("process-table-config");
+  m_schema = ss;
 
   jsonObj(JSON::instance());
-  jsonObj().start();
+  jsonObj().start(m_schema.c_str());
   populateProcessTable();
   jsonObj().stop();
   delete m_jsonObj;
@@ -25,6 +28,16 @@ SysMgr::~SysMgr()
 {
 }
 
+void SysMgr::jsonObj(JSON *obj)
+{
+  m_jsonObj = obj;
+}
+
+JSON &SysMgr::jsonObj(void)
+{
+  return(*m_jsonObj);
+}
+
 void SysMgr::populateProcessTable(void)
 {
   JSON root(jsonObj().value());
@@ -33,6 +46,7 @@ void SysMgr::populateProcessTable(void)
   int idx = 0;
   JSON::JSONValue *val = nullptr;
   JSON taskTabArray(taskTab);
+
 
   for(val = taskTabArray[idx]; val; val = taskTabArray[++idx])
   {
@@ -45,7 +59,8 @@ void SysMgr::populateProcessTable(void)
       break;
     }
 
-    SysMgr::_taskTable_t tTable;
+    CPTaskTable::_taskTable_t tTable;
+
     ACE_CString key(paramVal->m_svalue);
 
     if(-1 == m_taskMap.bind(key, tTable))
@@ -54,10 +69,10 @@ void SysMgr::populateProcessTable(void)
       break;
     }
 
-    tTable.taskName(key.c_str());
+    tTable.taskName((ACE_TCHAR *)key.c_str());
 
     paramVal = paramObj["start-level"];
-    tTable.startLevel(paramVal->m_ivalue);
+    tTable.startLevel((ACE_UINT8)paramVal->m_ivalue);
 
     paramVal = paramObj["parent-entity"];
     tTable.parentTask(paramVal->m_svalue);
@@ -77,6 +92,7 @@ void SysMgr::populateProcessTable(void)
                tTable.taskName(), tTable.startLevel(),
                tTable.parentTask(), tTable.minInstance(), tTable.maxInstance()));
   }
+
 }
 
 ACE_UINT32 SysMgr::process_signal(int signum)
@@ -120,30 +136,28 @@ int SysMgr::svc(void)
 
 int SysMgr::processSpawnRsp(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb)
 {
+
   taskTableMap_t::ENTRY *entry = nullptr;
 
-  if(nullptr == m_taskIter)
+  if(m_taskIter->next(entry))
   {
-    m_taskIter = m_taskMap.begin();
-  }
-
-  if(m_taskIter.next(entry))
-  {
-    SysMgr::_taskTable_t inst;
+    CPTaskTable::_taskTable_t inst;
     ACE_Message_Block *mb = nullptr;
     ACE_NEW_RETURN(mb, ACE_Message_Block(CommonIF::SIZE_1KB), -1);
 
     /*Build and send Spawn Request.*/
     /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    inst = (SysMgr::_taskTable_t )((*entry).int_id_);
+    inst = (CPTaskTable::_taskTable_t)((*entry).int_id_);
     ACE_CString ent(inst.taskName());
     buildAndSendSpawnReq(ent, inst.minInstance(), *mb);
 
     /*Reclaim the Heap Memory Now.*/
     mb->release();
     /*Move to next iterator now.*/
-    m_taskIter.advance();
+    m_taskIter->advance();
   }
+
+  return(0);
 }
 
 int SysMgr::processIPCMessage(ACE_Message_Block &mb)
@@ -161,18 +175,29 @@ int SysMgr::processIPCMessage(ACE_Message_Block &mb)
 
   switch(msgType)
   {
-  case CommonIF::MSG_PROCMGR_SYSMGR_PROCESS_SPAWN_RSP:
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l SPAWN RSP is received\n")));
+    case CommonIF::MSG_PROCMGR_SYSMGR_PROCESS_SPAWN_RSP:
+    {
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l SPAWN RSP is received\n")));
 
-    ACE_Message_Block *mbRsp = nullptr;
-    ACE_NEW_NORETURN(mbRsp, ACE_Message_Block(CommonIF::SIZE_1KB));
+      ACE_Message_Block *mbRsp = nullptr;
+      ACE_NEW_NORETURN(mbRsp, ACE_Message_Block(CommonIF::SIZE_1KB));
 
-    processSpawnRsp(in, len, *mbRsp);
-    /*Reclaim the Heap Memory Now.*/
-    mbRsp->release();
+      processSpawnRsp(in, len, *mbRsp);
+      /*Reclaim the Heap Memory Now.*/
+      mbRsp->release();
+    }
     break;
 
-  case CommonIF::MSG_PROCMGR_SYSMGR_PROCESS_DIED_IND:
+    case CommonIF::MSG_PROCMGR_SYSMGR_PROCESS_DIED_IND:
+    {
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Process Died Ind is received\n")));
+    }
+    break;
+
+    default:
+    {
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Unknown message Type is received\n")));
+    }
     break;
   }
 
@@ -183,12 +208,12 @@ ACE_UINT8 SysMgr::get_entId(ACE_CString &entName)
 {
   int idx;
   ACE_UINT8 entId = 0;
-  for(idx = 0; m_entTable[idx].m_entName; idx++)
+  for(idx = 0; CommonIF::m_entTable[idx].m_entName; idx++)
   {
     if(!ACE_OS::strncmp(entName.c_str(),
-                        m_entTable[idx].m_entName, ACE_OS::strlen(entName)))
+                        CommonIF::m_entTable[idx].m_entName, entName.length()))
     {
-      entId = m_entTable[idx].m_entId;
+      entId = CommonIF::m_entTable[idx].m_entId;
       break;
     }
   }
@@ -215,7 +240,7 @@ void SysMgr::buildAndSendSpawnReq(ACE_CString &entName, ACE_UINT8 instId, ACE_Me
   spawnReq->m_taskId = CommonIF::get_task_id(get_entId(entName), instId);
 
   ACE_OS::memset((void *)spawnReq->m_entName, 0, sizeof(spawnReq->m_entName));
-  ACE_OS::strncpy((ACE_TCHAR *)spawnReq->m_entName, entName, ACE_OS::strlen(entName) + 1);
+  ACE_OS::strncpy((ACE_TCHAR *)spawnReq->m_entName, entName.c_str(), entName.length());
 
   spawnReq->m_restartCnt = 0;
   ACE_OS::strncpy((ACE_TCHAR *)spawnReq->m_nodeTag, nodeTag().c_str(), nodeTag().length());

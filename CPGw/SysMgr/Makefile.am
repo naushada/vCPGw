@@ -7,6 +7,7 @@ SYSMGR_SOURCES=Src/SysMgr.cc \
 SYSMGR_CPPFLAGS=-I$(srcdir)/Inc \
 								-I$(srcdir)/../Ipc/Inc \
 								-I$(srcdir)/../Common/Inc \
+								-I$(srcdir)/../ProcMgr/Inc \
 								-I$(srcdir)/../Parser/Json/Inc \
 								-I/usr/local \
 								-I/usr/local/ACE-6.5.0/include
