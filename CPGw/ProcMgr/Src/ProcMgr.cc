@@ -239,6 +239,7 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
 
   default:
     /*parent Process.*/
+    sleep(1);
     pPid = ACE_OS::getppid();
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Parent Process cPid %u pPid %u\n"), cPid, pPid));
     buildSpawnRsp(in, cPid, pPid, mb);
@@ -265,7 +266,11 @@ int ProcMgr::buildSpawnRsp(ACE_Byte *in, pid_t cPid, pid_t pPid, ACE_Message_Blo
   ACE_OS::memcpy((void *)&rsp->m_src, (const ACE_TCHAR *)&req->m_dst,
                  sizeof(CommonIF::_cmHeader_t));
 
-  rsp->m_dst.m_procId = rsp->m_src.m_procId;
+  rsp->m_src.m_procId = get_self_procId();
+  rsp->m_src.m_entId = CommonIF::ENT_PROCMGR;
+  rsp->m_src.m_instId = CommonIF::INST1;
+
+  rsp->m_dst.m_procId = get_self_procId();
   rsp->m_dst.m_entId = CommonIF::ENT_SYSMGR;
   rsp->m_dst.m_instId = CommonIF::INST1;
 

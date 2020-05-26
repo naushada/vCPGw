@@ -25,7 +25,7 @@ CfgMgr::CfgMgr(ACE_CString &schema)
   m_schema = schema;
 }
 
-CfgMgr::CfgMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId, ACE_UINT8 instId, ACE_CString nodeTag) : 
+CfgMgr::CfgMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId, ACE_UINT8 instId, ACE_CString nodeTag) :
   UniIPC(thrMgr, ip, entId, instId, nodeTag)
 {
   ACE_Reactor::instance()->register_handler(this,

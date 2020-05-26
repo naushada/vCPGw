@@ -16,6 +16,8 @@
 #include "ace/Process.h"
 #include "ace/Event_Handler.h"
 
+#include <map>
+
 namespace CPTaskTable
 {
   typedef struct _taskTable
@@ -108,9 +110,8 @@ namespace CPTaskTable
   }_taskTable_t;
 };
 
-/*Task Id is the Key.*/
-typedef ACE_Hash_Map_Manager<ACE_CString, CPTaskTable::_taskTable_t, ACE_Null_Mutex> taskTableMap_t;
-typedef ACE_Hash_Map_Manager<ACE_CString, CPTaskTable::_taskTable_t, ACE_Null_Mutex>::iterator taskTableMapIter_t;
+typedef multimap<ACE_UINT8, CPTaskTable::_taskTable_t> taskTableMMap_t;
+typedef multimap<ACE_UINT8, CPTaskTable::_taskTable_t>::iterator taskTableMMap_Iter_t;
 
 class SysMgr : public UniIPC
 {
@@ -138,8 +139,8 @@ public:
 private:
   JSON *m_jsonObj;
 
-  taskTableMap_t m_taskMap;
-  taskTableMapIter_t *m_taskIter;
+  taskTableMMap_t m_taskMMap;
+  taskTableMMap_Iter_t m_taskMMapIter;
 
   ACE_CString m_schema;
 

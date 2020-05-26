@@ -11,7 +11,6 @@ SysMgr::SysMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId,
   ACE_Reactor::instance()->register_handler(this,
                                             ACE_Event_Handler::READ_MASK |
                                             ACE_Event_Handler::SIGNAL_MASK);
-  m_taskIter = nullptr;
   ACE_CString ss("process-table-config");
   m_schema = ss;
 
@@ -22,6 +21,7 @@ SysMgr::SysMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId,
   delete m_jsonObj;
   m_jsonObj = nullptr;
 
+  m_taskMMapIter = m_taskMMap.begin();
 }
 
 SysMgr::~SysMgr()
@@ -53,6 +53,7 @@ void SysMgr::populateProcessTable(void)
     JSON paramObj(val);
     JSON::JSONValue *paramVal = nullptr;
     paramVal = paramObj["task-name"];
+
     if(!paramVal)
     {
       ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Invalid value of task-name\n")));
@@ -60,19 +61,15 @@ void SysMgr::populateProcessTable(void)
     }
 
     CPTaskTable::_taskTable_t tTable;
-
     ACE_CString key(paramVal->m_svalue);
-
-    if(-1 == m_taskMap.bind(key, tTable))
-    {
-      ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l binding to Hash Map Failed for key %s\n"), key.c_str()));
-      break;
-    }
 
     tTable.taskName((ACE_TCHAR *)key.c_str());
 
     paramVal = paramObj["start-level"];
     tTable.startLevel((ACE_UINT8)paramVal->m_ivalue);
+
+    /*push entry into multimap now.*/
+    m_taskMMap.insert(std::pair<ACE_UINT8, CPTaskTable::_taskTable_t>(tTable.startLevel(), tTable));
 
     paramVal = paramObj["parent-entity"];
     tTable.parentTask(paramVal->m_svalue);
@@ -81,16 +78,25 @@ void SysMgr::populateProcessTable(void)
     paramVal = paramObj["visible"];
 
     paramVal = paramObj["task-instance-min"];
-    tTable.minInstance(paramVal->m_ivalue);
+    tTable.minInstance((ACE_UINT8)paramVal->m_ivalue);
 
     paramVal = paramObj["task-instance-max"];
-    tTable.maxInstance(paramVal->m_ivalue);
+    tTable.maxInstance((ACE_UINT8)paramVal->m_ivalue);
 
     paramVal = paramObj["stack-size"];
 
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l task-name %s start-level %u parent-task %s min-instance %u max-inatance %u\n"),
                tTable.taskName(), tTable.startLevel(),
                tTable.parentTask(), tTable.minInstance(), tTable.maxInstance()));
+
+    /*Processing of Max number of instance for a given Entity.*/
+    int idx;
+    for(idx = 1; idx < tTable.maxInstance(); idx++)
+    {
+      m_taskMMap.insert(std::pair<ACE_UINT8, CPTaskTable::_taskTable_t>
+                        (tTable.startLevel(), tTable));
+    }
+
   }
 
 }
@@ -136,25 +142,24 @@ int SysMgr::svc(void)
 
 int SysMgr::processSpawnRsp(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb)
 {
-
-  taskTableMap_t::ENTRY *entry = nullptr;
-
-  if(m_taskIter->next(entry))
+  if(m_taskMMapIter != m_taskMMap.end())
   {
     CPTaskTable::_taskTable_t inst;
     ACE_Message_Block *mb = nullptr;
     ACE_NEW_RETURN(mb, ACE_Message_Block(CommonIF::SIZE_1KB), -1);
 
     /*Build and send Spawn Request.*/
-    /*int_id_ is the Value, ext_id_ is the key of ACE_Hash_Map_Manager.*/
-    inst = (CPTaskTable::_taskTable_t)((*entry).int_id_);
+    inst = (CPTaskTable::_taskTable_t)((*m_taskMMapIter).second);
     ACE_CString ent(inst.taskName());
+
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l processing SPAWN RSP Sending Spawn Req\n")));
+
     buildAndSendSpawnReq(ent, inst.minInstance(), *mb);
 
     /*Reclaim the Heap Memory Now.*/
     mb->release();
     /*Move to next iterator now.*/
-    m_taskIter->advance();
+    m_taskMMapIter++;
   }
 
   return(0);
@@ -231,8 +236,8 @@ void SysMgr::buildAndSendSpawnReq(ACE_CString &entName, ACE_UINT8 instId, ACE_Me
   cMsg->m_dst.m_instId = CommonIF::INST1;
 
   cMsg->m_src.m_procId = get_self_procId();
-  cMsg->m_src.m_entId = CommonIF::ENT_SYSMGR;
-  cMsg->m_src.m_instId = CommonIF::INST1;
+  cMsg->m_src.m_entId = facility();
+  cMsg->m_src.m_instId = instance();
 
   cMsg->m_messageLen = sizeof(_processSpawnReq_t);
   cMsg->m_msgType = CommonIF::MSG_SYSMGR_PROCMGR_PROCESS_SPAWN_REQ;
