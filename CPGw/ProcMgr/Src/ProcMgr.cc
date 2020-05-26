@@ -214,13 +214,10 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
   instId = CommonIF::get_inst_id(taskId);
   entId = CommonIF::get_ent_id(taskId);
 
-  switch((cPid = fork()))
+  switch((cPid = ACE_OS::fork()))
   {
   case 0:
     /*child process.*/
-    //ACE_TCHAR instIdStr[8];
-    //ACE_OS::itoa((int)pReq->m_instId, instIdStr, 10);
-    //ACE_Byte *argv[] = {pReq->m_ip, entId, instIdStr, pReq->m_nodeTag, nullptr};
     ACE_TCHAR instStr[16];
     ACE_OS::itoa((int)instId, instStr, 10);
 
@@ -234,6 +231,7 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
       /*overriding of address space is failed with new process.*/
       ACE_OS::exit(1);
     }
+    break;
 
   case -1:
     /*Error case.*/
