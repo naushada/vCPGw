@@ -68,8 +68,6 @@ void SysMgr::populateProcessTable(void)
     paramVal = paramObj["start-level"];
     tTable.startLevel((ACE_UINT8)paramVal->m_ivalue);
 
-    /*push entry into multimap now.*/
-    m_taskMMap.insert(std::pair<ACE_UINT8, CPTaskTable::_taskTable_t>(tTable.startLevel(), tTable));
 
     paramVal = paramObj["parent-entity"];
     tTable.parentTask(paramVal->m_svalue);
@@ -89,12 +87,24 @@ void SysMgr::populateProcessTable(void)
                tTable.taskName(), tTable.startLevel(),
                tTable.parentTask(), tTable.minInstance(), tTable.maxInstance()));
 
+    ACE_UINT8 entId = get_entId(key);
+    ACE_UINT32 tId = CommonIF::get_task_id(entId, tTable.minInstance());
+    tTable.taskId(tId);
+
+    /*push entry into multimap now.*/
+    m_taskMMap.insert(std::pair<ACE_UINT8, CPTaskTable::_taskTable_t>(tTable.startLevel(), tTable));
+
     /*Processing of Max number of instance for a given Entity.*/
     int idx;
-    for(idx = 1; idx < tTable.maxInstance(); idx++)
+    for(idx = 2; idx <= tTable.maxInstance(); idx++)
     {
+
+      CPTaskTable::_taskTable_t ttTable = tTable;
+      ACE_UINT8 entId = get_entId(key);
+      ACE_UINT32 tId = CommonIF::get_task_id(entId, idx);
+      ttTable.taskId(tId);
       m_taskMMap.insert(std::pair<ACE_UINT8, CPTaskTable::_taskTable_t>
-                        (tTable.startLevel(), tTable));
+                        (ttTable.startLevel(), ttTable));
     }
 
   }
@@ -154,7 +164,7 @@ int SysMgr::processSpawnRsp(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb)
 
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l processing SPAWN RSP Sending Spawn Req\n")));
 
-    buildAndSendSpawnReq(ent, inst.minInstance(), *mb);
+    buildAndSendSpawnReq(ent, CommonIF::get_inst_id(inst.taskId()), *mb);
 
     /*Reclaim the Heap Memory Now.*/
     mb->release();

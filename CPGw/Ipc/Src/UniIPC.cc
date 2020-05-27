@@ -154,6 +154,7 @@ ACE_HANDLE UniIPC::get_handle(void) const
 
 ACE_INT32 UniIPC::handle_signal(int signum)
 {
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l the signum is %u\n"), signum));
   process_signal(signum);
 }
 
