@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
    *argv[1] - IP Address - 127.0.0.1
    *argv[2] - inst,
    *argv[3] - nodeTag,
-   *argv[4] - schema,
    **/
 
   if(argc > 3)

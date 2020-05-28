@@ -208,7 +208,19 @@ int SysMgr::processIPCMessage(ACE_Message_Block &mb)
 
     case CommonIF::MSG_PROCMGR_SYSMGR_PROCESS_DIED_IND:
     {
+      ACE_UINT8 ent = 0;
+      ACE_Message_Block *mbReq = nullptr;
+      ACE_NEW_NORETURN(mbReq, ACE_Message_Block(CommonIF::SIZE_1KB));
+
       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Process Died Ind is received\n")));
+      _processDiedInd_t *cDied = (_processDiedInd_t *)cMsg->m_message;
+      ent = CommonIF::get_ent_id(cDied->tId());
+      ACE_CString entStr(get_entName(ent));
+
+      buildAndSendSpawnReq(entStr, CommonIF::get_inst_id(cDied->tId()), *mbReq);
+
+      /*Reclaim the Heap memory now.*/
+      mbReq->release();
     }
     break;
 
@@ -238,6 +250,21 @@ ACE_UINT8 SysMgr::get_entId(ACE_CString &entName)
 
   return(entId);
 }
+
+const ACE_TCHAR *SysMgr::get_entName(ACE_UINT8 entId)
+{
+  int idx;
+  for(idx = 0; CommonIF::m_entTable[idx].m_entId; idx++)
+  {
+    if(entId == CommonIF::m_entTable[idx].m_entId)
+    {
+      return(CommonIF::m_entTable[idx].m_entName);
+    }
+  }
+
+  return(nullptr);
+}
+
 
 void SysMgr::buildAndSendSpawnReq(ACE_CString &entName, ACE_UINT8 instId, ACE_Message_Block &mb)
 {

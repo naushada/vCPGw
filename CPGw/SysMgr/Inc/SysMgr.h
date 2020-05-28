@@ -132,6 +132,7 @@ public:
   void buildAndSendSpawnReq(ACE_CString &entName, ACE_UINT8 instId, ACE_Message_Block &mb);
 
   ACE_UINT8 get_entId(ACE_CString &entName);
+  const ACE_TCHAR *get_entName(ACE_UINT8 entId);
   void populateProcessTable(void);
   JSON &jsonObj(void);
   void jsonObj(JSON *obj);

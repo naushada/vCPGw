@@ -34,12 +34,60 @@ typedef struct _processSpawnRsp
 
 typedef struct _processDiedInd
 {
+  /*Child PID.*/
   pid_t m_cPid;
+  /*Parent PID.*/
+  pid_t m_pPid;
+  /*A TaskId composed of <magic> + ent + instId.*/
+  ACE_UINT32 m_tId;
 
+  void cPid(pid_t c)
+  {
+    m_cPid = c;
+  }
+
+  pid_t cPid(void)
+  {
+    return(m_cPid);
+  }
+
+  void pPid(pid_t p)
+  {
+    m_pPid = p;
+  }
+
+  pid_t pPid(void)
+  {
+    return(m_pPid);
+  }
+
+  void tId(ACE_UINT32 t)
+  {
+    m_tId = t;
+  }
+
+  ACE_UINT32 tId(void)
+  {
+    return(m_tId);
+  }
+
+  _processDiedInd()
+  {
+    m_cPid = 0;
+    m_pPid = 0;
+    m_tId = 0;
+  }
+
+  ~_processDiedInd()
+  {
+  }
 }__attribute__((packed))_processDiedInd_t;
 
 typedef ACE_Hash_Map_Manager<ACE_CString, ACE_UINT8, ACE_Null_Mutex>EntNameToEntIdMap_t;
 typedef ACE_Hash_Map_Manager<ACE_CString, ACE_UINT8, ACE_Null_Mutex>::iterator EntNameToEntIdMap_Iter_t;
+
+typedef ACE_Hash_Map_Manager<pid_t, _processDiedInd_t, ACE_Null_Mutex> ChildPidMap_t;
+typedef ACE_Hash_Map_Manager<pid_t, _processDiedInd_t, ACE_Null_Mutex>::iterator ChildPidMapIter_t;
 
 class ProcessHandler : public ACE_Process
 {
@@ -49,26 +97,6 @@ public:
   ACE_Process_Options m_processOpt;
 
 private:
-
-};
-
-/*Forward declaration of class.*/
-class ProcMgr;
-
-class ChildHandler : public ACE_Task<ACE_MT_SYNCH>
-{
-public:
-  ChildHandler(ACE_Thread_Manager *thrMgr, ProcMgr *parent);
-  virtual ~ChildHandler();
-  int svc(void);
-  int open(void *arg=0);
-
-  ProcMgr &procMgr(void);
-  void procMgr(ProcMgr *parent);
-  int buildSpawnRsp(pid_t cPid, pid_t pPid, ACE_Message_Block &mb);
-
-private:
-  ProcMgr *m_procMgr;
 
 };
 
@@ -93,6 +121,7 @@ public:
   void buildAndSendSysMgrChildDiedInd(pid_t cPid, ACE_UINT32 reason);
 
 private:
+  ChildPidMap_t m_childPidMap;
 
 };
 

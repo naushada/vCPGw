@@ -4,7 +4,8 @@
 #include "ProcMgr.h"
 #include "CommonIF.h"
 
-ProcMgr::ProcMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId, ACE_UINT8 instId, ACE_CString nodeTag) :
+ProcMgr::ProcMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId,
+                 ACE_UINT8 instId, ACE_CString nodeTag) :
   UniIPC(thrMgr, ip, entId, instId, nodeTag)
 {
   ACE_Reactor::instance()->register_handler(this,
@@ -29,7 +30,9 @@ ProcMgr::~ProcMgr()
 
 void ProcMgr::buildAndSendSysMgrChildDiedInd(pid_t cPid, ACE_UINT32 reason)
 {
+  _processDiedInd_t inst;
   ACE_Message_Block *mb = nullptr;
+
   ACE_NEW_NORETURN(mb, ACE_Message_Block(CommonIF::SIZE_1KB));
 
   CommonIF::_cmMessage_t *cMsg = (CommonIF::_cmMessage_t *)mb->wr_ptr();
@@ -46,8 +49,19 @@ void ProcMgr::buildAndSendSysMgrChildDiedInd(pid_t cPid, ACE_UINT32 reason)
   cMsg->m_msgType = CommonIF::MSG_PROCMGR_SYSMGR_PROCESS_DIED_IND;
   cMsg->m_messageLen = sizeof(_processDiedInd_t);
 
-  /*Populating Payload of Request.*/
-  diedInd->m_cPid = cPid;
+  if(-1 != m_childPidMap.find(cPid, inst))
+  {
+    /*Populating Payload of Request.*/
+    diedInd->m_cPid = inst.cPid();
+    diedInd->m_pPid = inst.pPid();
+    diedInd->m_tId = inst.tId();
+
+    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l child is killed cPid %u pPic %u taskId %u\n"),
+               inst.cPid(), inst.pPid(), inst.tId()));
+
+    /*Remove entry from Hash Map*/
+    m_childPidMap.unbind(inst.cPid());
+  }
 
   /*Update the request length now.*/
   mb->wr_ptr(sizeof(CommonIF::_cmMessage_t) + sizeof(_processDiedInd_t));
@@ -246,11 +260,24 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
     break;
 
   default:
-    /*parent Process.*/
-    pPid = ACE_OS::getppid();
-    ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Parent Process cPid %u pPid %u\n"), cPid, pPid));
-    buildSpawnRsp(in, cPid, pPid, mb);
-    send_ipc((ACE_Byte *)mb.rd_ptr(), (ACE_UINT32)mb.length());
+    {
+      _processDiedInd_t inst;
+      /*parent Process.*/
+      pPid = ACE_OS::getppid();
+      inst.cPid(cPid);
+      inst.pPid(pPid);
+      inst.tId(taskId);
+
+      if(-1 == m_childPidMap.bind(cPid, inst))
+      {
+        ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l Insertion to m_childPidMap failed\n")));
+      }
+
+      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Parent Process cPid %u pPid %u\n"), cPid, pPid));
+      buildSpawnRsp(in, cPid, pPid, mb);
+      send_ipc((ACE_Byte *)mb.rd_ptr(), (ACE_UINT32)mb.length());
+    }
+
     break;
   }
 
