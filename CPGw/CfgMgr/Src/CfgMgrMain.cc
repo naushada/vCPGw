@@ -37,13 +37,13 @@ int main(int argc, char *argv[])
    *argv[4] - schema,
    **/
 
-  if(argc > 4)
+  if(argc > 3)
   {
     ACE_CString ip(argv[1]);
     ACE_UINT8 ent = CommonIF::ENT_CFGMGR;
     ACE_UINT8 inst = ACE_OS::atoi(argv[2]);
     ACE_CString proc(argv[3]);
-    ACE_CString sc(argv[4]);
+    ACE_CString sc("cpgw-config");
 
     CfgMgr cfgMgr(ACE_Thread_Manager::instance(), ip, ent, inst, proc);
     cfgMgr.schema(sc);
