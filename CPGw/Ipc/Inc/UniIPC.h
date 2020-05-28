@@ -146,7 +146,7 @@ class UniIPC : public ACE_Task<ACE_MT_SYNCH>
     /*! ACE Hook method */
     int open(void *args=0);
     ACE_INT32 handle_input(ACE_HANDLE handle);
-    ACE_INT32 handle_signal(int signum);
+    ACE_INT32 handle_signal(int signum, siginfo_t *s = 0, ucontext_t *u = 0);
 
     /*redefined in sub-class.*/
     virtual ACE_HANDLE get_handle(void) const;

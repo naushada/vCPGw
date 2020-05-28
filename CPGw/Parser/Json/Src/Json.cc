@@ -435,6 +435,11 @@ JSON::JSONValue *JSON::operator[](int index)
   return(json_value_at_index(value(), index));
 }
 
+JSON::JSONValue *JSON::at(int index)
+{
+  return(json_value_at_index(value(), index));
+}
+
 /*
  * @brief
  * @param
@@ -460,7 +465,12 @@ JSON::JSONValue *JSON::json_value_at_index(JSONValue *value, int index)
 
 JSON::JSONValue *JSON::operator[](const char *key)
 {
-  return(json_value_at_key(m_value, key));
+  return(json_value_at_key(value(), key));
+}
+
+JSON::JSONValue *JSON::at(const ACE_TCHAR *key)
+{
+  return(json_value_at_key(value(), key));
 }
 
 JSON::JSONValue *JSON::json_value_at_key(JSONValue *value, const char *key)

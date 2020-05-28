@@ -124,6 +124,9 @@ public:
   /*Array operator overloading.*/
   JSONValue *operator [] (int index);
   JSONValue *operator [] (const char *key);
+  JSONValue *at(const char *key);
+  JSONValue *at(int index);
+
   JSONValue *value(void);
   void value(JSONValue *value);
 

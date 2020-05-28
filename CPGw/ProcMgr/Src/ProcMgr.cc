@@ -8,8 +8,10 @@ ProcMgr::ProcMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId, AC
   UniIPC(thrMgr, ip, entId, instId, nodeTag)
 {
   ACE_Reactor::instance()->register_handler(this,
-                                            ACE_Event_Handler::READ_MASK |
-                                            ACE_Event_Handler::SIGNAL_MASK);
+                                            ACE_Event_Handler::READ_MASK);
+
+  ACE_Reactor::instance()->register_handler(SIGCHLD,
+                                            this);
 
   /*Build and send processSpawnReq to itself to spawn SYSMGR.*/
 
@@ -40,6 +42,7 @@ void ProcMgr::buildAndSendSysMgrChildDiedInd(pid_t cPid, ACE_UINT32 reason)
   cMsg->m_src.m_procId = get_self_procId();
   cMsg->m_src.m_entId = facility();
   cMsg->m_src.m_instId = instance();
+
   cMsg->m_msgType = CommonIF::MSG_PROCMGR_SYSMGR_PROCESS_DIED_IND;
   cMsg->m_messageLen = sizeof(_processDiedInd_t);
 
@@ -93,6 +96,8 @@ ACE_UINT32 ProcMgr::process_signal(int signum)
   pid_t childPid;
   int childStatus;
 
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The signum is %u\n"), signum));
+
   for(;;)
   {
     childStatus = 0;
@@ -101,6 +106,8 @@ ACE_UINT32 ProcMgr::process_signal(int signum)
 
     if(childPid <= 0)
     {
+      /* Control comes here when died child list is exhausted, return the
+       * control to Reactor main loop.*/
       ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l childPid is less than zero\n")));
       break;
     }
@@ -235,11 +242,11 @@ int ProcMgr::processSpawnReq(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb
 
   case -1:
     /*Error case.*/
+    ACE_ERROR((LM_ERROR, ACE_TEXT("%D %M %N:%l fork system call failed\n")));
     break;
 
   default:
     /*parent Process.*/
-    sleep(1);
     pPid = ACE_OS::getppid();
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l Parent Process cPid %u pPid %u\n"), cPid, pPid));
     buildSpawnRsp(in, cPid, pPid, mb);

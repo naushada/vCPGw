@@ -22,6 +22,12 @@ SysMgr::SysMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId,
   m_jsonObj = nullptr;
 
   m_taskMMapIter = m_taskMMap.begin();
+  ACE_Message_Block *mbRsp = nullptr;
+  ACE_NEW_NORETURN(mbRsp, ACE_Message_Block(CommonIF::SIZE_1KB));
+
+  processSpawnRsp(nullptr, 0, *mbRsp);
+  /*Reclaim the Heap Memory Now.*/
+  mbRsp->release();
 }
 
 SysMgr::~SysMgr()
@@ -113,6 +119,7 @@ void SysMgr::populateProcessTable(void)
 
 ACE_UINT32 SysMgr::process_signal(int signum)
 {
+  ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l The signum is %u\n"), signum));
   return(0);
 }
 
@@ -155,8 +162,6 @@ int SysMgr::processSpawnRsp(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb)
   if(m_taskMMapIter != m_taskMMap.end())
   {
     CPTaskTable::_taskTable_t inst;
-    ACE_Message_Block *mb = nullptr;
-    ACE_NEW_RETURN(mb, ACE_Message_Block(CommonIF::SIZE_1KB), -1);
 
     /*Build and send Spawn Request.*/
     inst = (CPTaskTable::_taskTable_t)((*m_taskMMapIter).second);
@@ -164,10 +169,8 @@ int SysMgr::processSpawnRsp(ACE_Byte *in, ACE_UINT32 len, ACE_Message_Block &mb)
 
     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l processing SPAWN RSP Sending Spawn Req\n")));
 
-    buildAndSendSpawnReq(ent, CommonIF::get_inst_id(inst.taskId()), *mb);
+    buildAndSendSpawnReq(ent, CommonIF::get_inst_id(inst.taskId()), mb);
 
-    /*Reclaim the Heap Memory Now.*/
-    mb->release();
     /*Move to next iterator now.*/
     m_taskMMapIter++;
   }
