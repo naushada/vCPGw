@@ -19,6 +19,7 @@ AC_HEADER_STDC
 AC_HEADER_DIRENT
 AC_CONFIG_FILES([
  Makefile
+ Cli/Makefile
  vAPSh/Makefile
  vTYSh/Makefile
  CPGw/Common/Makefile
