@@ -25,6 +25,14 @@ CPGatewayState::~CPGatewayState()
   ACE_TRACE("CPGatewayState::~CPGatewayState\n");
 }
 
+/*
+ * @brief This method is the main method which process
+ *        The request received from peer. This methos receives
+ *        the Ethernet Fram.
+ * @param reference to CPGateway
+ * @param pointer to received ethernet packet.
+ * @param length of ethernet packet.
+ * */
 ACE_UINT32 CPGatewayState::processRequest(CPGateway &parent,
                                           ACE_Byte *in,
                                           ACE_UINT32 inLen)

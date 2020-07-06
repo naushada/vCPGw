@@ -7,6 +7,8 @@
 
 #include <vector>
 
+using namespace std;
+
 class CPGateway;
 
 namespace DNS

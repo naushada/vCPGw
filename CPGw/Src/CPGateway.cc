@@ -125,19 +125,6 @@ int CPGateway::handle_input(ACE_HANDLE fd)
   /*Update the length od data in m_mb*/
   m_mb->wr_ptr(len);
 
-  char *dd = m_mb->rd_ptr();
-#if 0
-  for(int idx = 0; idx < len; idx++)
-  {
-    if(!(idx%16))
-      ACE_DEBUG((LM_DEBUG, "\n"));
-
-    ACE_DEBUG((LM_DEBUG, "%0.2X ", dd[idx] & 0xFF));
-  }
-
-  ACE_DEBUG((LM_DEBUG, "%I CPGateway length %u\n", len));
-#endif
-
   /*Check wheather CPGateway is administrative locked/error state.*/
   getState().processRequest(*this, (ACE_Byte *)m_mb->rd_ptr(), m_mb->length());
 
@@ -524,7 +511,7 @@ int CPGateway::processConfigRsp(ACE_Byte *in, ACE_UINT32 inLen)
 
   ACE_NEW_NORETURN(m_dhcpUser, DhcpServerUser(this));
 
-  /*Mske CPGateway state machine Activated State.*/
+  /*Make CPGateway state machine Activated State.*/
   setState(CPGatewayStateActivated::instance());
 
   /*Instantiating ARP instance.*/

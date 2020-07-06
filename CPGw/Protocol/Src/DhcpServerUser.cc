@@ -238,6 +238,12 @@ int DhcpServerUser::sendResponse(ACE_CString cha, ACE_Byte *in, ACE_UINT32 inLen
   return(cpGw().sendResponse(cha, in, inLen));
 }
 
+/*
+ * @brief This is the main method of processing the DHCP Packet
+ *        This receives the Ethernet Packet.
+ * @param in pointer to received byte buffer
+ * @param total length of the received packet.
+ * @return */
 ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
 {
    TransportIF::DHCP *dhcpHdr = (TransportIF::DHCP *)&in[sizeof(TransportIF::ETH) +
@@ -256,6 +262,7 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
 
    DHCP::Server *sess = NULL;
 
+   /*Is this a subsequent Request?*/
    if(isSubscriberFound(haddr))
    {
      ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l subscriber is found\n")));
@@ -265,11 +272,13 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
    }
    else
    {
+     /*This is a new DHCP Packet.*/
      struct in_addr addr;
      addr.s_addr = cpGw().DHCPConfInst().serverIP();
      ACE_TCHAR *ipStr = inet_ntoa(addr);
      ACE_CString ip(ipStr);
 
+     /*create a dhcp instance to handle this request.*/
      ACE_NEW_NORETURN(sess, DHCP::Server(this,
                                          cpGw().getMacAddress(),
                                          ip,
@@ -282,6 +291,7 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
                                          getIPFromPool()));
 
      addSubscriber(sess, haddr);
+     /*Feed request to FSM.*/
      sess->getState().rx(*sess, in, inLen);
    }
 

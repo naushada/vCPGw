@@ -134,7 +134,10 @@ ACE_UINT16 DNS::CPGwDns::chksumUDP(TransportIF::IP *ip)
 }
 
 
-ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_UINT32 inLen, ACE_Message_Block &mb)
+ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent,
+                                          ACE_Byte *in,
+                                          ACE_UINT32 inLen,
+                                          ACE_Message_Block &mb)
 {
   TransportIF::ETH *reqEthHdr = (TransportIF::ETH *)in;
   TransportIF::IP *reqIPHdr = (TransportIF::IP *)&in[sizeof(TransportIF::ETH)];
@@ -218,7 +221,7 @@ ACE_UINT32 DNS::CPGwDns::buildDnsResponse(CPGateway &parent, ACE_Byte *in, ACE_U
 
   getDomainNameFromQuery(dName);
 
-  /*Is this domain name is controlled by vCPGateway?*/
+  /*Is this domain name controlled by vCPGateway?*/
   if(domainName() != dName[0])
   {
     /*Domain is not ours.*/
@@ -310,10 +313,10 @@ ACE_UINT32 DNS::CPGwDns::buildQDSection(ACE_UINT8 &qdcount, ACE_Message_Block &m
   DNS::QData elm;
   DNS::QHdr qHdr;
 
-  for(iter = m_qDataList.begin(); iter !=m_qDataList.end(); iter++)
+  for(iter = m_qDataList.begin(); iter !=m_qDataList.end(); ++iter)
   {
     elm = *iter;
-    for(inIter = elm.m_qHdrList.begin(); inIter != elm.m_qHdrList.end(); inIter++)
+    for(inIter = elm.m_qHdrList.begin(); inIter != elm.m_qHdrList.end(); ++inIter)
     {
       qHdr = *inIter;
       *(mb.wr_ptr()) = qHdr.len();
@@ -535,7 +538,7 @@ void DNS::CPGwDns::processDnsQury(CPGateway &parent, ACE_Byte *in, ACE_UINT32 in
   if(!IP)
   {
     /*The Host is not controled by CPGateway.*/
-    //ACE_Message_Block *mb = buildAndSendResponse(parent, in, inLen, 
+    //ACE_Message_Block *mb = buildAndSendResponse(parent, in, inLen,
   }
   else
   {
