@@ -66,6 +66,9 @@ public:
 
 class UniIPCIF : public UniIPC
 {
+private:
+  CPGateway *m_CPGWIF;
+
 public:
   UniIPCIF(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 ent,
            ACE_UINT8 inst, ACE_CString nodeTag);
@@ -83,10 +86,6 @@ public:
 
   CPGateway &CPGWIF(void);
   void CPGWIF(CPGateway *cpGw);
-
-private:
-  CPGateway *m_CPGWIF;
-
 };
 
 class CPGateway : public ACE_Event_Handler

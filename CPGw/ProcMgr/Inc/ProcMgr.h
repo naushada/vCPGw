@@ -102,10 +102,14 @@ private:
 
 class ProcMgr : public UniIPC
 {
+private:
+  ChildPidMap_t m_childPidMap;
+
 public:
 
   ProcMgr(ACE_Thread_Manager *thrMgr, ACE_CString ip, ACE_UINT8 entId, ACE_UINT8 instId,
           ACE_CString nodeTag);
+
   ProcMgr() = default;
   virtual ~ProcMgr();
 
@@ -119,10 +123,6 @@ public:
   int buildSpawnRsp(ACE_Byte *in, pid_t cPid, pid_t pPid, ACE_Message_Block &mb);
   void buildAndSendSysMgrSpawnReq(ACE_Message_Block &mb);
   void buildAndSendSysMgrChildDiedInd(pid_t cPid, ACE_UINT32 reason);
-
-private:
-  ChildPidMap_t m_childPidMap;
-
 };
 
 

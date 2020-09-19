@@ -104,6 +104,12 @@ int CPGateway::sendResponse(ACE_CString chaddr, ACE_Byte *in, ACE_UINT32 inLen)
   return(sentLen);
 }
 
+/*
+ * @brief This is the hook method for ACE_Reactor which is invoked
+ *        when handle is ready for read.
+ * @param handle on which read to be performed
+ * @return 0 on SUCCESS else -1
+ * */
 int CPGateway::handle_input(ACE_HANDLE fd)
 {
   ACE_TRACE("CPGateway::handle_input\n");
@@ -700,6 +706,11 @@ ACE_UINT8 UniIPCIF::start(void)
   return(0);
 }
 
+/*
+ * @brief This is the entry method of Active Object.
+ * @param none
+ * @return 0 for SUCCESS, -1 for Failure
+ * */
 int UniIPCIF::svc(void)
 {
   ACE_Message_Block *mb = nullptr;

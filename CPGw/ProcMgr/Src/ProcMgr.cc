@@ -159,6 +159,7 @@ ACE_UINT32 ProcMgr::process_signal(int signum)
 
 ACE_UINT32 ProcMgr::handle_ipc(ACE_Message_Block *mb)
 {
+  /*pass on to Active Object to process it.*/
   putq(mb);
   return(0);
 }
@@ -169,6 +170,11 @@ ACE_HANDLE ProcMgr::get_handle(void) const
   return(const_cast<ProcMgr *>(this)->handle());
 }
 
+/*
+ * @brief This method is the entry point of Active Object
+ * @param none
+ * @return 0 to make this method survive -1 reactor will terminate it.
+ * */
 int ProcMgr::svc(void)
 {
   ACE_Message_Block *mb;

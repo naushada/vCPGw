@@ -85,7 +85,7 @@ ACE_UINT32 CPGatewayState::processRequest(CPGateway &parent,
   }
   else if(TransportIF::ETH_P_EAPOL == ntohs(ethHdr->proto))
   {
-    /*EAP Over Lan - First Authnticate and the Assign IP address.*/
+    /*EAP Over Lan - First Authnticate and then Assign IP address.*/
   }
   else if(TransportIF::ETH_P_PPP == ntohs(ethHdr->proto))
   {
