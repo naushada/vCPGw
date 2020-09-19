@@ -5,10 +5,10 @@ SUBDIRS=Common Ipc Protocol Parser/Json CfgMgr ProcMgr SysMgr
 bin_PROGRAMS=CPGateway
 
 CPGateway_SOURCES=Src/CPGateway.cc \
-	 					      Src/CPGatewayStateActivated.cc \
-						      Src/CPGatewayState.cc \
-						      Src/CPGatewayStateLocked.cc \
-						      Src/CPGatewayStateUnLocked.cc
+	 			  Src/CPGatewayStateActivated.cc \
+				  Src/CPGatewayState.cc \
+				  Src/CPGatewayStateLocked.cc \
+				  Src/CPGatewayStateUnLocked.cc
 
 CPGateway_CPPFLAGS=-I$(srcdir)/Inc \
                    -I$(srcdir)/Common/Inc \
