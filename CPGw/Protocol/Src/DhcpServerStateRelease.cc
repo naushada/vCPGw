@@ -39,9 +39,9 @@ DhcpServerStateRelease::~DhcpServerStateRelease()
   m_instance = NULL;
 }
 
-void DhcpServerStateRelease::onEntry(DHCP::Server &parent)
+void DhcpServerStateRelease::onEntryImpl(DHCP::Server &parent)
 {
-  ACE_TRACE("DhcpServerStateRelease::onEntry\n");
+  ACE_TRACE("DhcpServerStateRelease::onEntryImpl\n");
   /*1 second of grace period before removing the subscriber.*/
   ACE_UINT32 to = 1;
 
@@ -55,57 +55,69 @@ void DhcpServerStateRelease::onEntry(DHCP::Server &parent)
   parent.purgeTid().tid(timerId);
 }
 
-void DhcpServerStateRelease::onExit(DHCP::Server &parent)
+void DhcpServerStateRelease::onExitImpl(DHCP::Server &parent)
 {
-  ACE_TRACE("DhcpServerStateRelease::onExit\n");
+  ACE_TRACE("DhcpServerStateRelease::onExitImpl\n");
 }
 
-ACE_UINT32 DhcpServerStateRelease::offer(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateRelease::offerImpl(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateRelease::offer\n");
+  ACE_TRACE("DhcpServerStateRelease::offerImpl\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateRelease::discover(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateRelease::discoverImpl(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateRelease::discover\n");
+  ACE_TRACE("DhcpServerStateRelease::discoverImpl\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateRelease::request(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateRelease::requestImpl(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateRelease::request\n");
+  ACE_TRACE("DhcpServerStateRelease::requestImpl\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateRelease::requestAck(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateRelease::requestAckImpl(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateRelease::requestAck\n");
+  ACE_TRACE("DhcpServerStateRelease::requestAckImpl\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateRelease::leaseTO(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateRelease::leaseTOImpl(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateRelease::leaseTO\n");
+  ACE_TRACE("DhcpServerStateRelease::leaseTOImpl\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateRelease::release(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateRelease::releaseImpl(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateRelease::release\n");
+  ACE_TRACE("DhcpServerStateRelease::releaseImpl\n");
+  return(0);
+}
+
+ACE_UINT32 DhcpServerStateRelease::nackImpl(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
+{
+  ACE_TRACE("DhcpServerStateRelease::nackImpl\n");
+  return(0);
+}
+
+ACE_UINT32 DhcpServerStateRelease::declineImpl(DHCP::Server &parent,ACE_Byte *in, ACE_UINT32 inLen)
+{
+  ACE_TRACE("DhcpServerStateRelease::declineImpl\n");
   return(0);
 }
 
 /*Guard Timer is stared if next request is expected to complete the Flow.*/
-ACE_UINT32 DhcpServerStateRelease::guardTimerExpiry(DHCP::Server &parent, const void *act)
+ACE_UINT32 DhcpServerStateRelease::guardTimerExpiryImpl(DHCP::Server &parent, const void *act)
 {
-  ACE_TRACE("DhcpServerStateRelease::guardTimerExpiry\n");
+  ACE_TRACE("DhcpServerStateRelease::guardTimerExpiryImpl\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateRelease::leaseTimerExpiry(DHCP::Server &parent, const void *act)
+ACE_UINT32 DhcpServerStateRelease::leaseTimerExpiryImpl(DHCP::Server &parent, const void *act)
 {
-  ACE_TRACE("DhcpServerStateRelease::leaseTimerExpiry\n");
+  ACE_TRACE("DhcpServerStateRelease::leaseTimerExpiryImpl\n");
   return(0);
 }
 

@@ -22,17 +22,19 @@ DhcpServerState::~DhcpServerState()
 void DhcpServerState::onEntry(DHCP::Server &parent)
 {
   ACE_TRACE("DhcpServerState::onEntry\n");
+  onEntryImpl(parent);
 }
 
 void DhcpServerState::onExit(DHCP::Server &parent)
 {
   ACE_TRACE("DhcpServerState::onExit\n");
+  onExitImpl(parent);
 }
 
 /*
  * @brief This member function must be re-defined in respective derived class.
  *        If this is not re-defined in derived class then default base class
- *        member function is called which does nothig.
+ *        member function is called which does nothing.
  * @param Reference to dhcp server instance.
  * @param received byte buffer.
  * @param length of received byte buffer.
@@ -42,13 +44,14 @@ void DhcpServerState::onExit(DHCP::Server &parent)
 ACE_UINT32 DhcpServerState::offer(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::offer\n");
+  offerImpl(parent, inPtr, inLen);
   return(0);
 }
 
 /*
  * @brief This member function must be re-defined in respective derived class.
  *        If this is not re-defined in derived class then default base class
- *        member function is called which does nothig.
+ *        member function is called which does nothing.
  * @param Reference to dhcp server instance.
  * @param received byte buffer.
  * @param length of received byte buffer.
@@ -58,13 +61,14 @@ ACE_UINT32 DhcpServerState::offer(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UIN
 ACE_UINT32 DhcpServerState::discover(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::discover\n");
+  discoverImpl(parent, inPtr, inLen);
   return(0);
 }
 
 /*
  * @brief This member function must be re-defined in respective derived class.
  *        If this is not re-defined in derived class then default base class
- *        member function is called which does nothig.
+ *        member function is called which does nothing.
  * @param Reference to dhcp server instance.
  * @param received byte buffer.
  * @param length of received byte buffer.
@@ -74,13 +78,14 @@ ACE_UINT32 DhcpServerState::discover(DHCP::Server &parent, ACE_Byte *inPtr, ACE_
 ACE_UINT32 DhcpServerState::request(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::request\n");
+  requestImpl(parent, inPtr, inLen);
   return(0);
 }
 
 /*
  * @brief This member function must be re-defined in respective derived class.
  *        If this is not re-defined in derived class then default base class
- *        member function is called which does nothig.
+ *        member function is called which does nothing.
  * @param Reference to dhcp server instance.
  * @param received byte buffer.
  * @param length of received byte buffer.
@@ -90,13 +95,14 @@ ACE_UINT32 DhcpServerState::request(DHCP::Server &parent, ACE_Byte *inPtr, ACE_U
 ACE_UINT32 DhcpServerState::requestAck(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::requestAck\n");
+  requestAckImpl(parent, inPtr, inLen);
   return(0);
 }
 
 /*
  * @brief This member function must be re-defined in respective derived class.
  *        If this is not re-defined in derived class then default base class
- *        member function is called which does nothig.
+ *        member function is called which does nothing.
  * @param Reference to dhcp server instance.
  * @param received byte buffer.
  * @param length of received byte buffer.
@@ -106,13 +112,14 @@ ACE_UINT32 DhcpServerState::requestAck(DHCP::Server &parent, ACE_Byte *inPtr, AC
 ACE_UINT32 DhcpServerState::leaseTO(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::leaseTO\n");
+  leaseTOImpl(parent, inPtr, inLen);
   return(0);
 }
 
 /*
  * @brief This member function must be re-defined in respective derived class.
  *        If this is not re-defined in derived class then default base class
- *        member function is called which does nothig.
+ *        member function is called which does nothing.
  * @param Reference to dhcp server instance.
  * @param received byte buffer.
  * @param length of received byte buffer.
@@ -122,13 +129,14 @@ ACE_UINT32 DhcpServerState::leaseTO(DHCP::Server &parent, ACE_Byte *inPtr, ACE_U
 ACE_UINT32 DhcpServerState::release(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::release\n");
+  releaseImpl(parent, inPtr, inLen);
   return(0);
 }
 
 /*
  * @brief This member function must be re-defined in respective derived class.
  *        If this is not re-defined in derived class then default base class
- *        member function is called which does nothig.
+ *        member function is called which does nothing.
  * @param Reference to dhcp server instance.
  * @param received byte buffer.
  * @param length of received byte buffer.
@@ -138,13 +146,14 @@ ACE_UINT32 DhcpServerState::release(DHCP::Server &parent, ACE_Byte *inPtr, ACE_U
 ACE_UINT32 DhcpServerState::nack(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::nack\n");
+  nackImpl(parent, inPtr, inLen);
   return(0);
 }
 
 /*
  * @brief This member function must be re-defined in respective derived class.
  *        If this is not re-defined in derived class then default base class
- *        member function is called which does nothig.
+ *        member function is called which does nothing.
  * @param Reference to dhcp server instance.
  * @param received byte buffer.
  * @param length of received byte buffer.
@@ -153,7 +162,38 @@ ACE_UINT32 DhcpServerState::nack(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT
  * */
 ACE_UINT32 DhcpServerState::decline(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerState::nack\n");
+  ACE_TRACE("DhcpServerState::decline\n");
+  declineImpl(parent, inPtr, inLen);
+  return(0);
+}
+
+/*
+ * @brief This member function must be re-defined in respective derived class.
+ *        If this is not re-defined in derived class then default base class
+ *        member function is called which does nothing.
+ * @param pointer to act.
+ *
+ * @return 0.
+ * */
+ACE_UINT32 DhcpServerState::guardTimerExpiry(DHCP::Server &parent, const void *act)
+{
+  ACE_TRACE("DhcpServerState::guardTimerExpiry\n");
+  guardTimerExpiryImpl(parent, act);
+  return(0);
+}
+
+/*
+ * @brief This member function must be re-defined in respective derived class.
+ *        If this is not re-defined in derived class then default base class
+ *        member function is called which does nothing.
+ * @param pointer to act.
+ *
+ * @return 0.
+ * */
+ACE_UINT32 DhcpServerState::leaseTimerExpiry(DHCP::Server &parent, const void *act)
+{
+  ACE_TRACE("DhcpServerState::leaseTimerExpiry\n");
+  leaseTimerExpiryImpl(parent, act);
   return(0);
 }
 
@@ -305,7 +345,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
   dhcp->flags = 0x00;
   /*This will be filled by DHCP Client.*/
   dhcp->ciaddr = 0x00;
-  /*Assigining IP Address to DHCP Client.*/
+  /*Assigning IP Address to DHCP Client.*/
   dhcp->yiaddr = htonl(parent.ipAddr());
   dhcp->giaddr = 0x00;
 
@@ -508,7 +548,7 @@ ACE_Message_Block &DhcpServerState::buildResponse(DHCP::Server &parent, ACE_Byte
 
   rsp[offset++] = RFC2131::OPTION_END;
 
-  /*Update the lentgh of IP and UDP header now.*/
+  /*Update the length of IP and UDP header now.*/
   ip->tot_len = htons(offset - sizeof(TransportIF::ETH));
   udp->len = htons(offset - (sizeof(TransportIF::ETH) + sizeof(TransportIF::IP)));
 
@@ -681,32 +721,5 @@ ACE_UINT32 DhcpServerState::rx(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 in
   return(0);
 }
 
-/*
- * @brief This member function must be re-defined in respective derived class.
- *        If this is not re-defined in derived class then default base class
- *        member function is called which does nothig.
- * @param pointer to act.
- *
- * @return 0.
- * */
-ACE_UINT32 DhcpServerState::guardTimerExpiry(DHCP::Server &parent, const void *act)
-{
-  ACE_TRACE("DhcpServerState::guardTimerExpiry\n");
-  return(0);
-}
-
-/*
- * @brief This member function must be re-defined in respective derived class.
- *        If this is not re-defined in derived class then default base class
- *        member function is called which does nothig.
- * @param pointer to act.
- *
- * @return 0.
- * */
-ACE_UINT32 DhcpServerState::leaseTimerExpiry(DHCP::Server &parent, const void *act)
-{
-  ACE_TRACE("DhcpServerState::leaseTimerExpiry\n");
-  return(0);
-}
 
 #endif /*__DHCP_SERVER_STATE_CC__*/

@@ -41,17 +41,17 @@ DhcpServerStateDiscover::~DhcpServerStateDiscover()
   m_instance = NULL;
 }
 
-void DhcpServerStateDiscover::onEntry(DHCP::Server &parent)
+void DhcpServerStateDiscover::onEntryImpl(DHCP::Server &parent)
 {
   ACE_TRACE("DhcpServerStateDiscover::onEntry\n");
 }
 
-void DhcpServerStateDiscover::onExit(DHCP::Server &parent)
+void DhcpServerStateDiscover::onExitImpl(DHCP::Server &parent)
 {
   ACE_TRACE("DhcpServerStateDiscover::onExit\n");
 }
 
-ACE_UINT32 DhcpServerStateDiscover::offer(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateDiscover::offerImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerStateDiscover::offer\n");
   return(0);
@@ -59,7 +59,7 @@ ACE_UINT32 DhcpServerStateDiscover::offer(DHCP::Server &parent, ACE_Byte *inPtr,
 
 /*
  * @brief This member function processes DHCP Request in this state.
- *        DHCP Request can come in this state if DHCP server is crahsed
+ *        DHCP Request can come in this state if DHCP server is crashed
  *        or DHCP client supports fast commit and execute/exchange just two
  *        messages REQUEST/ACK..
  * @param Reference to dhcp server instance.
@@ -68,7 +68,7 @@ ACE_UINT32 DhcpServerStateDiscover::offer(DHCP::Server &parent, ACE_Byte *inPtr,
  *
  * @return 0.
  * */
-ACE_UINT32 DhcpServerStateDiscover::request(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateDiscover::requestImpl(DHCP::Server &parent, ACE_Byte *in, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerStateDiscover::request\n");
   /*Prepare Request ACK.*/
@@ -84,13 +84,13 @@ ACE_UINT32 DhcpServerStateDiscover::request(DHCP::Server &parent, ACE_Byte *in, 
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateDiscover::requestAck(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateDiscover::requestAckImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerStateDiscover::offer\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateDiscover::leaseTO(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateDiscover::leaseTOImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerStateDiscover::offer\n");
   return(0);
@@ -105,7 +105,7 @@ ACE_UINT32 DhcpServerStateDiscover::leaseTO(DHCP::Server &parent, ACE_Byte *inPt
  *
  * @return 0.
  * */
-ACE_UINT32 DhcpServerStateDiscover::discover(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateDiscover::discoverImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerStateDiscover::discover\n");
 
@@ -122,19 +122,32 @@ ACE_UINT32 DhcpServerStateDiscover::discover(DHCP::Server &parent, ACE_Byte *inP
 }
 
 /*Guard Timer is stared if next request is expected to complete the Flow.*/
-ACE_UINT32 DhcpServerStateDiscover::guardTimerExpiry(DHCP::Server &parent, const void *act)
+ACE_UINT32 DhcpServerStateDiscover::guardTimerExpiryImpl(DHCP::Server &parent, const void *act)
 {
   ACE_TRACE("DhcpServerStateDiscover::guardTimerExpiry\n");
   return(0);
 }
 
 /*lease Timer is started when IP address assignment is done successfully.*/
-ACE_UINT32 DhcpServerStateDiscover::leaseTimerExpiry(DHCP::Server &parent, const void *act)
+ACE_UINT32 DhcpServerStateDiscover::leaseTimerExpiryImpl(DHCP::Server &parent, const void *act)
 {
   ACE_TRACE("DhcpServerStateDiscover::leaseTimerExpiry\n");
   return(0);
 
 }
 
+ACE_UINT32 DhcpServerStateDiscover::releaseImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+{
+	return(0);
+}
 
+ACE_UINT32 DhcpServerStateDiscover::nackImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+{
+	return(0);
+}
+
+ACE_UINT32 DhcpServerStateDiscover::declineImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+{
+	return(0);
+}
 #endif /*__DHCP_SERVER_STATE_DISCOVER_CC__*/
