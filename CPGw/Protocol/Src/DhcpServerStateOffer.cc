@@ -28,75 +28,75 @@ DhcpServerStateOffer::~DhcpServerStateOffer()
   m_instance = NULL;
 }
 
-void DhcpServerStateOffer::onEntryImpl(DHCP::Server &parent)
+void DhcpServerStateOffer::do_onEntry(DHCP::Server &parent)
 {
   ACE_TRACE("DhcpServerStateOffer::onEntryImpl\n");
 }
 
-void DhcpServerStateOffer::onExitImpl(DHCP::Server &parent)
+void DhcpServerStateOffer::do_onExit(DHCP::Server &parent)
 {
-  ACE_TRACE("DhcpServerStateOffer::onExitImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_onExit\n");
 }
 
-ACE_UINT32 DhcpServerStateOffer::offerImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateOffer::do_offer(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateOffer::offerImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_offer\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateOffer::discoverImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateOffer::do_discover(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateOffer::discoverImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_discover\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateOffer::requestImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateOffer::do_request(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateOffer::requestImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_request\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateOffer::requestAckImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateOffer::do_requestAck(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateOffer::requestAckImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_requestAck\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateOffer::nackImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateOffer::do_nack(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateOffer::nackImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_nack\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateOffer::releaseImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateOffer::do_release(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateOffer::releaseImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_release\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateOffer::declineImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateOffer::do_decline(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateOffer::declineImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_decline\n");
   return(0);
 }
 
-ACE_UINT32 DhcpServerStateOffer::leaseTOImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
+ACE_UINT32 DhcpServerStateOffer::do_leaseTO(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
-  ACE_TRACE("DhcpServerStateOffer::leaseTOImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_leaseTO\n");
   return(0);
 }
 
 /*Guard Timer is stared if next request is expected to complete the Flow.*/
-ACE_UINT32 DhcpServerStateOffer::guardTimerExpiryImpl(DHCP::Server &parent, const void *act)
+ACE_UINT32 DhcpServerStateOffer::do_guardTimerExpiry(DHCP::Server &parent, const void *act)
 {
-  ACE_TRACE("DhcpServerStateOffer::guardTimerExpiryImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_guardTimerExpiry\n");
   return(0);
 }
 
 /*lease Timer is started when IP address assignment is done successfully.*/
-ACE_UINT32 DhcpServerStateOffer::leaseTimerExpiryImpl(DHCP::Server &parent, const void *act)
+ACE_UINT32 DhcpServerStateOffer::do_leaseTimerExpiry(DHCP::Server &parent, const void *act)
 {
-  ACE_TRACE("DhcpServerStateOffer::leaseTimerExpiryImpl\n");
+  ACE_TRACE("DhcpServerStateOffer::do_leaseTimerExpiry\n");
   return(0);
 }
 

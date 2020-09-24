@@ -38,7 +38,7 @@ DHCP::Server::Server(DhcpServerUser *parent, ACE_CString mac,
 
   ACE_NEW_NORETURN(m_purgeTid, TIMER_ID());
 
-  /*The start state is Discover.*/
+  /*The start state of DHCP FSM is  StateDiscover.*/
   setState(DhcpServerStateDiscover::instance());
 }
 
@@ -47,7 +47,7 @@ DHCP::Server::Server()
   /*context of DHCP Client's dhcp-header.*/
   ACE_NEW_NORETURN(m_ctx, RFC2131::DhcpCtx());
 
-  /*The start state is Discover.*/
+  /*The start state of DHCP FSM is  StateDiscover.*/
   setState(DhcpServerStateDiscover::instance());
 }
 
@@ -75,6 +75,14 @@ DHCP::Server::~Server()
   m_state = NULL;
 }
 
+/*
+ * @brief This method assigns instance of derived class into base class
+ *        pointer. If pointer to base class is not null then onExit method
+ *        is called before updating base class pointer and onEntry is called
+ *        while entering into new state.
+ * @param Pointer to base class.
+ * @return none.
+ * */
 void DHCP::Server::setState(DhcpServerState *st)
 {
   ACE_TRACE("DHCP::Server::setState\n");

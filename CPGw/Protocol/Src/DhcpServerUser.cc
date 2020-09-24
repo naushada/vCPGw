@@ -151,7 +151,7 @@ DhcpServerUser::~DhcpServerUser()
 
   m_ipPoolList.clear();
 
-  /*re-claim the heap memory now. of singelton instance.*/
+  /*re-claim the heap memory now. of singleton instance.*/
   delete DhcpServerStateDiscover::get_instance();
   delete DhcpServerStateInit::get_instance();
   delete DhcpServerStateLeaseExpire::get_instance();
@@ -193,7 +193,6 @@ ACE_UINT8 DhcpServerUser::createSubscriber(ACE_CString macAddress)
 
 ACE_UINT8 DhcpServerUser::addSubscriber(DHCP::Server *sess, ACE_CString macAddress)
 {
-  /*let STL do the memory management for stack object.*/
   m_instMap.bind(macAddress, sess);
 
   return(0);
@@ -262,16 +261,20 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
 
    DHCP::Server *sess = NULL;
 
-   /*Is this a subsequent Request?*/
-   if(isSubscriberFound(haddr))
+   do
    {
-     ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l subscriber is found\n")));
-     sess = getSubscriber(haddr);
-     /*Feed request to state machine.*/
-     sess->getState().rx(*sess, in, inLen);
-   }
-   else
-   {
+     /*Is this a subsequent Request?*/
+     if(isSubscriberFound(haddr))
+     {
+       ACE_DEBUG((LM_DEBUG, ACE_TEXT("%D %M %N:%l subscriber is found\n")));
+
+       sess = getSubscriber(haddr);
+
+       /*Feed request to DHCP Server FSM.*/
+       sess->getState().rx(*sess, in, inLen);
+       break;
+     }
+
      /*This is a new DHCP Packet.*/
      struct in_addr addr;
      addr.s_addr = cpGw().DHCPConfInst().serverIP();
@@ -291,9 +294,11 @@ ACE_UINT32 DhcpServerUser::processRequest(ACE_Byte *in, ACE_UINT32 inLen)
                                          getIPFromPool()));
 
      addSubscriber(sess, haddr);
-     /*Feed request to FSM.*/
+
+     /*Feed request to DHCP Server FSM.*/
      sess->getState().rx(*sess, in, inLen);
-   }
+
+   }while(0);
 
    RFC2131::DhcpOption *elm = NULL;
    if(sess->optionMap().find(RFC2131::OPTION_HOST_NAME, elm) != -1)

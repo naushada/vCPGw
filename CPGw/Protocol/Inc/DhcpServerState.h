@@ -27,27 +27,27 @@ private:
    *        method is made pure virtual to make sure then base class is not instantiated.
    * */
   /*DHCP Offer */
-  virtual ACE_UINT32 offerImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
+  virtual ACE_UINT32 do_offer(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
   /*DHCP Discover */
-  virtual ACE_UINT32 discoverImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
+  virtual ACE_UINT32 do_discover(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
   /*DHCP Request */
-  virtual ACE_UINT32 requestImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
+  virtual ACE_UINT32 do_request(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
   /*DHCP Request Ack */
-  virtual ACE_UINT32 requestAckImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
+  virtual ACE_UINT32 do_requestAck(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
   /*Lease Time Out */
-  virtual ACE_UINT32 leaseTOImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
+  virtual ACE_UINT32 do_leaseTO(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
   /*Release  */
-  virtual ACE_UINT32 releaseImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
+  virtual ACE_UINT32 do_release(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
   /*NACK  */
-  virtual ACE_UINT32 nackImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
+  virtual ACE_UINT32 do_nack(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
   /*decline  */
-  virtual ACE_UINT32 declineImpl(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
-  virtual void onEntryImpl(DHCP::Server &parent) = 0;
-  virtual void onExitImpl(DHCP::Server &parent) = 0;
+  virtual ACE_UINT32 do_decline(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen) = 0;
+  virtual void do_onEntry(DHCP::Server &parent) = 0;
+  virtual void do_onExit(DHCP::Server &parent) = 0;
   /*Guard Timer is stared if next request is expected to complete the Flow.*/
-  virtual ACE_UINT32 guardTimerExpiryImpl(DHCP::Server &parent, const void *act) = 0;
+  virtual ACE_UINT32 do_guardTimerExpiry(DHCP::Server &parent, const void *act) = 0;
   /*lease Timer is started when IP address assignment is done successfully.*/
-  virtual ACE_UINT32 leaseTimerExpiryImpl(DHCP::Server &parent, const void *act) = 0;
+  virtual ACE_UINT32 do_leaseTimerExpiry(DHCP::Server &parent, const void *act) = 0;
 
 public:
   DhcpServerState();

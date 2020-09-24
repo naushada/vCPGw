@@ -95,15 +95,19 @@ namespace DHCP
     TIMER_ID *m_purgeTid;
     ACE_Message_Block *m_mb;
     ACE_CString m_description;
-    /*State Machine Instance.*/
+
+    /*DHCP FSM - State Machine Instance.*/
     DhcpServerState *m_state;
+
     /*dhcp header is in context.*/
     RFC2131::DhcpCtx *m_ctx;
     ElemDef m_optionMap;
     /*Back Pointrt to parent.*/
     DhcpServerUser *m_dhcpServerUser;
+
     /*DHCP Client's Host Name.*/
     ACE_CString m_sname;
+
     /*IP Address of DHCP Client.*/
     ACE_UINT32 m_ipAddr;
     ACE_UINT32 m_subnetMask;
@@ -126,6 +130,7 @@ namespace DHCP
 
     virtual ~Server();
 
+    /* This method is invoked with instance of derived class as argument.*/
     void setState(DhcpServerState *st);
     DhcpServerState &getState(void);
 

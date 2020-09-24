@@ -22,13 +22,13 @@ DhcpServerState::~DhcpServerState()
 void DhcpServerState::onEntry(DHCP::Server &parent)
 {
   ACE_TRACE("DhcpServerState::onEntry\n");
-  onEntryImpl(parent);
+  do_onEntry(parent);
 }
 
 void DhcpServerState::onExit(DHCP::Server &parent)
 {
   ACE_TRACE("DhcpServerState::onExit\n");
-  onExitImpl(parent);
+  do_onExit(parent);
 }
 
 /*
@@ -44,7 +44,7 @@ void DhcpServerState::onExit(DHCP::Server &parent)
 ACE_UINT32 DhcpServerState::offer(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::offer\n");
-  offerImpl(parent, inPtr, inLen);
+  do_offer(parent, inPtr, inLen);
   return(0);
 }
 
@@ -61,7 +61,7 @@ ACE_UINT32 DhcpServerState::offer(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UIN
 ACE_UINT32 DhcpServerState::discover(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::discover\n");
-  discoverImpl(parent, inPtr, inLen);
+  do_discover(parent, inPtr, inLen);
   return(0);
 }
 
@@ -78,7 +78,7 @@ ACE_UINT32 DhcpServerState::discover(DHCP::Server &parent, ACE_Byte *inPtr, ACE_
 ACE_UINT32 DhcpServerState::request(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::request\n");
-  requestImpl(parent, inPtr, inLen);
+  do_request(parent, inPtr, inLen);
   return(0);
 }
 
@@ -95,7 +95,7 @@ ACE_UINT32 DhcpServerState::request(DHCP::Server &parent, ACE_Byte *inPtr, ACE_U
 ACE_UINT32 DhcpServerState::requestAck(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::requestAck\n");
-  requestAckImpl(parent, inPtr, inLen);
+  do_requestAck(parent, inPtr, inLen);
   return(0);
 }
 
@@ -112,7 +112,7 @@ ACE_UINT32 DhcpServerState::requestAck(DHCP::Server &parent, ACE_Byte *inPtr, AC
 ACE_UINT32 DhcpServerState::leaseTO(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::leaseTO\n");
-  leaseTOImpl(parent, inPtr, inLen);
+  do_leaseTO(parent, inPtr, inLen);
   return(0);
 }
 
@@ -129,7 +129,7 @@ ACE_UINT32 DhcpServerState::leaseTO(DHCP::Server &parent, ACE_Byte *inPtr, ACE_U
 ACE_UINT32 DhcpServerState::release(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::release\n");
-  releaseImpl(parent, inPtr, inLen);
+  do_release(parent, inPtr, inLen);
   return(0);
 }
 
@@ -146,7 +146,7 @@ ACE_UINT32 DhcpServerState::release(DHCP::Server &parent, ACE_Byte *inPtr, ACE_U
 ACE_UINT32 DhcpServerState::nack(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::nack\n");
-  nackImpl(parent, inPtr, inLen);
+  do_nack(parent, inPtr, inLen);
   return(0);
 }
 
@@ -163,7 +163,7 @@ ACE_UINT32 DhcpServerState::nack(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT
 ACE_UINT32 DhcpServerState::decline(DHCP::Server &parent, ACE_Byte *inPtr, ACE_UINT32 inLen)
 {
   ACE_TRACE("DhcpServerState::decline\n");
-  declineImpl(parent, inPtr, inLen);
+  do_decline(parent, inPtr, inLen);
   return(0);
 }
 
@@ -178,7 +178,7 @@ ACE_UINT32 DhcpServerState::decline(DHCP::Server &parent, ACE_Byte *inPtr, ACE_U
 ACE_UINT32 DhcpServerState::guardTimerExpiry(DHCP::Server &parent, const void *act)
 {
   ACE_TRACE("DhcpServerState::guardTimerExpiry\n");
-  guardTimerExpiryImpl(parent, act);
+  do_guardTimerExpiry(parent, act);
   return(0);
 }
 
@@ -193,7 +193,7 @@ ACE_UINT32 DhcpServerState::guardTimerExpiry(DHCP::Server &parent, const void *a
 ACE_UINT32 DhcpServerState::leaseTimerExpiry(DHCP::Server &parent, const void *act)
 {
   ACE_TRACE("DhcpServerState::leaseTimerExpiry\n");
-  leaseTimerExpiryImpl(parent, act);
+  do_leaseTimerExpiry(parent, act);
   return(0);
 }
 
